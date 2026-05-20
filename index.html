@@ -10,10 +10,14 @@
 <meta name="theme-color" content="#F7F2EB">
 <meta name="msapplication-TileColor" content="#A2BFFE">
 <link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1024' height='1024' viewBox='0 0 1024 1024'%3E%3Cdefs%3E%3CclipPath id='s'%3E%3Crect width='1024' height='1024' rx='224'/%3E%3C/clipPath%3E%3CclipPath id='c'%3E%3Crect x='162' y='168' width='700' height='704' rx='104'/%3E%3C/clipPath%3E%3C/defs%3E%3Cg clip-path='url(%23s)'%3E%3Crect width='1024' height='1024' fill='%23A2BFFE'/%3E%3Cpath d='M0 650C134 586 250 600 360 690C482 790 610 812 742 732C838 674 928 680 1024 734V1024H0Z' fill='%23E8FFD8'/%3E%3Cpath d='M0 0H1024V248C894 310 750 302 612 218C488 142 348 124 196 174C128 196 62 206 0 204Z' fill='%23E2B3F2' opacity='0.55'/%3E%3Cpath d='M760 0H1024V442C920 410 832 342 780 248C736 168 722 82 760 0Z' fill='%23FAB6DC' opacity='0.78'/%3E%3Crect x='162' y='168' width='700' height='704' rx='104' fill='%23FFF6C2'/%3E%3Cg clip-path='url(%23c)'%3E%3Crect x='162' y='168' width='700' height='704' fill='%23FFF6C2'/%3E%3Crect x='162' y='168' width='700' height='224' fill='%23FAB6DC'/%3E%3Crect x='162' y='342' width='700' height='54' fill='%23E2B3F2' opacity='0.62'/%3E%3Cpath d='M162 778C272 728 354 742 458 798C568 858 684 856 862 764V872H162Z' fill='%23E8FFD8'/%3E%3C/g%3E%3Crect x='162' y='168' width='700' height='704' rx='104' fill='none' stroke='%23FFFFFF' stroke-width='18' opacity='0.72'/%3E%3Crect x='288' y='76' width='104' height='214' rx='52' fill='%23E2B3F2'/%3E%3Crect x='632' y='76' width='104' height='214' rx='52' fill='%23E2B3F2'/%3E%3Ccircle cx='340' cy='270' r='44' fill='%23FAB6DC'/%3E%3Ccircle cx='684' cy='270' r='44' fill='%23FAB6DC'/%3E%3Ctext x='512' y='675' fill='%2326355F' font-family='-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif' font-size='286' font-weight='900' text-anchor='middle'%3E26%3C/text%3E%3C/g%3E%3C/svg%3E">
 <link rel="icon" type="image/svg+xml" href="images/app-icon.svg">
 <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16.png">
 <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png">
+<link rel="apple-touch-icon" sizes="192x192" href="images/app-icon-192.png">
+<link rel="apple-touch-icon" sizes="512x512" href="images/app-icon-512.png">
+<link rel="mask-icon" href="images/app-icon.svg" color="#A2BFFE">
 <title>Grounded</title>
 <script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.9.14/dist/dotlottie-wc.js" type="module"></script>
 <style>
@@ -57,6 +61,18 @@
   --icon-pink: #A2BFFE;
   --icon-pink-strong: #7A9FEE;
   --icon-pink-light: #E0EAFF;
+  --pal-blue: #A2BFFE;
+  --pal-yellow: #FFF6C2;
+  --pal-pink: #FAB6DC;
+  --pal-purple: #E2B3F2;
+  --pal-green: #E8FFD8;
+  --pal-blue-strong: #7A9FEE;
+  --pal-pink-strong: #E48FBE;
+  --pal-purple-strong: #C48BDF;
+  --pal-green-strong: #B5E89A;
+  --pal-yellow-strong: #E8D67E;
+  --rainbow: linear-gradient(90deg, #A2BFFE 0%, #E2B3F2 28%, #FAB6DC 52%, #FFF6C2 76%, #E8FFD8 100%);
+  --rainbow-soft: linear-gradient(90deg, rgba(162,191,254,0.55) 0%, rgba(226,179,242,0.55) 28%, rgba(250,182,220,0.55) 52%, rgba(255,246,194,0.55) 76%, rgba(232,255,216,0.55) 100%);
 }
 
 [data-theme="dark"] {
@@ -86,6 +102,18 @@
   --icon-pink: #8AABF5;
   --icon-pink-strong: #A2BFFE;
   --icon-pink-light: #1E2A3D;
+  --pal-blue: #A2BFFE;
+  --pal-yellow: #FFF6C2;
+  --pal-pink: #FAB6DC;
+  --pal-purple: #E2B3F2;
+  --pal-green: #E8FFD8;
+  --pal-blue-strong: #A2BFFE;
+  --pal-pink-strong: #FAB6DC;
+  --pal-purple-strong: #E2B3F2;
+  --pal-green-strong: #E8FFD8;
+  --pal-yellow-strong: #FFF6C2;
+  --rainbow: linear-gradient(90deg, #A2BFFE 0%, #E2B3F2 28%, #FAB6DC 52%, #FFF6C2 76%, #E8FFD8 100%);
+  --rainbow-soft: linear-gradient(90deg, rgba(162,191,254,0.32) 0%, rgba(226,179,242,0.32) 28%, rgba(250,182,220,0.32) 52%, rgba(255,246,194,0.32) 76%, rgba(232,255,216,0.32) 100%);
   --shadow-sm: 0 1px 4px rgba(0,0,0,0.2);
   --shadow-md: 0 4px 16px rgba(0,0,0,0.25);
 }
@@ -117,6 +145,37 @@ select:focus-visible {
   gap: 14px;
 }
 .splash.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+
+/* ── Celebration overlay (confetti) ── */
+.celebrate-overlay {
+  position: fixed; inset: 0; z-index: 9998;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: rgba(247,242,235,0.55);
+  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  opacity: 0; visibility: hidden; pointer-events: none;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+.celebrate-overlay.active {
+  opacity: 1; visibility: visible; pointer-events: auto;
+}
+[data-theme="dark"] .celebrate-overlay { background: rgba(30,25,21,0.55); }
+.celebrate-lottie-wrap {
+  width: min(80vw, 360px); height: min(80vw, 360px);
+  display: flex; align-items: center; justify-content: center;
+}
+.celebrate-lottie-wrap dotlottie-wc { width: 100%; height: 100%; }
+.celebrate-message {
+  margin-top: -10px;
+  font-family: var(--font-display); font-size: 28px; font-weight: 800;
+  color: var(--espresso); letter-spacing: 0.4px;
+  background: var(--bg-card); padding: 10px 22px; border-radius: 999px;
+  border: 1px solid var(--border-soft); box-shadow: var(--shadow-md);
+  transform: translateY(8px) scale(0.92); opacity: 0;
+  transition: transform 0.35s cubic-bezier(.2,1.3,.4,1), opacity 0.3s ease;
+}
+.celebrate-overlay.active .celebrate-message {
+  transform: translateY(0) scale(1); opacity: 1;
+}
 .splash-title {
   font-family: var(--font-display); font-size: 32px; font-weight: 700;
   color: var(--espresso); letter-spacing: 0.5px;
@@ -231,12 +290,46 @@ select:focus-visible {
 }
 .card-title-row { justify-content: space-between; margin-bottom: 2px; }
 .card-title-row .theme-sticker { --sticker-size: 30px; opacity: 0.88; }
+.gym-this-week-stickers { display: inline-flex; align-items: center; gap: 4px; }
 .month-head, .month-grid { position: relative; z-index: 1; }
 .month-cell { position: relative; overflow: hidden; }
 .month-day-sticker {
-  --sticker-size: 18px;
+  --sticker-size: 14px;
   position: static;
-  opacity: 0.85;
+  opacity: 0.92;
+}
+.month-day-sticker.gym-mini { --sticker-size: 7px; opacity: 0.88; }
+.month-top-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 4px; min-height: 16px;
+}
+.month-corner {
+  display: flex; gap: 2px; align-items: center; justify-content: flex-end;
+  pointer-events: none;
+}
+.month-corner-sticker { --sticker-size: 14px; opacity: 0.95; }
+.next-shift-card {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%; text-align: left;
+  padding: 12px 16px; margin-bottom: 14px;
+  background: var(--bg-card); border: 1px solid var(--border-soft);
+  border-radius: var(--radius); box-shadow: var(--shadow-sm); cursor: pointer;
+  position: relative; overflow: hidden;
+  transition: transform 0.15s ease, border-color 0.2s ease;
+}
+.next-shift-card::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+  width: 4px; background: var(--rainbow); opacity: 0.85;
+}
+.next-shift-card:active { transform: scale(0.985); border-color: var(--icon-pink); }
+.next-shift-sticker { --sticker-size: 36px; opacity: 0.95; flex-shrink: 0; }
+.next-shift-text { flex: 1; min-width: 0; }
+.next-shift-title {
+  font-family: var(--font-display); font-size: 13px; font-weight: 700;
+  color: var(--text-secondary); letter-spacing: 0.4px; text-transform: uppercase;
+}
+.next-shift-sub {
+  font-size: 16px; font-weight: 700; color: var(--espresso); margin-top: 2px;
 }
 .shift-import-card .theme-sticker,
 .academic-balance-card .theme-sticker,
@@ -260,12 +353,50 @@ select:focus-visible {
 }
 .theme-divider {
   display: flex; align-items: center; justify-content: center;
-  gap: 10px; padding: 8px 0 10px;
+  gap: 8px; padding: 10px 0 12px;
 }
 .theme-divider::before,
 .theme-divider::after {
   content: ''; height: 1px; background: var(--border-soft); flex: 1;
 }
+.beans-divider-sticker { --sticker-size: 22px; opacity: 0.75; }
+.beans-divider-sticker.beans-flip { transform: rotate(-18deg) scale(1.08); opacity: 0.85; }
+.beans-bg-decor {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  overflow: hidden;
+}
+.beans-bg-decor .bean {
+  position: absolute; display: inline-block;
+  background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M5.30798 10.1076C5.32119 9.93003 5.14351 9.80257 4.98917 9.89135C3.42339 10.792 2.84061 13.1129 3.46896 15.458C4.11514 17.8696 5.8216 19.4816 7.6834 19.3662C7.81555 19.3581 7.90693 19.2352 7.91347 19.1029C7.92892 18.7907 8.03031 18.446 8.06948 18.1558C8.17453 17.3776 7.97932 16.5981 7.52015 15.9624L5.91538 13.7403C5.39972 13.0263 5.15514 12.1621 5.22041 11.2847L5.30798 10.1076ZM9.70431 18.9966C9.71317 19.0126 9.73457 19.0043 9.75136 18.9968C11.516 18.2141 12.0948 15.7956 11.4326 13.3241C10.7969 10.9515 9.1362 9.35299 7.30865 9.41158C7.15177 9.41661 7.05238 9.58264 7.06451 9.73912C7.10073 10.2065 6.93151 10.8241 6.90173 11.2245C6.84832 11.9424 7.04843 12.6494 7.47034 13.2336L9.0751 15.4557C9.63631 16.2328 9.8749 17.1854 9.7465 18.1366C9.65887 18.7857 9.68126 18.9547 9.70431 18.9966Z' fill='%23744A30' stroke='%232F2118'/%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M17.0946 5.01096C17.1948 4.86379 17.1047 4.66457 16.9266 4.66429C15.1203 4.66139 13.4551 6.37999 12.8268 8.725C12.1806 11.1366 12.8524 13.3859 14.5225 14.2169C14.641 14.2759 14.7816 14.2152 14.8534 14.1039C15.0229 13.8412 15.283 13.5934 15.462 13.3617C15.9421 12.7403 16.1628 11.9676 16.083 11.1874L15.8043 8.4607C15.7147 7.58452 15.935 6.71379 16.4302 5.98655L17.0946 5.01096ZM16.4575 14.9072C16.4571 14.9256 16.4798 14.929 16.4981 14.931C18.4177 15.1354 20.1282 13.3303 20.7904 10.8589C21.4262 8.48629 20.7872 6.27157 19.1752 5.40854C19.0369 5.33446 18.8678 5.42854 18.8 5.57013C18.5977 5.99296 18.1424 6.4432 17.9164 6.77508C17.5112 7.37009 17.331 8.0825 17.4042 8.79938L17.683 11.5261C17.7805 12.4797 17.5108 13.424 16.924 14.1835C16.5235 14.7019 16.4584 14.8594 16.4575 14.9072Z' fill='%23744A30' stroke='%232F2118'/%3E%3C/svg%3E");
+  background-size: contain; background-repeat: no-repeat; background-position: center;
+  opacity: 0.08;
+}
+[data-theme="dark"] .beans-bg-decor .bean { opacity: 0.12; }
+.beans-bg-decor .bean.dark { opacity: 0.12; }
+.beans-bg-decor .bean.light { opacity: 0.05; }
+[data-theme="dark"] .beans-bg-decor .bean.dark { opacity: 0.16; }
+[data-theme="dark"] .beans-bg-decor .bean.light { opacity: 0.07; }
+.beans-bg-decor .b1 { top: 4%; left: 4%; width: 90px; height: 90px; transform: rotate(-15deg); }
+.beans-bg-decor .b2 { top: 12%; right: 5%; width: 64px; height: 64px; transform: rotate(48deg); }
+.beans-bg-decor .b3 { top: 18%; left: 28%; width: 38px; height: 38px; transform: rotate(110deg); }
+.beans-bg-decor .b4 { top: 24%; right: 24%; width: 52px; height: 52px; transform: rotate(-72deg); }
+.beans-bg-decor .b5 { top: 32%; left: 10%; width: 72px; height: 72px; transform: rotate(28deg); }
+.beans-bg-decor .b6 { top: 38%; right: 8%; width: 46px; height: 46px; transform: rotate(-130deg); }
+.beans-bg-decor .b7 { top: 45%; left: 38%; width: 30px; height: 30px; transform: rotate(78deg); }
+.beans-bg-decor .b8 { top: 50%; right: 32%; width: 88px; height: 88px; transform: rotate(-40deg); }
+.beans-bg-decor .b9 { top: 56%; left: 6%; width: 56px; height: 56px; transform: rotate(160deg); }
+.beans-bg-decor .b10 { top: 62%; right: 4%; width: 110px; height: 110px; transform: rotate(-25deg); }
+.beans-bg-decor .b11 { top: 68%; left: 22%; width: 42px; height: 42px; transform: rotate(15deg); }
+.beans-bg-decor .b12 { top: 74%; right: 18%; width: 34px; height: 34px; transform: rotate(-100deg); }
+.beans-bg-decor .b13 { top: 80%; left: 10%; width: 78px; height: 78px; transform: rotate(8deg); }
+.beans-bg-decor .b14 { top: 86%; right: 30%; width: 50px; height: 50px; transform: rotate(58deg); }
+.beans-bg-decor .b15 { bottom: 8%; left: 40%; width: 64px; height: 64px; transform: rotate(-22deg); }
+.beans-bg-decor .b16 { bottom: 4%; right: 10%; width: 96px; height: 96px; transform: rotate(135deg); }
+.beans-bg-decor .b17 { top: 6%; right: 36%; width: 48px; height: 48px; transform: rotate(-55deg); }
+.beans-bg-decor .b18 { bottom: 22%; right: 38%; width: 42px; height: 42px; transform: rotate(90deg); }
+.beans-bg-decor .b19 { top: 70%; left: 46%; width: 36px; height: 36px; transform: rotate(-15deg); }
+.beans-bg-decor .b20 { top: 22%; left: 48%; width: 28px; height: 28px; transform: rotate(60deg); }
+.tab-page { position: relative; z-index: 1; }
 [data-theme="dark"] .theme-sticker svg { filter: drop-shadow(0 2px 2px rgba(0,0,0,0.22)); }
 [data-theme="dark"] .theme-sprinkles .theme-sticker,
 [data-theme="dark"] .theme-corner,
@@ -322,16 +453,36 @@ select:focus-visible {
   border-top: 1px solid var(--border-soft);
   backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
 }
+.bottom-nav::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: var(--rainbow); opacity: 0.85;
+  pointer-events: none;
+}
 [data-theme="dark"] .bottom-nav { background: rgba(30,25,21,0.92); }
 .nav-item {
   flex: 1; display: flex; flex-direction: column; align-items: center;
-  justify-content: center; gap: 2px;
+  justify-content: center; gap: 2px; position: relative;
   background: none; border: none; cursor: pointer;
   color: var(--icon-pink); transition: color 0.2s, opacity 0.2s;
   padding: 6px 2px; -webkit-tap-highlight-color: transparent;
   opacity: 0.72;
 }
-.nav-item.active { color: var(--icon-pink-strong); opacity: 1; }
+.nav-item[data-tab="today"] { color: var(--pal-blue-strong); }
+.nav-item[data-tab="routines"] { color: var(--pal-purple-strong); }
+.nav-item[data-tab="gym"] { color: var(--pal-pink-strong); }
+.nav-item[data-tab="money"] { color: var(--pal-green-strong); }
+.nav-item[data-tab="health"] { color: var(--pal-yellow-strong); }
+[data-theme="dark"] .nav-item[data-tab="today"] { color: var(--pal-blue); }
+[data-theme="dark"] .nav-item[data-tab="routines"] { color: var(--pal-purple); }
+[data-theme="dark"] .nav-item[data-tab="gym"] { color: var(--pal-pink); }
+[data-theme="dark"] .nav-item[data-tab="money"] { color: var(--pal-green); }
+[data-theme="dark"] .nav-item[data-tab="health"] { color: var(--pal-yellow); }
+.nav-item.active { opacity: 1; }
+.nav-item.active::after {
+  content: ''; position: absolute; bottom: 4px; left: 50%;
+  width: 18px; height: 3px; border-radius: 999px;
+  transform: translateX(-50%); background: currentColor; opacity: 0.9;
+}
 .nav-item:focus-visible { outline-offset: -5px; border-radius: 14px; }
 .nav-item svg { width: 20px; height: 20px; stroke-width: 1.8; }
 .nav-item img { width: 20px; height: 20px; object-fit: contain; filter: brightness(0) saturate(100%) invert(80%) sepia(20%) saturate(1000%) hue-rotate(305deg) brightness(105%); }
@@ -436,7 +587,7 @@ img.card-icon, img.page-icon { filter: brightness(0) saturate(100%) invert(80%) 
 .progress-wrap { margin-bottom: 14px; }
 .progress-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-bottom: 5px; }
 .progress-bar { height: 6px; border-radius: 3px; background: var(--border-soft); overflow: hidden; }
-.progress-fill { height: 100%; border-radius: 3px; background: var(--espresso); transition: width 0.5s ease; }
+.progress-fill { height: 100%; border-radius: 3px; background: var(--rainbow); background-size: 200% 100%; transition: width 0.5s ease; }
 
 /* ── Streak ── */
 .streak-card {
@@ -603,7 +754,7 @@ img.card-icon, img.page-icon { filter: brightness(0) saturate(100%) invert(80%) 
 .month-cell.today { border-color: var(--espresso); background: var(--espresso-light); }
 .month-cell.selected { box-shadow: inset 0 0 0 2px var(--icon-pink); }
 .month-date { font-size: 12px; font-weight: 700; color: var(--text); }
-.month-tags { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 5px; align-items: center; }
+.month-tags { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 4px; align-items: center; }
 .month-tag {
   display: block; width: fit-content; max-width: 100%; padding: 2px 5px; border-radius: 999px;
   font-size: 9px; line-height: 1.2; color: var(--espresso);
@@ -615,6 +766,26 @@ img.card-icon, img.page-icon { filter: brightness(0) saturate(100%) invert(80%) 
 .month-tag.academic { background: #DCEBFF; color: #234D83; }
 .month-tag.income.monthly { background: #A2BFFE; color: var(--espresso); }
 .month-tag.income.biweekly { background: #E2B3F2; color: var(--espresso); }
+.cal-action-row {
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px; margin: 6px 0 10px;
+}
+.cal-action-btn {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: var(--bg-input); border: 1px solid var(--border-soft);
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; padding: 0; box-shadow: var(--shadow-sm);
+  transition: transform 0.16s ease, background 0.2s ease, border-color 0.2s ease;
+  position: relative; overflow: hidden;
+}
+.cal-action-btn::before {
+  content: ''; position: absolute; inset: 0;
+  background: var(--rainbow); opacity: 0.18; pointer-events: none;
+  border-radius: inherit;
+}
+.cal-action-btn:active { transform: scale(0.92); }
+.cal-action-btn .theme-sticker { --sticker-size: 24px; opacity: 0.95; position: relative; z-index: 1; }
+.cal-action-btn .theme-sticker svg { filter: drop-shadow(0 1px 1px rgba(60,40,25,0.18)); }
 .week-planner-actions { display: flex; gap: 6px; align-items: center; }
 .tiny-nav-btn {
   width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--border-soft);
@@ -1353,6 +1524,20 @@ img.card-icon, img.page-icon { filter: brightness(0) saturate(100%) invert(80%) 
   color: var(--text-secondary); cursor: pointer; font-size: 18px;
 }
 .day-modal-actions { display: grid; gap: 8px; margin-top: 12px; }
+.day-modal-gym {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: var(--radius-sm);
+  background: #E8FFD8; border: 1px solid #B5E89A;
+  margin-bottom: 10px;
+}
+.day-modal-gym-text { flex: 1; font-size: 13px; color: var(--espresso); }
+.day-modal-gym-remove {
+  border: 1px solid var(--danger); background: transparent;
+  color: var(--danger); border-radius: 999px;
+  padding: 6px 10px; font-size: 11px; font-weight: 700; cursor: pointer;
+  white-space: nowrap;
+}
+.day-modal-gym-remove:active { background: var(--danger-light); }
 .timeline-label {
   display: inline-flex; padding: 2px 7px; border-radius: 999px;
   font-size: 10px; font-weight: 800; color: var(--espresso);
@@ -1422,6 +1607,7 @@ img.card-icon, img.page-icon { filter: brightness(0) saturate(100%) invert(80%) 
 .collapse-header.open { border-radius: var(--radius) var(--radius) 0 0; border-bottom-color: transparent; }
 .collapse-header-left { display: flex; align-items: center; gap: 10px; }
 .collapse-title { font-family: var(--font-display); font-size: 16px; color: var(--espresso); }
+.collapse-title-sticker { --sticker-size: 28px; opacity: 0.95; flex-shrink: 0; }
 .collapse-sub { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
 .collapse-chevron { width: 18px; height: 18px; color: var(--text-muted); transition: transform 0.25s ease; flex-shrink: 0; }
 .collapse-header.open .collapse-chevron { transform: rotate(180deg); }
@@ -1482,6 +1668,13 @@ img.card-icon, img.page-icon { filter: brightness(0) saturate(100%) invert(80%) 
   <dotlottie-wc src="https://lottie.host/f20a8222-a9d7-494a-a34b-36e01b0b1727/CrW7SmScJG.lottie" style="width: 300px; height: 300px; filter: saturate(0.35) brightness(1.1) opacity(0.85);" autoplay loop></dotlottie-wc>
 </div>
 
+<div class="celebrate-overlay" id="celebrate-overlay" aria-hidden="true" onclick="dismissCelebrate()">
+  <div class="celebrate-lottie-wrap">
+    <dotlottie-wc id="celebrate-lottie" src="https://lottie.host/e2cfca4d-1f6b-4d9d-9007-eee8f8b59ace/qCsXrlqgPZ.lottie" autoplay loop></dotlottie-wc>
+  </div>
+  <div class="celebrate-message" id="celebrate-message">Great job!</div>
+</div>
+
 <div class="top-bar" id="top-bar" style="display:none;">
   <button class="top-btn brain-btn" id="btn-brain-dump" title="Brain dump" onclick="openBrainDump()">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
@@ -1502,6 +1695,15 @@ img.card-icon, img.page-icon { filter: brightness(0) saturate(100%) invert(80%) 
 </div>
 
 <div class="app" id="app" style="display:none;">
+  <div class="beans-bg-decor" aria-hidden="true">
+    <span class="bean b1"></span><span class="bean b2 light"></span><span class="bean b3 dark"></span>
+    <span class="bean b4"></span><span class="bean b5"></span><span class="bean b6 light"></span>
+    <span class="bean b7 dark"></span><span class="bean b8"></span><span class="bean b9 light"></span>
+    <span class="bean b10"></span><span class="bean b11"></span><span class="bean b12 light"></span>
+    <span class="bean b13"></span><span class="bean b14 dark"></span><span class="bean b15"></span>
+    <span class="bean b16 light"></span><span class="bean b17"></span><span class="bean b18 dark"></span>
+    <span class="bean b19 light"></span><span class="bean b20"></span>
+  </div>
   <div class="tab-page active" id="page-today"></div>
   <div class="tab-page" id="page-routines"></div>
   <div class="tab-page" id="page-gym"></div>
@@ -2369,6 +2571,7 @@ const THEME_ICONS = {
   money: `<svg viewBox="0 -196 1416 1416" fill="none"><path d="M55.351 290.041h1038.391c18.82 0 33.211 14.391 33.211 33.211v645.397c0 18.819-14.391 33.21-33.211 33.21H55.351c-18.819 0-33.21-14.391-33.21-33.21V323.252c0-17.713 14.391-33.211 33.21-33.211z" fill="#9DBE87"/><path d="M954.257 902.227H194.837c0-52.03-43.174-95.204-95.204-95.204V472.7c52.03 0 95.204-43.174 95.204-95.204h759.42c0 52.03 43.175 95.204 95.205 95.204v334.322c-53.137 0-95.205 43.174-95.205 95.204z" fill="#D6F0C5"/><path d="M576.761 790.417c-35.425 0-73.064-13.284-99.632-47.602c-7.75-9.963-5.535-23.247 3.321-30.997c9.963-7.749 23.247-5.535 30.997 3.321c26.568 34.318 67.528 35.425 94.097 26.569c22.14-7.75 35.424-22.141 35.424-37.639c0-14.391-34.317-24.354-64.207-33.21c-46.495-14.392-105.168-30.997-105.168-86.349c0-26.568 16.606-50.923 45.388-65.314c35.425-17.713 95.205-24.355 151.663 16.605c9.963 7.749 12.177 21.034 4.428 30.997c-7.749 9.963-21.034 12.177-30.997 4.428c-37.639-27.676-79.706-26.569-105.168-13.284c-13.284 6.642-22.14 16.605-22.14 26.568c0 21.034 30.996 30.997 73.063 44.281c45.388 13.284 95.205 28.783 95.205 75.278c0 34.318-25.462 65.315-65.315 79.706c-11.07 3.321-26.568 6.642-40.96 6.642z" fill="#131313"/><path d="M574.547 549.085c-12.177 0-22.14-9.963-22.14-22.14v-48.71c0-12.177 9.963-22.14 22.14-22.14s22.14 9.963 22.14 22.14v48.71c0 13.284-9.963 22.14-22.14 22.14z" fill="#131313"/><path d="M574.547 832.484c-12.177 0-22.14-9.963-22.14-22.14v-36.532c0-12.177 9.963-22.14 22.14-22.14s22.14 9.963 22.14 22.14v36.532c0 12.177-9.963 22.14-22.14 22.14z" fill="#131313"/><circle cx="285.613" cy="653.146" r="40.96" fill="#AECD99"/><circle cx="865.695" cy="653.146" r="40.96" fill="#AECD99"/></svg>`,
   bill: `<svg viewBox="0 0 1024 1024" fill="none"><path d="M853.333333 874.666667H170.666667c-46.933333 0-85.333333-38.4-85.333334-85.333334V343.466667c0-27.733333 12.8-53.333333 36.266667-70.4L512 0l390.4 273.066667c23.466667 14.933333 36.266667 42.666667 36.266667 70.4V789.333333c0 46.933333-38.4 85.333333-85.333334 85.333334z" fill="#78909C"/><path d="M298.666667 21.333333h426.666666v661.333334H298.666667z" fill="#AED581"/><path d="M277.333333 0v704h469.333334V0H277.333333z m426.666667 661.333333H320V42.666667h384v618.666666z" fill="#558B2F"/><path d="M725.333333 64c0 36.266667-6.4 64-42.666666 64s-64-27.733333-64-64 27.733333-42.666667 64-42.666667 42.666667 6.4 42.666666 42.666667zM341.333333 21.333333c36.266667 0 64 6.4 64 42.666667s-27.733333 64-64 64-42.666667-27.733333-42.666666-64 6.4-42.666667 42.666666-42.666667z" fill="#558B2F"/><path d="M512 170.666667m-42.666667 0a42.666667 42.666667 0 1 0 85.333334 0 42.666667 42.666667 0 1 0-85.333334 0Z" fill="#558B2F"/><path d="M512 426.666667m-128 0a128 128 0 1 0 256 0 128 128 0 1 0-256 0Z" fill="#558B2F"/><path d="M853.333333 874.666667H170.666667c-46.933333 0-85.333333-38.4-85.333334-85.333334V362.666667l426.666667 277.333333 426.666667-277.333333v426.666666c0 46.933333-38.4 85.333333-85.333334 85.333334z" fill="#CFD8DC"/></svg>`,
   academic: `<svg viewBox="0 0 512 512" fill="none"><rect y="8.198" fill="#CFDCE5" width="370.957" height="495.607"/><path fill="#4EBFED" d="M432.203 93.909l39.898-85.711 39.898 85.711v385.139c0 13.673-11.083 24.756-24.756 24.756h-30.286c-13.673 0-24.756-11.083-24.756-24.756V93.909z"/><path fill="#FF6F52" d="M511.996 438.44v40.606c0 13.671-11.086 24.757-24.757 24.757h-30.287c-13.671 0-24.744-11.086-24.744-24.757V438.44h79.788z"/><rect x="473.027" y="93.909" fill="#97E1F7" width="14.845" height="344.529"/><path fill="#3BA4BC" d="M432.203 479.048c0 13.673 11.083 24.756 24.756 24.756h7.55c-6.855 0-12.414-11.083-12.414-24.756V93.909l20.007-85.711-39.898 85.711v385.139z"/><polygon fill="#FCD577" points="511.996 93.91 432.208 93.91 472.096 8.195"/><path fill="#E25749" d="M464.512 503.802h-7.559c-13.671 0-24.744-11.086-24.744-24.757V438.44h19.882v40.606c0 13.671 5.567 24.756 12.421 24.756z"/><polygon fill="#EAC36E" points="452.09 93.91 432.208 93.91 472.096 8.195"/><rect x="432.199" y="429.156" fill="#FCD577" width="79.801" height="18.558"/><rect x="76.918" y="72.858" fill="#415E72" width="217.12" height="18.558"/><rect x="268.279" y="168.287" fill="#415E72" width="56.291" height="18.558"/><rect x="46.393" y="168.287" fill="#415E72" width="209.511" height="18.558"/><rect x="46.393" y="264.395" fill="#415E72" width="278.177" height="18.558"/><rect x="121.681" y="216.341" fill="#415E72" width="202.892" height="18.558"/><rect x="46.393" y="216.341" fill="#415E72" width="62.912" height="18.558"/><rect x="46.393" y="408.556" fill="#415E72" width="278.177" height="18.558"/><rect x="244.154" y="360.502" fill="#415E72" width="80.416" height="18.558"/><rect x="46.393" y="360.502" fill="#415E72" width="185.385" height="18.558"/></svg>`,
+  beans: `<svg viewBox="0 0 24 24" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M5.30798 10.1076C5.32119 9.93003 5.14351 9.80257 4.98917 9.89135C3.42339 10.792 2.84061 13.1129 3.46896 15.458C4.11514 17.8696 5.8216 19.4816 7.6834 19.3662C7.81555 19.3581 7.90693 19.2352 7.91347 19.1029C7.92892 18.7907 8.03031 18.446 8.06948 18.1558C8.17453 17.3776 7.97932 16.5981 7.52015 15.9624L5.91538 13.7403C5.39972 13.0263 5.15514 12.1621 5.22041 11.2847L5.30798 10.1076ZM9.70431 18.9966C9.71317 19.0126 9.73457 19.0043 9.75136 18.9968C11.516 18.2141 12.0948 15.7956 11.4326 13.3241C10.7969 10.9515 9.1362 9.35299 7.30865 9.41158C7.15177 9.41661 7.05238 9.58264 7.06451 9.73912C7.10073 10.2065 6.93151 10.8241 6.90173 11.2245C6.84832 11.9424 7.04843 12.6494 7.47034 13.2336L9.0751 15.4557C9.63631 16.2328 9.8749 17.1854 9.7465 18.1366C9.65887 18.7857 9.68126 18.9547 9.70431 18.9966Z" fill="#744A30" stroke="#2F2118"/><path fill-rule="evenodd" clip-rule="evenodd" d="M17.0946 5.01096C17.1948 4.86379 17.1047 4.66457 16.9266 4.66429C15.1203 4.66139 13.4551 6.37999 12.8268 8.725C12.1806 11.1366 12.8524 13.3859 14.5225 14.2169C14.641 14.2759 14.7816 14.2152 14.8534 14.1039C15.0229 13.8412 15.283 13.5934 15.462 13.3617C15.9421 12.7403 16.1628 11.9676 16.083 11.1874L15.8043 8.4607C15.7147 7.58452 15.935 6.71379 16.4302 5.98655L17.0946 5.01096ZM16.4575 14.9072C16.4571 14.9256 16.4798 14.929 16.4981 14.931C18.4177 15.1354 20.1282 13.3303 20.7904 10.8589C21.4262 8.48629 20.7872 6.27157 19.1752 5.40854C19.0369 5.33446 18.8678 5.42854 18.8 5.57013C18.5977 5.99296 18.1424 6.4432 17.9164 6.77508C17.5112 7.37009 17.331 8.0825 17.4042 8.79938L17.683 11.5261C17.7805 12.4797 17.5108 13.424 16.924 14.1835C16.5235 14.7019 16.4584 14.8594 16.4575 14.9072Z" fill="#744A30" stroke="#2F2118"/></svg>`,
 };
 
 function themeIcon(name, cls = '') {
@@ -2388,7 +2591,7 @@ function themePageHeader(title, subtitle, icons = []) {
 }
 
 function themeDivider() {
-  return `<div class="theme-divider"></div>`;
+  return `<div class="theme-divider">${themeIcon('beans', 'beans-divider-sticker')}${themeIcon('beans', 'beans-divider-sticker beans-flip')}${themeIcon('beans', 'beans-divider-sticker')}</div>`;
 }
 
 function scheduleThemeIcon(type) {
@@ -2657,6 +2860,38 @@ function todayKey() { return localDateKey(); }
 function dateFromKey(key) { return new Date(key + 'T00:00:00'); }
 function addDays(date, days) { const d = new Date(date); d.setDate(d.getDate() + days); return d; }
 function startOfWeek(date) { const d = new Date(date); d.setHours(0,0,0,0); d.setDate(d.getDate() - d.getDay()); return d; }
+
+let _celebrateTimer = null;
+function celebrate(message = 'Great job!', duration = 2400) {
+  const overlay = document.getElementById('celebrate-overlay');
+  const msg = document.getElementById('celebrate-message');
+  const lottie = document.getElementById('celebrate-lottie');
+  if (!overlay || !msg) return;
+  msg.textContent = message;
+  if (lottie) {
+    try {
+      if (typeof lottie.stop === 'function') lottie.stop();
+      if (typeof lottie.play === 'function') lottie.play();
+      else lottie.setAttribute('autoplay', '');
+    } catch {}
+  }
+  overlay.classList.add('active');
+  overlay.setAttribute('aria-hidden', 'false');
+  if (_celebrateTimer) clearTimeout(_celebrateTimer);
+  _celebrateTimer = setTimeout(() => {
+    overlay.classList.remove('active');
+    overlay.setAttribute('aria-hidden', 'true');
+    _celebrateTimer = null;
+  }, duration);
+}
+function dismissCelebrate() {
+  const overlay = document.getElementById('celebrate-overlay');
+  if (overlay) {
+    overlay.classList.remove('active');
+    overlay.setAttribute('aria-hidden', 'true');
+  }
+  if (_celebrateTimer) { clearTimeout(_celebrateTimer); _celebrateTimer = null; }
+}
 function ls(k, fb) { try { const v = localStorage.getItem(k); return v !== null ? JSON.parse(v) : fb; } catch { return fb; } }
 function lsSave(k, v) {
   try {
@@ -3107,15 +3342,10 @@ function renderToday() {
   const plan = ls(`gnd-${todayKey()}-plan`, null);
 
   let html = buildMonthCalendar();
+  html += buildNextShiftCard();
   html += buildDueSoonSection();
   html += buildScheduleSection();
   html += buildHomeGymCheck(gym);
-
-  html += `<div class="shift-import-card theme-row-card" style="background:var(--success-light);border-color:var(--success);">
-    ${themeIcon('bicep', 'theme-corner')}
-    <div class="shift-import-copy"><strong>Schedule gym sessions.</strong><br>Paste dated sessions and I will fill the calendar.</div>
-    <button class="shift-import-btn" style="background:var(--success);" onclick="openGymImportModal()">Add sessions</button>
-  </div>`;
 
   if (plan && plan.priorities.some(p => p.trim())) {
     html += `<div class="plan-banner"><div class="plan-banner-title">Today's Plan</div>${plan.priorities.filter(p=>p.trim()).map(p=>`<div class="plan-banner-item">&#8226; ${p}</div>`).join('')}</div>`;
@@ -3155,24 +3385,86 @@ function buildMonthCalendar() {
     <div class="month-count">${calendarMonthOffset + 1}/3</div>
     <button class="tiny-nav-btn" onclick="moveCalendarMonth(1)" title="Next month" ${calendarMonthOffset===2?'disabled':''}>&#8250;</button>
     <button class="tiny-nav-btn" onclick="calendarMonthOffset=0;resetScheduleWeek()" title="Jump to today" aria-label="Jump to today">•</button>
-  </div></div>`;
+  </div></div>
+  <div class="cal-action-row">
+    <button class="cal-action-btn" type="button" onclick="openShiftImportModal()" title="Add work shifts" aria-label="Add work shifts">${themeIcon('work')}</button>
+    <button class="cal-action-btn" type="button" onclick="openSyllabusImportModal()" title="Import syllabus / study blocks" aria-label="Import syllabus">${themeIcon('academic')}</button>
+    <button class="cal-action-btn" type="button" onclick="rebalanceAcademicBlocksNow(true)" title="Academic auto-balance" aria-label="Academic auto-balance">${themeIcon('morning')}</button>
+    <button class="cal-action-btn" type="button" onclick="openGymImportModal()" title="Schedule gym sessions" aria-label="Schedule gym sessions">${themeIcon('leg')}</button>
+  </div>`;
   html += `<div class="month-grid">${DAY_SHORT.map(d => `<div class="month-weekday">${d}</div>`).join('')}`;
   for (let i = 0; i < 42; i++) {
     const d = addDays(gridStart, i);
     const dk = localDateKey(d);
     const tags = monthTagsForDate(d);
+    const corner = monthCornerStickersForDate(d);
     const cls = [
       d.getMonth() !== month ? 'muted' : '',
       dk === todayKey() ? 'today' : '',
       dk === selectedKey ? 'selected' : ''
     ].filter(Boolean).join(' ');
+    const cornerHtml = corner.length
+      ? `<div class="month-corner">${corner.map(c => themeIcon(c.icon, `month-corner-sticker ${c.cls}`)).join('')}</div>`
+      : '';
+    const tagsHtml = tags.slice(0,3).map(t => {
+      if (!t.icon) return t.label ? `<div class="month-tag ${t.cls}">${esc(t.label)}</div>` : '';
+      const stickerCls = `month-day-sticker${t.sticker === 'tiny-gym' ? ' gym-mini' : ''}`;
+      return themeIcon(t.icon, stickerCls);
+    }).join('');
     html += `<button class="month-cell ${cls}" onclick="openDayModal('${dk}')">
-      <div class="month-date">${d.getDate()}</div>
-      <div class="month-tags">${tags.slice(0,3).map(t => t.icon ? themeIcon(t.icon, 'month-day-sticker') : `<div class="month-tag ${t.cls}">${esc(t.label)}</div>`).join('')}</div>
+      <div class="month-top-row">
+        <div class="month-date">${d.getDate()}</div>
+        ${cornerHtml}
+      </div>
+      <div class="month-tags">${tagsHtml}</div>
     </button>`;
   }
   html += `</div></div>`;
   return html;
+}
+
+function buildNextShiftCard() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayMin = nowMinutes();
+  const events = getEvents();
+  let best = null;
+  for (let i = 0; i < 60; i++) {
+    const d = addDays(today, i);
+    const dk = localDateKey(d);
+    const workEvents = getEventsForDateFromList(dk, events)
+      .filter(e => e.type === 'work' && e.start)
+      .map(e => ({ ...e, _start: timeToMinutes(e.start) }));
+    if (!workEvents.length) continue;
+    workEvents.sort((a, b) => a._start - b._start);
+    const next = i === 0
+      ? workEvents.find(e => e._start >= todayMin) || (todayMin < 1440 ? workEvents[0] : null)
+      : workEvents[0];
+    if (!next) continue;
+    best = { date: d, dateKey: dk, event: next };
+    break;
+  }
+  if (!best) {
+    return `<div class="next-shift-card">${themeIcon('work', 'next-shift-sticker')}<div class="next-shift-text"><div class="next-shift-title">No upcoming shifts</div><div class="next-shift-sub">Tap the work icon above the calendar to add one.</div></div></div>`;
+  }
+  const dayLabel = best.dateKey === todayKey()
+    ? 'today'
+    : best.dateKey === localDateKey(addDays(today, 1))
+      ? 'tomorrow'
+      : best.date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+  const timeLabel = formatTime(best.event.start);
+  return `<button class="next-shift-card" type="button" onclick="openDayModal('${best.dateKey}')">
+    ${themeIcon('work', 'next-shift-sticker')}
+    <div class="next-shift-text">
+      <div class="next-shift-title">Next shift</div>
+      <div class="next-shift-sub">${esc(dayLabel)} at ${esc(timeLabel)}</div>
+    </div>
+  </button>`;
+}
+
+function nowMinutes() {
+  const n = new Date();
+  return n.getHours() * 60 + n.getMinutes();
 }
 
 function monthTagsForDate(date) {
@@ -3182,16 +3474,32 @@ function monthTagsForDate(date) {
   if (events.some(e => e.type === 'work')) tags.push({ label: 'Work', cls: 'work', icon: 'work' });
   const gymKind = normalizeGymKind(getGymPlans()[dk]);
   if (['gym','upper','lower'].includes(gymKind)) {
-    tags.push({ label: gymKind === 'lower' ? 'Lower' : 'Upper', cls: 'gym', icon: gymKind === 'lower' ? 'leg' : 'bicep' });
+    tags.push({ label: gymKind === 'lower' ? 'Lower' : 'Upper', cls: 'gym', icon: gymKind === 'lower' ? 'leg' : 'bicep', sticker: 'tiny-gym' });
   }
   if (events.some(e => e.type === 'academic')) tags.push({ label: 'Academic', cls: 'academic', icon: 'academic' });
-  incomeOccurrencesForDate(date).forEach(occ => {
-    if (occ.cadence === 'biweekly') tags.push({ label: 'Payday', cls: 'income biweekly', icon: 'money' });
-    else tags.push({ label: 'Income', cls: `income ${occ.cadence}` });
-  });
-  BILLS.filter(b => b.day === date.getDate()).forEach(b => tags.push({ label: b.name, cls: 'bill', icon: 'bill' }));
   if (events.some(e => e.type !== 'work' && e.type !== 'academic')) tags.push({ label: 'Plans', cls: '' });
   return tags;
+}
+
+function monthCornerStickersForDate(date) {
+  const stickers = [];
+  if (incomeOccurrencesForDate(date).length) {
+    stickers.push({ icon: 'money', cls: 'corner-money' });
+  }
+  if (BILLS.some(b => b.day === date.getDate())) {
+    stickers.push({ icon: 'bill', cls: 'corner-bill' });
+  }
+  return stickers;
+}
+
+function formatStickerTime(time) {
+  if (!time) return '';
+  const [rawH, rawM = '0'] = String(time).split(':');
+  const h = Number(rawH);
+  const m = Number(rawM);
+  if (!Number.isFinite(h) || !Number.isFinite(m)) return '';
+  const ampm = h >= 12 ? 'p' : 'a';
+  return `${h % 12 || 12}${m ? `:${String(m).padStart(2,'0')}` : ''}${ampm}`;
 }
 
 function buildHomeGymCheck(gym) {
@@ -3378,7 +3686,7 @@ function buildDueSoonSection() {
 
   const visible = items.slice(0, 6);
   let html = `<div class="card theme-card due-soon-card">
-    ${themeIcon('work', 'theme-corner bottom-right')}
+    ${themeIcon('academic', 'theme-corner bottom-right')}
     <div class="due-soon-head">
       <div><div class="card-title">Due Soon</div><div class="page-date">Next 7 days</div></div>
       <div class="due-soon-count">${items.length}</div>
@@ -3420,20 +3728,7 @@ function buildScheduleSection() {
   const viewKey = localDateKey(viewDate);
   const weekEnd = addDays(weekStart, 6);
 
-  let html = `<div class="shift-import-card theme-row-card">
-    ${themeIcon('work', 'theme-corner')}
-    <div class="shift-import-copy"><strong>Work shifts in one brain-dump.</strong><br>Paste dated shifts, and I will fill the calendar.</div>
-    <button class="shift-import-btn" onclick="openShiftImportModal()">Add shifts</button>
-  </div>`;
-
-  html += `<div class="shift-import-card theme-row-card" style="background:#DCEBFF;border-color:#7DA8E8;">
-    <div class="shift-import-copy"><strong>Syllabus to study blocks.</strong><br>Paste class deadlines and I will place Academic blocks around what is already scheduled.</div>
-    <button class="shift-import-btn" style="background:#37679E;" onclick="openSyllabusImportModal()">Import syllabus</button>
-  </div>`;
-
-  html += buildAcademicBalanceCard();
-
-  html += `<div class="card theme-card"><div class="week-planner-head"><div><div class="week-planner-title">Week Planner</div><div class="page-date">${formatShortDate(weekStart)} - ${formatShortDate(weekEnd)}</div></div><div class="week-planner-actions">
+  let html = `<div class="card theme-card"><div class="week-planner-head"><div><div class="week-planner-title">Week Planner</div><div class="page-date">${formatShortDate(weekStart)} - ${formatShortDate(weekEnd)}</div></div><div class="week-planner-actions">
     <button class="tiny-nav-btn" onclick="moveScheduleWeek(-1)" title="Previous week">&#8249;</button>
     <button class="tiny-nav-btn" onclick="resetScheduleWeek()" title="This week">•</button>
     <button class="tiny-nav-btn" onclick="moveScheduleWeek(1)" title="Next week">&#8250;</button>
@@ -3644,10 +3939,18 @@ function renderDayModal(dateKey) {
   if (!modal || !sheet) return;
   modal.dataset.dateKey = dateKey;
   const date = dateFromKey(dateKey);
+  const gymKind = normalizeGymKind(getGymPlans()[dateKey]);
+  const gymScheduled = ['gym','upper','lower'].includes(gymKind);
+  const gymLabel = gymKind === 'lower' ? 'Lower body' : gymKind === 'upper' ? 'Upper body' : 'Gym';
   sheet.innerHTML = `<div class="day-modal-head">
     <div><div class="day-modal-title">${formatDate(date)}</div><div class="day-modal-date">${date.toLocaleDateString('en-US', { year: 'numeric' })}</div></div>
     <button class="modal-close-btn" onclick="document.getElementById('day-modal').classList.remove('open')" aria-label="Close">&times;</button>
   </div>
+  ${gymScheduled ? `<div class="day-modal-gym">
+    ${themeIcon(gymKind === 'lower' ? 'leg' : 'bicep', 'small')}
+    <div class="day-modal-gym-text"><strong>${esc(gymLabel)}</strong> scheduled</div>
+    <button class="day-modal-gym-remove" type="button" onclick="removeGymForDate('${dateKey}')">Didn't go · remove</button>
+  </div>` : ''}
   <div class="agenda-day-title"><strong>Timed agenda</strong><span>Real time blocks</span></div>
   ${buildTimelineHtml(dateKey, true)}
   ${buildDayMoneyHtml(dateKey)}
@@ -3656,6 +3959,17 @@ function renderDayModal(dateKey) {
     <button class="add-btn" onclick="rebalanceAcademicBlocksNow(true)" style="border-style:solid;margin:0;">Rebalance Academic Blocks</button>
     <button class="modal-submit" onclick="document.getElementById('day-modal').classList.remove('open');openEventModal('${dateKey}')">Add Event</button>
   </div>`;
+}
+
+function removeGymForDate(dateKey) {
+  const plans = getGymPlans();
+  if (!plans[dateKey]) return;
+  delete plans[dateKey];
+  saveGymPlans(plans);
+  renderToday();
+  refreshDayModalIfOpen();
+  if (currentTab === 'health') renderHealth();
+  if (currentTab === 'gym') renderGym();
 }
 
 function refreshDayModalIfOpen() {
@@ -3706,7 +4020,7 @@ function buildAcademicBalanceCard() {
     }
   }
   return `<div class="academic-balance-card theme-row-card">
-    ${themeIcon('work', 'theme-corner')}
+    ${themeIcon('academic', 'theme-corner')}
     <div class="academic-balance-copy"><strong>Academic auto-balance.</strong><br>${esc(line)}</div>
     <button class="academic-balance-btn" onclick="rebalanceAcademicBlocksNow(true)">Rebalance now</button>
   </div>`;
@@ -4190,11 +4504,13 @@ let gymPraiseText = '';
 
 function chgWater(d) {
   const h = getHealthData();
-  h.water = Math.max(0, (h.water||0) + d);
+  const prev = h.water || 0;
+  h.water = Math.max(0, prev + d);
   if (d > 0) waterPraiseText = WATER_PRAISE[(h.water - 1) % WATER_PRAISE.length];
   saveDayData('health', h);
   if (currentTab === 'today') renderToday();
   if (currentTab === 'health') renderHealth();
+  if (d > 0 && prev < 8 && h.water >= 8) celebrate('Great job!');
 }
 
 function tapWaterBottle() { chgWater(1); }
@@ -4209,10 +4525,12 @@ function resetWater() {
 
 function toggleGymForDate(dateKey) {
   const d = ls(`gnd-${dateKey}-gym`, null) || defGym();
+  const wasCompleted = !!d.completed;
   d.completed = !d.completed;
   saveDayDataForDate(dateKey, 'gym', d);
   gymPraiseText = d.completed ? GYM_PRAISE[Math.floor(Math.random() * GYM_PRAISE.length)] : 'No pressure. The button is ready when you are.';
   renderHealth();
+  if (!wasCompleted && d.completed) celebrate('Great job!');
 }
 
 function toggleGamble() {
@@ -4281,10 +4599,10 @@ function addWorkTask() {
 
 function buildCollapseSection(id, title, sub, isOpen, content, icon = '') {
   const chevron = `<svg class="collapse-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>`;
+  const inlineSticker = icon ? themeIcon(icon, 'collapse-title-sticker') : '';
   return `<div class="collapse-section theme-card">
-    ${themeIcon(icon, 'theme-corner')}
     <div class="collapse-header ${isOpen?'open':''}" onclick="toggleRoutineSection('${id}')">
-      <div class="collapse-header-left"><div><div class="collapse-title-row"><div class="collapse-title">${title}</div></div><div class="collapse-sub">${sub}</div></div></div>
+      <div class="collapse-header-left"><div><div class="collapse-title-row">${inlineSticker}<div class="collapse-title">${title}</div></div><div class="collapse-sub">${sub}</div></div></div>
       ${chevron}
     </div>
     <div class="collapse-body ${isOpen?'open':''}">${content}</div>
@@ -4335,11 +4653,6 @@ function renderRoutines() {
 
   html += buildCollapseSection('evening', 'Evening', `${eDone}/${EVENING_ITEMS.length} done · 8 – 10 PM`, routineOpenState.evening,
     ring(eDone, EVENING_ITEMS.length) + buildRoutineChecklist('evening', EVENING_ITEMS, eve),
-    'sleep'
-  );
-
-  html += buildCollapseSection('todo', "Today's To-Do's", `${tDone}/${todos.length} done`, routineOpenState.todo,
-    buildTodayTodosContent(),
     'sleep'
   );
 
@@ -4518,18 +4831,22 @@ function logWt(i, v) {
 
 function completeGym() {
   const d = dayData('gym') || defGym();
+  const wasCompleted = !!d.completed;
   d.completed = true;
   saveDayData('gym', d);
   renderGym();
+  if (!wasCompleted) celebrate('Great job!');
 }
 
 function toggleGymToday() {
   const d = dayData('gym') || defGym();
+  const wasCompleted = !!d.completed;
   d.completed = !d.completed;
   saveDayData('gym', d);
   if (currentTab === 'today') renderToday();
   if (currentTab === 'gym') renderGym();
   if (currentTab === 'health') renderHealth();
+  if (!wasCompleted && d.completed) celebrate('Great job!');
 }
 
 let editingGymWeekDraft = {};
@@ -6147,7 +6464,7 @@ function buildHealthGymSummary() {
     const data = ls(`gnd-${localDateKey(addDays(weekStart, dow))}-gym`, null);
     return data?.completed;
   }).length;
-  let html = `<div class="card theme-card">${themeIcon('bicep', 'theme-corner bottom-right')}<div class="card-title-row"><div class="card-title">Gym This Week?</div></div><div class="page-date">${done}/${gymDays.length || 0} scheduled days logged</div><div class="gym-summary-grid">`;
+  let html = `<div class="card theme-card"><div class="card-title-row"><div class="card-title">Gym This Week?</div><div class="gym-this-week-stickers">${themeIcon('bicep', 'small')}${themeIcon('leg', 'tiny')}</div></div><div class="page-date">${done}/${gymDays.length || 0} scheduled days logged</div><div class="gym-summary-grid">`;
   if (!gymDays.length) {
     return html + `</div><div class="gym-summary-note">No gym sessions scheduled this week.</div></div>`;
   }
