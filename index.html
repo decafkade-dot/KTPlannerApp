@@ -8,6 +8,12 @@
 <meta name="apple-mobile-web-app-title" content="Grounded">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#F7F2EB">
+<meta name="msapplication-TileColor" content="#A2BFFE">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="images/app-icon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png">
 <title>Grounded</title>
 <script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.9.14/dist/dotlottie-wc.js" type="module"></script>
 <style>
@@ -228,9 +234,9 @@ select:focus-visible {
 .month-head, .month-grid { position: relative; z-index: 1; }
 .month-cell { position: relative; overflow: hidden; }
 .month-day-sticker {
-  --sticker-size: 17px;
-  position: absolute; right: 3px; bottom: 2px;
-  opacity: 0.54;
+  --sticker-size: 18px;
+  position: static;
+  opacity: 0.85;
 }
 .shift-import-card .theme-sticker,
 .academic-balance-card .theme-sticker,
@@ -597,7 +603,7 @@ img.card-icon, img.page-icon { filter: brightness(0) saturate(100%) invert(80%) 
 .month-cell.today { border-color: var(--espresso); background: var(--espresso-light); }
 .month-cell.selected { box-shadow: inset 0 0 0 2px var(--icon-pink); }
 .month-date { font-size: 12px; font-weight: 700; color: var(--text); }
-.month-tags { display: flex; flex-direction: column; gap: 3px; margin-top: 5px; }
+.month-tags { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 5px; align-items: center; }
 .month-tag {
   display: block; width: fit-content; max-width: 100%; padding: 2px 5px; border-radius: 999px;
   font-size: 9px; line-height: 1.2; color: var(--espresso);
@@ -639,6 +645,71 @@ img.card-icon, img.page-icon { filter: brightness(0) saturate(100%) invert(80%) 
   border: none; border-radius: 999px; background: #37679E; color: #fff;
   padding: 8px 12px; font-size: 12px; font-weight: 700; cursor: pointer;
   white-space: nowrap;
+}
+.due-soon-card { overflow: hidden; }
+.due-soon-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 12px; margin-bottom: 10px; padding-right: 34px;
+}
+.due-soon-count {
+  min-width: 34px; height: 34px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: #DCEBFF; color: #234D83; font-size: 14px; font-weight: 900;
+  flex-shrink: 0;
+}
+.due-soon-list { display: grid; gap: 0; }
+.due-soon-row {
+  padding: 11px 0; border-top: 1px solid var(--border-soft);
+}
+.due-soon-row:first-child { border-top: none; padding-top: 2px; }
+.due-soon-top {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 8px;
+}
+.due-soon-class {
+  display: inline-flex; align-items: center; max-width: 52%;
+  padding: 3px 8px; border-radius: 999px;
+  background: #DCEBFF; color: #234D83;
+  font-size: 10px; font-weight: 900; line-height: 1.1;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.due-soon-countdown {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 22px; padding: 3px 8px; border-radius: 999px;
+  background: var(--latte-light); color: var(--espresso);
+  font-size: 10px; font-weight: 900; line-height: 1.1; text-align: center;
+  white-space: nowrap; flex-shrink: 0;
+}
+.due-soon-countdown.now { background: var(--danger-light); color: var(--danger); }
+.due-soon-countdown.soon { background: var(--caramel-light); color: var(--espresso); }
+.due-soon-title {
+  margin-top: 7px; color: var(--text); font-size: 14px; font-weight: 800;
+  line-height: 1.25; overflow-wrap: anywhere;
+}
+.due-soon-date { margin-top: 3px; color: var(--text-muted); font-size: 11px; }
+.due-soon-links { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.due-soon-link {
+  border: 1px solid #7DA8E8; border-radius: 999px;
+  background: #DCEBFF; color: #234D83;
+  padding: 6px 9px; font-size: 11px; font-weight: 800;
+  cursor: pointer; line-height: 1.1; transition: transform 0.15s ease;
+}
+.due-soon-link:active { transform: scale(0.96); }
+.due-soon-muted { color: var(--text-muted); font-size: 11px; font-weight: 700; }
+.due-soon-more {
+  margin-top: 2px; padding-top: 9px; border-top: 1px dashed var(--border-soft);
+  color: var(--text-muted); font-size: 11px; text-align: center;
+}
+.timeline-block.highlighted {
+  border-color: #37679E; box-shadow: 0 0 0 2px rgba(55,103,158,0.24), var(--shadow-sm);
+}
+[data-theme="dark"] .due-soon-count,
+[data-theme="dark"] .due-soon-class,
+[data-theme="dark"] .due-soon-link {
+  background: rgba(125,168,232,0.18); color: #A2BFFE; border-color: rgba(125,168,232,0.55);
+}
+@media (max-width: 480px) {
+  .due-soon-head { padding-right: 124px; }
 }
 @keyframes softBob {
   0%, 100% { transform: translateY(0); }
@@ -1408,7 +1479,7 @@ img.card-icon, img.page-icon { filter: brightness(0) saturate(100%) invert(80%) 
 <body>
 
 <div class="splash" id="splash">
-  <dotlottie-wc src="https://lottie.host/f20a8222-a9d7-494a-a34b-36e01b0b1727/CrW7SmScJG.lottie" style="width: 300px; height: 300px" autoplay loop></dotlottie-wc>
+  <dotlottie-wc src="https://lottie.host/f20a8222-a9d7-494a-a34b-36e01b0b1727/CrW7SmScJG.lottie" style="width: 300px; height: 300px; filter: saturate(0.35) brightness(1.1) opacity(0.85);" autoplay loop></dotlottie-wc>
 </div>
 
 <div class="top-bar" id="top-bar" style="display:none;">
@@ -1736,9 +1807,9 @@ img.card-icon, img.page-icon { filter: brightness(0) saturate(100%) invert(80%) 
     <div class="modal-title">Schedule Gym Sessions</div>
     <div class="modal-field">
       <div class="field-label">Type each session on its own line</div>
-      <textarea class="text-area" id="gym-import-input" rows="7" placeholder="5/19, Gym&#10;5/20, Rest&#10;5/22, Gym"></textarea>
+      <textarea class="text-area" id="gym-import-input" rows="7" placeholder="5/19, Upper&#10;5/20, Rest&#10;5/22, Lower"></textarea>
     </div>
-    <div class="edit-hint" style="margin-bottom:10px;">Dates can be M/D or M/D/YYYY. Use "Gym" or "Rest".</div>
+    <div class="edit-hint" style="margin-bottom:10px;">Dates can be M/D or M/D/YYYY. Use "Upper", "Lower", or "Rest".</div>
     <button class="modal-submit" onclick="saveBulkGymSessions()">Fill Calendar</button>
   </div>
 </div>
@@ -2290,110 +2361,57 @@ function coffeeDivider(type) {
 
 /* ── Cozy sticker icons inspired by the uploaded planner art ── */
 const THEME_ICONS = {
-  pourBuddy: `<svg viewBox="0 0 96 96" fill="none" stroke="#3B1D0D" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M30 15C44 3 68 8 76 24c8 16-2 31-18 35 14 5 22 18 18 32H39c-8-5-10-19-7-31-12 4-20 0-20-10 0-11 8-18 18-35Z" fill="#EDE4D8"/>
-    <path d="M42 25v10M57 26l-2 10"/>
-    <path d="M21 45c-8 7-13 16-15 28-2 9 7 13 14 7 6-5 9-13 11-23"/>
-    <path d="M36 49l-23 9 10 23 24-8-3-18-8-6Z" fill="#C9CCCB"/>
-    <path d="M45 70c5 3 13 2 19-1l2 8c-9 3-20 3-29-1"/>
-    <path d="M43 57c-3 3-2 8 3 11"/>
-    <path d="M41 72l-1 19"/>
-    <path d="M48 72h28l-7 19H40l8-19Z" fill="#6E4A37"/>
-    <path d="M51 78h19" stroke="#1E0D05"/>
-  </svg>`,
-  doubleMug: `<svg viewBox="0 0 96 96" fill="none" stroke="#3B1D0D" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M31 28c6-18 34-18 39 1 2 8-1 14-7 18 11 2 18 11 14 21-4 10-14 9-22 4 5 8 3 15-6 17-13 2-32-4-35-15-2-8 2-15 11-17-11 1-19-2-21-10-2-9 8-11 27-19Z" fill="#EDE4D8"/>
-    <path d="M43 31l1 9M56 31l1 9"/>
-    <path d="M34 67c8 6 18 6 27-2"/>
-    <path d="M7 23h22c3 0 5 2 4 5l-4 16c-1 4-4 7-9 7h-2c-5 0-8-3-9-7L5 28c-1-3 0-5 2-5Z" fill="#A77B5D"/>
-    <path d="M5 29C-1 27-1 42 10 43"/>
-    <path d="M66 23h22c3 0 5 2 4 5l-4 16c-1 4-4 7-9 7h-2c-5 0-8-3-9-7l-4-16c-1-3 0-5 2-5Z" fill="#78523D"/>
-    <path d="M91 29c7-1 6 13-4 14"/>
-  </svg>`,
-  beans: `<svg viewBox="0 0 96 96" fill="none" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M13 62c-5-19 10-40 30-41 16-1 25 10 21 25-4 18-23 31-39 27-6-1-10-5-12-11Z" fill="#A86138" stroke="#FFFFFF" stroke-width="8"/>
-    <path d="M13 62c-5-19 10-40 30-41 16-1 25 10 21 25-4 18-23 31-39 27-6-1-10-5-12-11Z" fill="#A86138" stroke="#761D38" stroke-width="3"/>
-    <path d="M36 25c11 12-4 27 6 44" stroke="#761D38" stroke-width="2.2"/>
-    <path d="M22 45c8 1 14 4 18 9M25 57c5 1 11 4 15 8M27 34c6 1 11 3 15 7" stroke="#F5A466" stroke-width="3"/>
-    <path d="M43 70c-2-18 9-37 27-38 14-1 25 9 24 22-1 16-16 27-32 27-9 0-16-4-19-11Z" fill="#9B5A35" stroke="#FFFFFF" stroke-width="8"/>
-    <path d="M43 70c-2-18 9-37 27-38 14-1 25 9 24 22-1 16-16 27-32 27-9 0-16-4-19-11Z" fill="#9B5A35" stroke="#761D38" stroke-width="3"/>
-    <path d="M72 35c-5 14 7 25-3 41" stroke="#761D38" stroke-width="2.2"/>
-    <path d="M57 50c6 1 12 3 18 8M56 62c6 0 12 3 17 7M68 42c7 1 12 3 16 7" stroke="#F5A466" stroke-width="3"/>
-  </svg>`,
-  bigCup: `<svg viewBox="0 0 96 96" fill="none" stroke="#3B1D0D" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M47 12c18-9 41 4 39 27-1 10-7 18-17 22 9 5 13 15 9 25H49c-12 0-22-10-20-22-12 7-24 2-23-10 1-11 12-25 27-34 4-3 9-6 14-8Z" fill="#EDE4D8"/>
-    <path d="M46 29v9M60 29v9"/>
-    <path d="M50 51c9 2 19-2 25-12"/>
-    <path d="M17 29l40-13 13 61-33 15L17 29Z" fill="#A77B5D"/>
-    <path d="M18 38l45-14" stroke-width="6"/>
-    <path d="M31 65c8 8 25 8 34-4"/>
-  </svg>`,
-  laptopBuddy: `<svg viewBox="0 0 96 96" fill="none" stroke="#3B1D0D" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M35 16c12-11 36-7 44 8 7 14 0 27-14 33 9 7 13 19 8 32H39c-12-6-17-22-10-34-12-3-17-12-14-22 2-7 9-13 20-17Z" fill="#EDE4D8"/>
-    <path d="M44 34v9M57 34v9"/>
-    <path d="M62 60c-6 11-14 16-26 17"/>
-    <path d="M7 57h40l9 27H15L7 57Z" fill="#C9CCCB"/>
-    <path d="M2 84h63"/>
-    <path d="M64 83h28"/>
-  </svg>`,
-  sleepyCup: `<svg viewBox="0 0 96 96" fill="none" stroke="#3B1D0D" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M21 84c-4-18 2-33 15-43-11-6-15-18-9-30 8-15 33-16 47-4 12 11 11 28 1 39 9 8 11 22 6 38H21Z" fill="#EDE4D8"/>
-    <path d="M36 31c4-3 8-3 13-1M58 30c5-1 10 0 14 3"/>
-    <path d="M49 43c-4 5-2 11 4 13"/>
-    <path d="M71 47h17l-2 28c0 4-3 7-7 7h-2c-4 0-7-3-7-7l-2-26 3-2Z" fill="#6D4A36"/>
-    <path d="M70 47l2-6c7-2 13-2 18 1l1 7" fill="#F1C166"/>
-    <circle cx="79" cy="63" r="5" fill="#F1C166"/>
-    <path d="M88 41c4-4 5-8 1-12"/>
-    <path d="M23 62c-7 7-10 15-7 22"/>
-  </svg>`,
+  bicep: `<svg viewBox="0 0 512 512" fill="none"><path fill="#FFD3B6" d="M472 362.5c-6.9-25.8-29.8-48.2-65-58.1c-26.4-7.4-74.2-17.3-118.6-5.5c-26.9 7.1-54.7 23.9-78.1 39.4V335c0-5.7.2-24.7.9-36.4c.4-12.5.8-25.3 1.6-38c.5-12.9 1.5-25.6 2.6-38.2c.8-12.8 2.9-24.6 4.4-36.5c1.9-10.9 5.4-21.5 9.2-31.3c12.8 8.1 30.9 14 53.8 14c30.6 0 45.1-9.4 51.2-16.3c3-3.4 8.2-9.8 3.8-21.9c-4.2-11.3-10.2-9.3-10.2-13.6c0-5.7 2.2-5.5 11-10c20-10.1 17.9-27.4 17.8-43.7c.1-1.2.1-2.3.1-3.5c0-32.8-31.9-59.4-71.1-59.4c-.8 0-1.6 0-2.4.1l-.2-.3c-32.8 0-53.6 9.7-66.1 24.2c-.6.4-1.1.8-1.7 1.3c-1.6 1.6-3.3 3.2-5.1 5c-6.7 6.8-16.8 17.7-20.8 24.6c-5.8 8-11.8 16.9-17.4 26.2c-6.4 9.4-11.8 19.5-18.5 30c-6.6 10.5-12.3 21.9-19.2 33.4c-12.5 23.3-26.7 48-38.9 73.7C83 244.1 71.2 270.3 62.2 296c-4.5 12.9-8.4 25.6-11.7 37.9c-3.1 12.6-6.5 24.1-7.9 35.9c-.2 1.5-.4 3-.5 4.5c-7.8 49.9-8.6 106.5-1.7 115.2c7.9 10.1 29.3 13.1 49.5 11.7c13.8-.9 77.9 10.5 140.5 10.5c3.6.1 7.2.2 10.9.2c47.9.2 100.9-3.3 132.2-17.2c91.6-40.5 113.2-77 98.5-132.2z"/><path fill="#EDC0A2" d="M302.4 434.1c-2.1 0-4.2-.1-6.4-.2c-27.9-1.7-53.4-14.1-71.9-35c-3.4-3.8-3.1-9.7.8-13.1c3.8-3.4 9.7-3.1 13.1.8c15.2 17.2 36.2 27.4 59.1 28.7c22.9 1.4 45-6.3 62.1-21.5c3.8-3.4 9.7-3.1 13.1.8c3.4 3.8 3.1 9.7-.8 13.1c-19.2 17.1-43.5 26.4-69.1 26.4z"/></svg>`,
+  leg: `<svg viewBox="0 0 36 36" fill="none"><path fill="#AF7E57" d="M24.854.731c3.633 1.239 4.935 8.505.991 10.297c-1.586.72-4.049 1.511-6.185 1.032c-2.737-.613-4.721-.238-4.721-.238s4.797 2.19 6.339 6.323c1.542 4.133 1.072 7.171 3.235 9.163c1.708 1.573 2.79 3.7 1.639 4.994c-1.545 1.738-3.929-.028-6.1 2.48c-1.522 1.758-4.81 1.182-7.088.142c-2.879-1.314.807-2.191 1.842-2.297c1.15-.117 5.29-2.348 3.33-5.544c-4.196-6.841-8.501-10.544-11.313-12.61c-2.514-1.846-2.772-5.313-.147-8.465c1.662-1.996 5.229-3.554 9.253-4.733c2.8-.821 5.973-1.551 8.925-.544z"/><path fill="#90603E" d="M8.267 13.047l-.042-.02a.78.78 0 0 1-.324-1.054c1.154-2.179.472-3.999.443-4.076a.783.783 0 0 1 .44-1.01a.777.777 0 0 1 1.009.432c.041.102.993 2.541-.513 5.383a.78.78 0 0 1-1.013.345z"/></svg>`,
+  work: `<svg viewBox="0 0 512 512" fill="none"><path fill="#272F37" d="M122.836 249.195l-48.489-44.149c-17.3-15.753-21.84-41.173-11.062-61.941l12.741-24.55c15.971-30.772 51.954-45.355 84.842-34.383l21.979 7.332c7.848 2.618 12.087 11.102 9.469 18.95c-4.436 13.296-14.75 23.809-27.959 28.497c-7.849 2.786-16.394 2.925-24.33.397c-16.309-5.195-33.989 2.11-41.874 17.303c-3.928 7.568-1.343 16.884 5.923 21.347c12.363 7.592 22.025 18.883 27.614 32.273c3.88 9.296 11.12 16.789 20.278 20.987c6.385 2.928 8.076 11.222 3.347 16.415c-8.539 9.387-23.08 10.068-32.479 2.522z"/><path fill="#6A7379" d="M218.675 133.699h-45.3c-10.598 0-19.598-7.76-21.159-18.243l-5.243-35.229 71.702 1.171V133.699z"/><path fill="#B7B9BC" d="M373.935 319.826H211.012c-4.073 0-7.511 3.028-8.026 7.069l-21.395 168.239c-.602 4.735 3.087 8.924 7.861 8.924h206.039c4.774 0 8.464-4.19 7.861-8.924l-21.392-168.239c-.515-4.04-3.953-7.069-8.025-7.069z"/><path fill="#B7B9BC" d="M211.012 281.972h162.923c4.073 0 7.511-3.028 8.026-7.069L404.489 97.74H180.458l22.529 177.162c.514 4.042 3.952 7.07 8.025 7.07z"/><rect x="212.846" y="281.974" fill="#6A7379" width="159.251" height="37.855"/><path fill="#B7B9BC" d="M258.716 60.862h67.515c2.554 0 5.073.591 7.361 1.725l70.898 35.153H180.458l70.898-35.153c2.287-1.134 4.807-1.725 7.36-1.725z"/><path fill="#6A7379" d="M279.927 60.862h25.093l24.793 36.877H255.135l24.792-36.877z"/><path fill="#272F37" d="M315.71 7.941h-46.473c-3.75 0-6.63 3.322-6.098 7.035l6.578 45.886h45.513l6.578-45.886c.532-3.713-2.348-7.035-6.098-7.035z"/></svg>`,
+  sleep: `<svg viewBox="0 0 512 512" fill="none"><circle fill="#F8E99B" cx="252.278" cy="255.998" r="252.278"/><path fill="#F6E27D" d="M252.278 3.724V508.28c139.329 0 252.278-112.949 252.278-252.278S391.608 3.724 252.278 3.724z"/><path fill="#A58868" d="M159.334 329.03c-30.901 0-60.762-14.752-62.018-15.381l17.772-35.648c.227.112 22.906 11.196 44.246 11.196 21.259 0 43.98-11.063 44.204-11.175l17.813 35.627C220.096 314.278 190.235 329.03 159.334 329.03z"/><path fill="#947859" d="M345.223 329.03c-30.901 0-60.762-14.752-62.018-15.381l17.772-35.648c.227.112 22.906 11.196 44.246 11.196 21.259 0 43.981-11.063 44.204-11.175l17.814 35.627C405.985 314.278 376.124 329.03 345.223 329.03z"/><path fill="#A58868" d="M252.278 435.252c-14.643 0-26.556-11.913-26.556-26.556 0-14.643 11.913-26.556 26.556-26.556 14.645 0 26.556 11.913 26.556 26.556 0 14.643-11.911 26.556-26.556 26.556z"/><polygon fill="#3862CC" points="278.834 222.81 192.528 222.81 178.446 188.811 224.112 143.143 185.889 143.143 185.889 103.31 272.195 103.31 286.277 137.31 240.611 182.977 278.834 182.977"/><polygon fill="#3862CC" points="391.695 196.252 305.389 196.252 291.307 162.253 336.973 116.585 298.751 116.585 298.751 76.752 385.056 76.752 399.139 110.752 353.472 156.418 391.695 156.418"/><polygon fill="#3862CC" points="504.556 169.696 418.251 169.696 404.168 135.697 449.835 90.029 411.612 90.029 411.612 50.196 497.918 50.196 512 84.197 466.334 129.863 504.556 129.863"/></svg>`,
+  morning: `<svg viewBox="0 0 1024 1024" fill="none"><path d="M155.864 538.294a343.871 342.482 90 1 0 684.965 0 343.871 342.482 90 1 0-684.965 0Z" fill="#FFCA6C"/><path d="M766.407 538.294c0 148.662-120.013 269.175-268.06 269.175-33.678 0-65.9-6.235-95.585-17.613a269.232 269.232 0 0 1-172.487-251.562c0-148.64 120.013-269.164 268.083-269.164 39.754 0 77.494 8.704 111.423 24.303A269.232 269.232 0 0 1 766.407 538.294z" fill="#F2F2F2"/><path d="M766.407 538.294c0 148.662-120.013 269.175-268.06 269.175-33.678 0-65.9-6.235-95.585-17.613L609.781 293.433A269.232 269.232 0 0 1 766.407 538.294z" fill="#FFF"/><path d="M873.381 386.992l-87.916-88.246a2.15 2.15 0 0 1-.228-.228l-24.041-24.132-112.174-112.629c49.55-49.766 123.734-59.71 183.149-29.866v.023c14.859 7.43 28.786 17.408 41.21 29.844 61.918 62.202 61.918 163.055 0 225.234z" fill="#FFCA6C"/><path d="M123.335 387.004c-61.94-62.202-61.94-163.044 0-225.246 61.952-62.202 162.384-62.202 224.336 0L235.508 274.375 123.335 387.004z" fill="#FFCA6C"/><path d="M498.347 553.882c8.556 0 15.519-6.975 15.519-15.576V412.5c0-8.602-6.952-15.576-15.52-15.576-8.566 0-15.518 6.974-15.518 15.576v110.228h-58.857c-8.568 0-15.52 6.963-15.52 15.576s6.941 15.576 15.52 15.576h74.376z" fill="#333"/></svg>`,
+  money: `<svg viewBox="0 -196 1416 1416" fill="none"><path d="M55.351 290.041h1038.391c18.82 0 33.211 14.391 33.211 33.211v645.397c0 18.819-14.391 33.21-33.211 33.21H55.351c-18.819 0-33.21-14.391-33.21-33.21V323.252c0-17.713 14.391-33.211 33.21-33.211z" fill="#9DBE87"/><path d="M954.257 902.227H194.837c0-52.03-43.174-95.204-95.204-95.204V472.7c52.03 0 95.204-43.174 95.204-95.204h759.42c0 52.03 43.175 95.204 95.205 95.204v334.322c-53.137 0-95.205 43.174-95.205 95.204z" fill="#D6F0C5"/><path d="M576.761 790.417c-35.425 0-73.064-13.284-99.632-47.602c-7.75-9.963-5.535-23.247 3.321-30.997c9.963-7.749 23.247-5.535 30.997 3.321c26.568 34.318 67.528 35.425 94.097 26.569c22.14-7.75 35.424-22.141 35.424-37.639c0-14.391-34.317-24.354-64.207-33.21c-46.495-14.392-105.168-30.997-105.168-86.349c0-26.568 16.606-50.923 45.388-65.314c35.425-17.713 95.205-24.355 151.663 16.605c9.963 7.749 12.177 21.034 4.428 30.997c-7.749 9.963-21.034 12.177-30.997 4.428c-37.639-27.676-79.706-26.569-105.168-13.284c-13.284 6.642-22.14 16.605-22.14 26.568c0 21.034 30.996 30.997 73.063 44.281c45.388 13.284 95.205 28.783 95.205 75.278c0 34.318-25.462 65.315-65.315 79.706c-11.07 3.321-26.568 6.642-40.96 6.642z" fill="#131313"/><path d="M574.547 549.085c-12.177 0-22.14-9.963-22.14-22.14v-48.71c0-12.177 9.963-22.14 22.14-22.14s22.14 9.963 22.14 22.14v48.71c0 13.284-9.963 22.14-22.14 22.14z" fill="#131313"/><path d="M574.547 832.484c-12.177 0-22.14-9.963-22.14-22.14v-36.532c0-12.177 9.963-22.14 22.14-22.14s22.14 9.963 22.14 22.14v36.532c0 12.177-9.963 22.14-22.14 22.14z" fill="#131313"/><circle cx="285.613" cy="653.146" r="40.96" fill="#AECD99"/><circle cx="865.695" cy="653.146" r="40.96" fill="#AECD99"/></svg>`,
+  bill: `<svg viewBox="0 0 1024 1024" fill="none"><path d="M853.333333 874.666667H170.666667c-46.933333 0-85.333333-38.4-85.333334-85.333334V343.466667c0-27.733333 12.8-53.333333 36.266667-70.4L512 0l390.4 273.066667c23.466667 14.933333 36.266667 42.666667 36.266667 70.4V789.333333c0 46.933333-38.4 85.333333-85.333334 85.333334z" fill="#78909C"/><path d="M298.666667 21.333333h426.666666v661.333334H298.666667z" fill="#AED581"/><path d="M277.333333 0v704h469.333334V0H277.333333z m426.666667 661.333333H320V42.666667h384v618.666666z" fill="#558B2F"/><path d="M725.333333 64c0 36.266667-6.4 64-42.666666 64s-64-27.733333-64-64 27.733333-42.666667 64-42.666667 42.666667 6.4 42.666666 42.666667zM341.333333 21.333333c36.266667 0 64 6.4 64 42.666667s-27.733333 64-64 64-42.666667-27.733333-42.666666-64 6.4-42.666667 42.666666-42.666667z" fill="#558B2F"/><path d="M512 170.666667m-42.666667 0a42.666667 42.666667 0 1 0 85.333334 0 42.666667 42.666667 0 1 0-85.333334 0Z" fill="#558B2F"/><path d="M512 426.666667m-128 0a128 128 0 1 0 256 0 128 128 0 1 0-256 0Z" fill="#558B2F"/><path d="M853.333333 874.666667H170.666667c-46.933333 0-85.333333-38.4-85.333334-85.333334V362.666667l426.666667 277.333333 426.666667-277.333333v426.666666c0 46.933333-38.4 85.333333-85.333334 85.333334z" fill="#CFD8DC"/></svg>`,
+  academic: `<svg viewBox="0 0 512 512" fill="none"><rect y="8.198" fill="#CFDCE5" width="370.957" height="495.607"/><path fill="#4EBFED" d="M432.203 93.909l39.898-85.711 39.898 85.711v385.139c0 13.673-11.083 24.756-24.756 24.756h-30.286c-13.673 0-24.756-11.083-24.756-24.756V93.909z"/><path fill="#FF6F52" d="M511.996 438.44v40.606c0 13.671-11.086 24.757-24.757 24.757h-30.287c-13.671 0-24.744-11.086-24.744-24.757V438.44h79.788z"/><rect x="473.027" y="93.909" fill="#97E1F7" width="14.845" height="344.529"/><path fill="#3BA4BC" d="M432.203 479.048c0 13.673 11.083 24.756 24.756 24.756h7.55c-6.855 0-12.414-11.083-12.414-24.756V93.909l20.007-85.711-39.898 85.711v385.139z"/><polygon fill="#FCD577" points="511.996 93.91 432.208 93.91 472.096 8.195"/><path fill="#E25749" d="M464.512 503.802h-7.559c-13.671 0-24.744-11.086-24.744-24.757V438.44h19.882v40.606c0 13.671 5.567 24.756 12.421 24.756z"/><polygon fill="#EAC36E" points="452.09 93.91 432.208 93.91 472.096 8.195"/><rect x="432.199" y="429.156" fill="#FCD577" width="79.801" height="18.558"/><rect x="76.918" y="72.858" fill="#415E72" width="217.12" height="18.558"/><rect x="268.279" y="168.287" fill="#415E72" width="56.291" height="18.558"/><rect x="46.393" y="168.287" fill="#415E72" width="209.511" height="18.558"/><rect x="46.393" y="264.395" fill="#415E72" width="278.177" height="18.558"/><rect x="121.681" y="216.341" fill="#415E72" width="202.892" height="18.558"/><rect x="46.393" y="216.341" fill="#415E72" width="62.912" height="18.558"/><rect x="46.393" y="408.556" fill="#415E72" width="278.177" height="18.558"/><rect x="244.154" y="360.502" fill="#415E72" width="80.416" height="18.558"/><rect x="46.393" y="360.502" fill="#415E72" width="185.385" height="18.558"/></svg>`,
 };
 
 function themeIcon(name, cls = '') {
-  return `<span class="theme-sticker ${cls}" aria-hidden="true">${THEME_ICONS[name] || THEME_ICONS.beans}</span>`;
+  if (!THEME_ICONS[name]) return '';
+  return `<span class="theme-sticker ${cls}" aria-hidden="true">${THEME_ICONS[name]}</span>`;
 }
 
 function themeSprinkles(items = []) {
-  if (!items.length) return '';
-  return `<div class="theme-sprinkles" aria-hidden="true">${items.map(item => themeIcon(item.name, `${item.pos || 'top-right'} ${item.size || 'large'}`)).join('')}</div>`;
+  return '';
 }
 
-function themePageHeader(title, subtitle, icons = ['laptopBuddy', 'beans']) {
+function themePageHeader(title, subtitle, icons = []) {
   return `<div class="page-header theme-page-header theme-card">
     <div class="page-header-main"><div><div class="page-greeting">${esc(title)}</div><div class="page-date">${esc(subtitle)}</div></div></div>
-    <div class="theme-header-icons">${icons.map((name, idx) => themeIcon(name, idx % 2 ? 'small' : 'medium')).join('')}</div>
+    ${icons.length ? `<div class="theme-header-icons">${icons.map((name, idx) => themeIcon(name, idx % 2 ? 'small' : 'medium')).join('')}</div>` : ''}
   </div>`;
 }
 
-function themeDivider(left = 'beans', right = 'doubleMug') {
-  return `<div class="theme-divider">${themeIcon(left, 'small')}${themeIcon(right, 'small')}</div>`;
+function themeDivider() {
+  return `<div class="theme-divider"></div>`;
 }
 
 function scheduleThemeIcon(type) {
   const map = {
-    work: 'laptopBuddy',
-    routine: 'pourBuddy',
-    gym: 'bigCup',
-    appointment: 'sleepyCup',
-    personal: 'doubleMug',
-    academic: 'laptopBuddy',
-    sleep: 'doubleMug',
-    bill: 'beans'
+    work: 'work',
+    gym: 'bicep',
+    academic: 'academic',
+    bill: 'bill'
   };
-  return map[type] || 'beans';
+  return map[type] || '';
 }
 
 function monthStickerForTags(tags) {
-  if (tags.some(t => t.cls === 'gym')) return 'bigCup';
-  if (tags.some(t => t.cls === 'work')) return 'laptopBuddy';
-  if (tags.some(t => String(t.cls).includes('income'))) return 'beans';
-  if (tags.some(t => t.cls === 'bill')) return 'beans';
-  if (tags.some(t => t.cls === 'academic')) return 'laptopBuddy';
-  return tags.length ? 'doubleMug' : '';
+  if (tags.some(t => t.cls === 'gym')) return 'bicep';
+  if (tags.some(t => t.cls === 'work')) return 'work';
+  if (tags.some(t => String(t.cls).includes('income'))) return 'money';
+  if (tags.some(t => t.cls === 'bill')) return 'bill';
+  if (tags.some(t => t.cls === 'academic')) return 'academic';
+  return '';
 }
 
 function stickySticker(i) {
-  const icons = ['beans', 'sleepyCup', 'laptopBuddy', 'doubleMug', 'pourBuddy'];
-  return themeIcon(icons[i % icons.length], 'note-sticker');
+  return '';
 }
 
 const ICONS = {
@@ -2951,7 +2969,11 @@ function getTimeGreeting() {
 
 function formatDate(d) { return (d || new Date()).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }); }
 function normalizeGymKind(kind) {
-  return ['gym', 'upper', 'lower', 'scheduled'].includes(String(kind || '').toLowerCase()) ? 'gym' : 'rest';
+  const k = String(kind || '').toLowerCase();
+  if (k === 'upper') return 'upper';
+  if (k === 'lower') return 'lower';
+  if (['gym', 'scheduled'].includes(k)) return 'gym';
+  return 'rest';
 }
 function defaultGymKind() { return 'rest'; }
 function getGymPlanForDate(date = new Date()) {
@@ -2962,7 +2984,7 @@ function getGymPlanForDate(date = new Date()) {
 function isGymDay(date = new Date()) { return getGymTypeInfo(getGymPlanForDate(date)) !== null; }
 function isFriday() { return new Date().getDay() === 5; }
 function getWorkout(dow) { return GYM_SCHEDULE[dow === undefined ? new Date().getDay() : dow] || null; }
-function getGymTypeInfo(kind) { return normalizeGymKind(kind) === 'gym' ? GYM_TYPES.gym : null; }
+function getGymTypeInfo(kind) { const k = normalizeGymKind(kind); return ['gym','upper','lower'].includes(k) ? GYM_TYPES.gym : null; }
 function currentHour() { return new Date().getHours(); }
 
 function imgTag() { return ''; }
@@ -3023,6 +3045,7 @@ let scheduleDay = null;
 let scheduleWeekOffset = 0;
 let calendarMonthOffset = 0;
 let billMonthOffset = 0;
+let highlightedAcademicEventId = null;
 
 function getScheduleWeekStart() {
   return addDays(startOfWeek(new Date()), scheduleWeekOffset * 7);
@@ -3084,11 +3107,12 @@ function renderToday() {
   const plan = ls(`gnd-${todayKey()}-plan`, null);
 
   let html = buildMonthCalendar();
+  html += buildDueSoonSection();
   html += buildScheduleSection();
   html += buildHomeGymCheck(gym);
 
   html += `<div class="shift-import-card theme-row-card" style="background:var(--success-light);border-color:var(--success);">
-    ${themeIcon('bigCup', 'theme-corner')}
+    ${themeIcon('bicep', 'theme-corner')}
     <div class="shift-import-copy"><strong>Schedule gym sessions.</strong><br>Paste dated sessions and I will fill the calendar.</div>
     <button class="shift-import-btn" style="background:var(--success);" onclick="openGymImportModal()">Add sessions</button>
   </div>`;
@@ -3112,7 +3136,7 @@ function renderToday() {
   html += `<button class="sticky-add" onclick="addSticky()">+</button>`;
   html += `</div></div>`;
 
-  html += themeDivider('beans', 'doubleMug');
+  html += themeDivider('puppy', 'puppy');
 
   document.getElementById('page-today').innerHTML = html;
 }
@@ -3126,7 +3150,7 @@ function buildMonthCalendar() {
   const selectedKey = localDateKey(getScheduleViewDate());
   const monthName = focus.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
-  let html = `<div class="card month-card theme-card"><div class="month-head"><div><div class="month-title">${monthName}</div><div class="page-date">${getTimeGreeting()} · ${formatDate()}</div></div><div class="theme-header-icons">${themeIcon('sleepyCup', 'small')}${themeIcon('beans', 'small')}</div><div class="month-nav">
+  let html = `<div class="card month-card theme-card"><div class="month-head"><div><div class="month-title">${monthName}</div><div class="page-date">${getTimeGreeting()} · ${formatDate()}</div></div><div class="month-nav">
     <button class="tiny-nav-btn" onclick="moveCalendarMonth(-1)" title="Previous month" ${calendarMonthOffset===0?'disabled':''}>&#8249;</button>
     <div class="month-count">${calendarMonthOffset + 1}/3</div>
     <button class="tiny-nav-btn" onclick="moveCalendarMonth(1)" title="Next month" ${calendarMonthOffset===2?'disabled':''}>&#8250;</button>
@@ -3142,11 +3166,9 @@ function buildMonthCalendar() {
       dk === todayKey() ? 'today' : '',
       dk === selectedKey ? 'selected' : ''
     ].filter(Boolean).join(' ');
-    const sticker = monthStickerForTags(tags);
     html += `<button class="month-cell ${cls}" onclick="openDayModal('${dk}')">
       <div class="month-date">${d.getDate()}</div>
-      <div class="month-tags">${tags.slice(0,3).map(t => `<div class="month-tag ${t.cls}">${esc(t.label)}</div>`).join('')}</div>
-      ${sticker ? themeIcon(sticker, 'month-day-sticker') : ''}
+      <div class="month-tags">${tags.slice(0,3).map(t => t.icon ? themeIcon(t.icon, 'month-day-sticker') : `<div class="month-tag ${t.cls}">${esc(t.label)}</div>`).join('')}</div>
     </button>`;
   }
   html += `</div></div>`;
@@ -3157,17 +3179,17 @@ function monthTagsForDate(date) {
   const dk = localDateKey(date);
   const events = getEventsForDate(dk);
   const tags = [];
-  if (events.some(e => e.type === 'work')) tags.push({ label: 'Work', cls: 'work' });
-  const gymKind = getGymPlanForDate(date);
-  const gym = getGymTypeInfo(gymKind);
-  if (gym) {
-    tags.push({ label: gym.calendar, cls: 'gym' });
+  if (events.some(e => e.type === 'work')) tags.push({ label: 'Work', cls: 'work', icon: 'work' });
+  const gymKind = normalizeGymKind(getGymPlans()[dk]);
+  if (['gym','upper','lower'].includes(gymKind)) {
+    tags.push({ label: gymKind === 'lower' ? 'Lower' : 'Upper', cls: 'gym', icon: gymKind === 'lower' ? 'leg' : 'bicep' });
   }
-  if (events.some(e => e.type === 'academic')) tags.push({ label: 'Academic', cls: 'academic' });
+  if (events.some(e => e.type === 'academic')) tags.push({ label: 'Academic', cls: 'academic', icon: 'academic' });
   incomeOccurrencesForDate(date).forEach(occ => {
-    tags.push({ label: occ.cadence === 'biweekly' ? 'Payday' : 'Income', cls: `income ${occ.cadence}` });
+    if (occ.cadence === 'biweekly') tags.push({ label: 'Payday', cls: 'income biweekly', icon: 'money' });
+    else tags.push({ label: 'Income', cls: `income ${occ.cadence}` });
   });
-  BILLS.filter(b => b.day === date.getDate()).forEach(b => tags.push({ label: b.name, cls: 'bill' }));
+  BILLS.filter(b => b.day === date.getDate()).forEach(b => tags.push({ label: b.name, cls: 'bill', icon: 'bill' }));
   if (events.some(e => e.type !== 'work' && e.type !== 'academic')) tags.push({ label: 'Plans', cls: '' });
   return tags;
 }
@@ -3180,7 +3202,7 @@ function buildHomeGymCheck(gym) {
   const done = !!gym.completed;
   const title = scheduled ? 'Gym today' : 'No gym scheduled today';
   return `<div class="home-gym-card theme-row-card"><div class="home-gym-row">
-    ${themeIcon(scheduled ? 'bigCup' : 'doubleMug', 'theme-corner')}
+    ${scheduled ? themeIcon('bicep', 'theme-corner') : ''}
     <div><div class="home-gym-title">${esc(title)}</div></div>
     <button class="home-gym-btn ${done?'done':''}" onclick="toggleGymToday()">${done ? 'Went today' : 'Did I go?'}</button>
   </div>${scheduled ? `<div class="gym-chip-row"><span class="gym-type-chip gym">Scheduled</span></div>` : ''}</div>`;
@@ -3202,18 +3224,190 @@ function getBaseScheduleBlocks(dayOfWeek, dateKey = null) {
   return blocks;
 }
 
+const MORNING_ROUTINE_BUFFER_MINUTES = 15;
+const MORNING_ROUTINE_MIN_MINUTES = 20;
+const MORNING_ROUTINE_EARLIEST_AUTO_MINUTE = 4 * 60;
+
+function getEarliestWorkShiftForDate(dateKey, events = getEvents()) {
+  return getEventsForDateFromList(dateKey, events)
+    .filter(e => e.type === 'work' && e.start)
+    .sort((a, b) => timeToMinutes(a.start) - timeToMinutes(b.start))[0] || null;
+}
+
+function addAutoRoutineDetail(block, note) {
+  return { ...block, detail: block.detail || note };
+}
+
+function adaptMorningRoutineBlockForDate(dateKey, block, events = getEvents()) {
+  if (!dateKey || !block || block.blockKey !== 'morning') return block;
+  const work = getEarliestWorkShiftForDate(dateKey, events);
+  if (!work) return block;
+
+  const workStart = timeToMinutes(work.start);
+  const start = timeToMinutes(block.time);
+  let end = timeToMinutes(block.end || block.time);
+  if (end <= start) end = start + 60;
+  if (workStart >= end) return block;
+
+  const targetEnd = workStart - MORNING_ROUTINE_BUFFER_MINUTES;
+  const earliestStart = Math.min(start, MORNING_ROUTINE_EARLIEST_AUTO_MINUTE);
+  const originalDuration = Math.max(MORNING_ROUTINE_MIN_MINUTES, end - start);
+  const available = targetEnd - earliestStart;
+
+  if (available >= originalDuration) {
+    return addAutoRoutineDetail({
+      ...block,
+      time: minutesToClock(targetEnd - originalDuration),
+      end: minutesToClock(targetEnd),
+      routineAdjust: 'shifted',
+      workStart: work.start
+    }, 'Early shift: moved before work with a little breathing room.');
+  }
+
+  if (available >= MORNING_ROUTINE_MIN_MINUTES) {
+    return addAutoRoutineDetail({
+      ...block,
+      title: 'Morning Basics',
+      time: minutesToClock(earliestStart),
+      end: minutesToClock(targetEnd),
+      routineAdjust: 'shortened',
+      workStart: work.start
+    }, 'Early shift: shortened to the essentials before work.');
+  }
+
+  const pinTime = Math.max(0, Math.min(workStart, earliestStart));
+  return addAutoRoutineDetail({
+    ...block,
+    title: 'Morning Basics',
+    time: minutesToClock(pinTime),
+    end: minutesToClock(pinTime),
+    routineAdjust: 'collapsed',
+    workStart: work.start
+  }, 'Early shift: tiny version. Do what helps; no full block expected.');
+}
+
 function applyScheduleCustom(dayOfWeek, block) {
   const customKey = `${dayOfWeek}-${block.blockKey}`;
   const custom = getScheduleCustom()[customKey] || {};
   return { ...block, ...custom, customKey, source: 'default' };
 }
 
-function getScheduleBlockByKey(customKey) {
+function getScheduleBlockByKey(customKey, dateKey = null) {
   const parts = String(customKey || '').split('-');
   const dayOfWeek = Number(parts.shift());
   const blockKey = parts.join('-');
   const base = getBaseScheduleBlocks(dayOfWeek).find(b => b.blockKey === blockKey);
-  return base ? applyScheduleCustom(dayOfWeek, base) : null;
+  if (!base) return null;
+  const block = applyScheduleCustom(dayOfWeek, base);
+  return dateKey ? adaptMorningRoutineBlockForDate(dateKey, block) : block;
+}
+
+function getMorningRoutineBlockForDate(dateKey, events = getEvents()) {
+  const dayOfWeek = dateFromKey(dateKey).getDay();
+  const base = getBaseScheduleBlocks(dayOfWeek, dateKey).find(b => b.blockKey === 'morning');
+  return base ? adaptMorningRoutineBlockForDate(dateKey, applyScheduleCustom(dayOfWeek, base), events) : null;
+}
+
+function academicTextKey(value) {
+  return String(value || '').replace(/\s+/g, ' ').trim().toLowerCase();
+}
+
+function academicEventDueDate(event) {
+  return event.academicDueDate || parseAcademicDueDateFromText(event.detail) || '';
+}
+
+function academicEventMatchesAssignment(event, assignment) {
+  if (!event || event.type !== 'academic' || !assignment) return false;
+  if (event.academicAssignmentId && assignment.id && event.academicAssignmentId === assignment.id) return true;
+
+  const eventDue = academicEventDueDate(event);
+  if (eventDue && eventDue !== assignment.dueDate) return false;
+
+  const eventClass = academicClassKey(event.academicClass || '');
+  const assignmentClass = academicClassKey(assignment.className || '');
+  if (eventClass && assignmentClass && eventClass !== assignmentClass) return false;
+
+  const title = academicTextKey(assignment.title);
+  const eventText = academicTextKey(event.academicAssignmentTitle || event.detail || event.title);
+  return !!title && !!eventText && (eventText.includes(title) || title.includes(eventText));
+}
+
+function academicBlocksForAssignment(assignment, events = getEvents()) {
+  return events
+    .filter(event => academicEventMatchesAssignment(event, assignment))
+    .sort((a, b) => (a.date || '').localeCompare(b.date || '') || (a.start || '').localeCompare(b.start || ''));
+}
+
+function academicCountdownText(daysUntil) {
+  if (daysUntil === 0) return 'Due today';
+  if (daysUntil === 1) return '1 day left';
+  return `${daysUntil} days left`;
+}
+
+function getDueSoonAcademicItems() {
+  const today = dateFromKey(todayKey());
+  const events = getEvents();
+  return getAcademicAssignments()
+    .map(assignment => {
+      if (!assignment?.dueDate) return null;
+      const due = dateFromKey(assignment.dueDate);
+      if (Number.isNaN(due.getTime())) return null;
+      const daysUntil = Math.round((due - today) / 86400000);
+      if (daysUntil < 0 || daysUntil > 7) return null;
+      const blocks = academicBlocksForAssignment(assignment, events)
+        .filter(block => (block.date || '') >= todayKey());
+      return { assignment, due, daysUntil, blocks };
+    })
+    .filter(Boolean)
+    .sort((a, b) =>
+      a.daysUntil - b.daysUntil ||
+      academicTextKey(a.assignment.className).localeCompare(academicTextKey(b.assignment.className)) ||
+      academicTextKey(a.assignment.title).localeCompare(academicTextKey(b.assignment.title))
+    );
+}
+
+function academicBlockLinkLabel(block) {
+  const date = dateFromKey(block.date);
+  const day = DAY_NAMES[date.getDay()] || '';
+  return `${day} ${formatTime(block.start)}`;
+}
+
+function buildDueSoonSection() {
+  const items = getDueSoonAcademicItems();
+  if (!items.length) return '';
+
+  const visible = items.slice(0, 6);
+  let html = `<div class="card theme-card due-soon-card">
+    ${themeIcon('work', 'theme-corner bottom-right')}
+    <div class="due-soon-head">
+      <div><div class="card-title">Due Soon</div><div class="page-date">Next 7 days</div></div>
+      <div class="due-soon-count">${items.length}</div>
+    </div>
+    <div class="due-soon-list">`;
+
+  visible.forEach(item => {
+    const countdownClass = item.daysUntil === 0 ? 'now' : item.daysUntil <= 2 ? 'soon' : '';
+    const links = item.blocks.length
+      ? item.blocks.slice(0, 3).map(block => `<button class="due-soon-link" onclick="openDayModal('${attr(block.date)}','${attr(block.id || '')}')">${esc(academicBlockLinkLabel(block))}</button>`).join('')
+      : `<span class="due-soon-muted">No block scheduled</span>`;
+    const extraBlocks = item.blocks.length > 3 ? `<span class="due-soon-muted">+${item.blocks.length - 3} more</span>` : '';
+
+    html += `<div class="due-soon-row">
+      <div class="due-soon-top">
+        <span class="due-soon-class">${esc(item.assignment.className || 'Class')}</span>
+        <span class="due-soon-countdown ${countdownClass}">${esc(academicCountdownText(item.daysUntil))}</span>
+      </div>
+      <div class="due-soon-title">${esc(item.assignment.title || 'Assignment')}</div>
+      <div class="due-soon-date">Due ${formatShortDate(item.due)}</div>
+      <div class="due-soon-links">${links}${extraBlocks}</div>
+    </div>`;
+  });
+
+  if (items.length > visible.length) {
+    html += `<div class="due-soon-more">+${items.length - visible.length} more this week</div>`;
+  }
+
+  return html + `</div></div>`;
 }
 
 function buildScheduleSection() {
@@ -3227,20 +3421,19 @@ function buildScheduleSection() {
   const weekEnd = addDays(weekStart, 6);
 
   let html = `<div class="shift-import-card theme-row-card">
-    ${themeIcon('laptopBuddy', 'theme-corner')}
+    ${themeIcon('work', 'theme-corner')}
     <div class="shift-import-copy"><strong>Work shifts in one brain-dump.</strong><br>Paste dated shifts, and I will fill the calendar.</div>
     <button class="shift-import-btn" onclick="openShiftImportModal()">Add shifts</button>
   </div>`;
 
   html += `<div class="shift-import-card theme-row-card" style="background:#DCEBFF;border-color:#7DA8E8;">
-    ${themeIcon('pourBuddy', 'theme-corner')}
     <div class="shift-import-copy"><strong>Syllabus to study blocks.</strong><br>Paste class deadlines and I will place Academic blocks around what is already scheduled.</div>
     <button class="shift-import-btn" style="background:#37679E;" onclick="openSyllabusImportModal()">Import syllabus</button>
   </div>`;
 
   html += buildAcademicBalanceCard();
 
-  html += `<div class="card theme-card">${themeIcon('doubleMug', 'theme-corner bottom-right')}<div class="week-planner-head"><div><div class="week-planner-title">Week Planner</div><div class="page-date">${formatShortDate(weekStart)} - ${formatShortDate(weekEnd)}</div></div><div class="week-planner-actions">
+  html += `<div class="card theme-card"><div class="week-planner-head"><div><div class="week-planner-title">Week Planner</div><div class="page-date">${formatShortDate(weekStart)} - ${formatShortDate(weekEnd)}</div></div><div class="week-planner-actions">
     <button class="tiny-nav-btn" onclick="moveScheduleWeek(-1)" title="Previous week">&#8249;</button>
     <button class="tiny-nav-btn" onclick="resetScheduleWeek()" title="This week">•</button>
     <button class="tiny-nav-btn" onclick="moveScheduleWeek(1)" title="Next week">&#8250;</button>
@@ -3273,7 +3466,10 @@ function buildScheduleSection() {
 function getScheduleBlocksForDate(dateKey, events = getEvents()) {
   const viewDate = dateFromKey(dateKey);
   const dayOfWeek = viewDate.getDay();
-  const blocks = getBaseScheduleBlocks(dayOfWeek, dateKey).map(b => applyScheduleCustom(dayOfWeek, b));
+  const blocks = getBaseScheduleBlocks(dayOfWeek, dateKey).map(b => {
+    const block = applyScheduleCustom(dayOfWeek, b);
+    return adaptMorningRoutineBlockForDate(dateKey, block, events);
+  });
 
   getEventsForDateFromList(dateKey, events).forEach(ev => {
     blocks.push({ id: ev.id, source: 'event', time: ev.start, end: ev.end || ev.start, title: ev.title, type: ev.type, detail: ev.detail, date: ev.date, recurring: ev.recurring, recurDays: ev.recurDays });
@@ -3355,7 +3551,8 @@ function buildTimelineHtml(dateKey, allowEdit = true) {
     const canEdit = allowEdit && b.editable !== false;
     const top = Math.max(0, (b.start - windowStart) * pxPerMinute);
     const height = Math.max(34, b.duration * pxPerMinute);
-    html += `<div class="timeline-block" style="top:${top}px;height:${height}px;--block-color:${evColor(b.type)};">
+    const highlightClass = highlightedAcademicEventId && b.id === highlightedAcademicEventId ? ' highlighted' : '';
+    html += `<div class="timeline-block${highlightClass}" style="top:${top}px;height:${height}px;--block-color:${evColor(b.type)};">
       <div class="timeline-block-title">${esc(b.title)}</div>
       <div class="timeline-block-time">${formatTime(b.time)}${b.end && b.end !== b.time ? ` - ${formatTime(b.end)}` : ''}</div>
       ${b.detail ? `<div class="timeline-block-detail">${esc(b.detail)}</div>` : ''}
@@ -3422,7 +3619,14 @@ function buildDayMoneyHtml(dateKey) {
   return html + `</div></div>`;
 }
 
-function openDayModal(dateKey) {
+function scrollHighlightedAcademicBlock() {
+  if (!highlightedAcademicEventId) return;
+  const block = document.querySelector('.timeline-block.highlighted');
+  if (block) block.scrollIntoView({ block: 'center', behavior: 'smooth' });
+}
+
+function openDayModal(dateKey, highlightEventId = '') {
+  highlightedAcademicEventId = highlightEventId || null;
   const date = dateFromKey(dateKey);
   const current = startOfWeek(new Date());
   const target = startOfWeek(date);
@@ -3431,6 +3635,7 @@ function openDayModal(dateKey) {
   renderToday();
   renderDayModal(dateKey);
   document.getElementById('day-modal').classList.add('open');
+  setTimeout(scrollHighlightedAcademicBlock, 60);
 }
 
 function renderDayModal(dateKey) {
@@ -3446,7 +3651,7 @@ function renderDayModal(dateKey) {
   <div class="agenda-day-title"><strong>Timed agenda</strong><span>Real time blocks</span></div>
   ${buildTimelineHtml(dateKey, true)}
   ${buildDayMoneyHtml(dateKey)}
-  ${themeDivider('beans', 'sleepyCup')}
+  ${themeDivider('puppy', 'puppy')}
   <div class="day-modal-actions">
     <button class="add-btn" onclick="rebalanceAcademicBlocksNow(true)" style="border-style:solid;margin:0;">Rebalance Academic Blocks</button>
     <button class="modal-submit" onclick="document.getElementById('day-modal').classList.remove('open');openEventModal('${dateKey}')">Add Event</button>
@@ -3501,7 +3706,7 @@ function buildAcademicBalanceCard() {
     }
   }
   return `<div class="academic-balance-card theme-row-card">
-    ${themeIcon('laptopBuddy', 'theme-corner')}
+    ${themeIcon('work', 'theme-corner')}
     <div class="academic-balance-copy"><strong>Academic auto-balance.</strong><br>${esc(line)}</div>
     <button class="academic-balance-btn" onclick="rebalanceAcademicBlocksNow(true)">Rebalance now</button>
   </div>`;
@@ -4074,7 +4279,7 @@ function addWorkTask() {
   renderRoutines();
 }
 
-function buildCollapseSection(id, title, sub, isOpen, content, icon = 'beans') {
+function buildCollapseSection(id, title, sub, isOpen, content, icon = '') {
   const chevron = `<svg class="collapse-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>`;
   return `<div class="collapse-section theme-card">
     ${themeIcon(icon, 'theme-corner')}
@@ -4084,6 +4289,20 @@ function buildCollapseSection(id, title, sub, isOpen, content, icon = 'beans') {
     </div>
     <div class="collapse-body ${isOpen?'open':''}">${content}</div>
   </div>`;
+}
+
+function routineTimeRangeLabel(block) {
+  if (!block) return '6:00 AM - 7:00 AM';
+  if (!block.end || block.end === block.time) return formatTime(block.time);
+  return `${formatTime(block.time)} - ${formatTime(block.end)}`;
+}
+
+function morningRoutineSub(done, total, block) {
+  let label = routineTimeRangeLabel(block);
+  if (block?.routineAdjust === 'shifted') label += ' · early shift version';
+  if (block?.routineAdjust === 'shortened') label += ' · essentials before work';
+  if (block?.routineAdjust === 'collapsed') label = `tiny version before ${formatTime(block.workStart)} shift`;
+  return `${done}/${total} done · ${label}`;
 }
 
 function renderRoutines() {
@@ -4098,11 +4317,12 @@ function renderRoutines() {
 
   if (!routineOpenState) routineOpenState = getDefaultRoutineOpen();
 
-  let html = themePageHeader('Routines', 'Just do the next thing.', ['pourBuddy', 'doubleMug', 'beans']);
+  let html = themePageHeader('Routines', 'Just do the next thing.', ['morning', 'sleep']);
+  const morningBlock = getMorningRoutineBlockForDate(todayKey());
 
-  html += buildCollapseSection('morning', 'Morning', `${mDone}/${MORNING_ITEMS.length} done · 6 – 7 AM`, routineOpenState.morning,
+  html += buildCollapseSection('morning', 'Morning', morningRoutineSub(mDone, MORNING_ITEMS.length, morningBlock), routineOpenState.morning,
     ring(mDone, MORNING_ITEMS.length) + buildRoutineChecklist('morning', MORNING_ITEMS, morn),
-    'pourBuddy'
+    'morning'
   );
 
   const todayEvents = getEventsForDate(todayKey());
@@ -4110,20 +4330,20 @@ function renderRoutines() {
   const workSub = workShift ? `${formatTime(workShift.start)} – ${formatTime(workShift.end)}` : 'No shift today';
   html += buildCollapseSection('work', 'Work', workSub + (wDone ? ` · ${wDone}/${workTasks.length} tasks` : ''), routineOpenState.work,
     buildWorkBlock(workTasks),
-    'laptopBuddy'
+    'work'
   );
 
   html += buildCollapseSection('evening', 'Evening', `${eDone}/${EVENING_ITEMS.length} done · 8 – 10 PM`, routineOpenState.evening,
     ring(eDone, EVENING_ITEMS.length) + buildRoutineChecklist('evening', EVENING_ITEMS, eve),
-    'sleepyCup'
+    'sleep'
   );
 
   html += buildCollapseSection('todo', "Today's To-Do's", `${tDone}/${todos.length} done`, routineOpenState.todo,
     buildTodayTodosContent(),
-    'beans'
+    'sleep'
   );
 
-  html += themeDivider('beans', 'laptopBuddy');
+  html += themeDivider();
   document.getElementById('page-routines').innerHTML = html;
 }
 
@@ -4248,21 +4468,21 @@ function renderGym() {
   const gymKind = getGymPlanForDate();
   const gymInfo = getGymTypeInfo(gymKind);
 
-  let html = themePageHeader('Gym', gymInfo ? 'Scheduled today' : 'Not scheduled today', ['bigCup', 'beans', 'doubleMug']);
+  let html = themePageHeader('Gym', gymInfo ? 'Scheduled today' : 'Not scheduled today', ['bicep', 'leg']);
 
   html += buildGymWeek();
 
   if (!gymInfo) {
-    html += `<div class="rest-card theme-card">${themeIcon('doubleMug', 'theme-corner')}<div class="rest-text">Rest Day</div><div class="rest-sub">Recovery is part of the process. Grab a coffee.</div></div>`;
+    html += `<div class="rest-card theme-card"><div class="rest-text">Rest Day</div><div class="rest-sub">Recovery is part of the process.</div></div>`;
   } else {
-    html += `<div class="card theme-card" style="text-align:center;padding:28px 18px;">${themeIcon('bigCup', 'theme-corner')}${themeIcon('beans', 'theme-corner bottom-left')}
+    html += `<div class="card theme-card" style="text-align:center;padding:28px 18px;">${themeIcon('bicep', 'theme-corner')}${themeIcon('leg', 'theme-corner bottom-left')}
       <div class="card-title-row" style="justify-content:center;margin-bottom:12px;"><div class="card-title" style="font-size:20px;">Gym</div></div>
       <button class="modal-submit" style="margin:0 auto;max-width:200px;" onclick="toggleGymToday()">${gd.completed ? 'Went!' : 'Did I go?'}</button>
       ${gd.completed ? `<div style="margin-top:12px;font-size:14px;color:var(--success);font-weight:500;">Workout logged!</div>` : ''}
     </div>`;
   }
 
-  html += themeDivider('beans', 'bigCup');
+  html += themeDivider('puppy', 'puppy');
   document.getElementById('page-gym').innerHTML = html;
 }
 
@@ -4334,8 +4554,8 @@ function renderGymWeekDraftGrid() {
     const i = d.getDay();
     html += `<div class="gym-edit-row">
       <div class="gym-edit-day">${DAY_NAMES[i]} ${d.getDate()}</div>
-      <div class="segmented two">
-        ${['gym','rest'].map(kind => `<button class="segment-btn ${editingGymWeekDraft[key]===kind?'active':''}" onclick="setGymWeekDraft('${key}','${kind}')" type="button">${kind === 'rest' ? 'Rest' : 'Gym'}</button>`).join('')}
+      <div class="segmented three">
+        ${['upper','lower','rest'].map(kind => `<button class="segment-btn ${editingGymWeekDraft[key]===kind?'active':''}" onclick="setGymWeekDraft('${key}','${kind}')" type="button">${kind === 'upper' ? 'Upper' : kind === 'lower' ? 'Lower' : 'Rest'}</button>`).join('')}
       </div>
     </div>`;
   });
@@ -4351,7 +4571,7 @@ function saveGymWeekEdit() {
   const plans = getGymPlans();
   Object.keys(editingGymWeekDraft).forEach(key => {
     const kind = normalizeGymKind(editingGymWeekDraft[key]);
-    if (kind === 'gym') plans[key] = 'gym'; else delete plans[key];
+    if (kind !== 'rest') plans[key] = kind; else delete plans[key];
   });
   saveGymPlans(plans);
   document.getElementById('gym-week-modal').classList.remove('open');
@@ -4378,7 +4598,7 @@ function parseGymLines(text) {
     const date = new Date(year, month, day);
     if (date.getMonth() !== month || date.getDate() !== day) return;
     const rest = clean.slice(dateMatch[0].length).trim().toLowerCase();
-    let kind = rest.includes('rest') || rest.includes('off') ? 'rest' : 'gym';
+    let kind = rest.includes('rest') || rest.includes('off') ? 'rest' : rest.includes('upper') ? 'upper' : rest.includes('lower') ? 'lower' : 'gym';
     sessions.push({ date: localDateKey(date), kind });
   });
   return sessions;
@@ -4393,7 +4613,7 @@ function saveBulkGymSessions() {
   const plans = getGymPlans();
   sessions.forEach(s => {
     const kind = normalizeGymKind(s.kind);
-    if (kind === 'gym') plans[s.date] = 'gym'; else delete plans[s.date];
+    if (kind !== 'rest') plans[s.date] = kind; else delete plans[s.date];
   });
   saveGymPlans(plans);
   document.getElementById('gym-import-modal').classList.remove('open');
@@ -5017,7 +5237,7 @@ let billCatOpen = { Necessities: true, 'Credit Card Payments': false, Subscripti
 function renderMoney() {
   BILLS = getBillsList();
 
-  let html = themePageHeader('Money', 'Know where it goes.', ['beans', 'doubleMug', 'laptopBuddy']);
+  let html = themePageHeader('Money', 'Know where it goes.', ['money']);
 
   html += `<div class="money-tabs">
     <button class="money-tab ${moneySubTab==='accounts'?'active':''}" onclick="moneySubTab='accounts';renderMoney()">Accounts</button>
@@ -5031,7 +5251,7 @@ function renderMoney() {
   else if (moneySubTab === 'bills') html += renderMoneyBills();
   else if (moneySubTab === 'income') html += renderMoneyIncome();
 
-  html += themeDivider('beans', 'doubleMug');
+  html += themeDivider('money', 'puppy');
 
   document.getElementById('page-money').innerHTML = html;
 }
@@ -5084,16 +5304,14 @@ function renderMoneyAccounts() {
   let html = '';
 
   if (!accounts.length) {
-    html += `<div class="card theme-card" style="text-align:center;padding:24px;">${themeIcon('beans', 'theme-corner')}<div style="font-size:14px;color:var(--text-muted);margin-bottom:12px;">No accounts yet. Add one to start tracking.</div></div>`;
+    html += `<div class="card theme-card" style="text-align:center;padding:24px;">${themeIcon('money', 'theme-corner')}<div style="font-size:14px;color:var(--text-muted);margin-bottom:12px;">No accounts yet. Add one to start tracking.</div></div>`;
   }
 
   accounts.forEach((acct, i) => {
     const b = accountBalanceBreakdown(acct.id);
     const isOpen = moneyAcctOpen === acct.id;
     const color = colorById(acct.color || ACCOUNT_COLORS[0].id);
-    const sticker = ['beans', 'doubleMug', 'laptopBuddy', 'sleepyCup'][i % 4];
     html += `<div class="acct-card theme-card ${isOpen?'open':''}">
-      ${themeIcon(sticker, 'acct-card-sticker')}
       <div class="acct-card-header" onclick="moneyAcctOpen=moneyAcctOpen==='${acct.id}'?null:'${acct.id}';renderMoney()">
         <div class="acct-card-dot" style="background:${color.bg}"></div>
         <div class="acct-card-info">
@@ -5193,7 +5411,7 @@ function renderMoneyTransactions() {
   let html = `<button class="modal-submit" style="width:100%;margin-bottom:14px;" onclick="openTxModal()">+ Log Transaction</button>`;
 
   if (!txs.length) {
-    html += `<div class="card theme-card" style="text-align:center;padding:24px;">${themeIcon('beans', 'theme-corner')}<div style="font-size:14px;color:var(--text-muted);">No transactions logged yet.</div></div>`;
+    html += `<div class="card theme-card" style="text-align:center;padding:24px;">${themeIcon('money', 'theme-corner')}<div style="font-size:14px;color:var(--text-muted);">No transactions logged yet.</div></div>`;
     return html;
   }
 
@@ -5224,12 +5442,12 @@ function renderMoneyTransactions() {
   };
 
   if (scheduled.length) {
-    html += `<div class="card theme-card" style="margin-bottom:12px;">${themeIcon('sleepyCup', 'theme-corner')}<div class="card-title">Upcoming Scheduled</div>`;
+    html += `<div class="card theme-card" style="margin-bottom:12px;">${themeIcon('evening', 'theme-corner')}<div class="card-title">Upcoming Scheduled</div>`;
     scheduled.forEach(t => { html += renderRow(t, true); });
     html += `</div>`;
   }
   if (completed.length) {
-    html += `<div class="card theme-card">${themeIcon('beans', 'theme-corner bottom-right')}<div class="card-title">Completed</div>`;
+    html += `<div class="card theme-card">${themeIcon('money', 'theme-corner bottom-right')}<div class="card-title">Completed</div>`;
     completed.forEach(t => { html += renderRow(t, false); });
     html += `</div>`;
   }
@@ -5260,11 +5478,8 @@ function renderMoneyBills() {
     const catTotal = catBills.reduce((s, b) => s + b.amount, 0);
     const catPaid = catBills.filter(b => paid[b.key]).length;
     const isOpen = billCatOpen[cat] !== false;
-    const catSticker = cat === 'Subscriptions' ? 'sleepyCup' : cat === 'Variable' ? 'doubleMug' : cat === 'Credit Card Payments' ? 'beans' : cat === 'Necessities' ? 'laptopBuddy' : 'doubleMug';
-
     html += `<div class="bill-cat-section ${isOpen ? 'open' : ''}">
       <div class="bill-cat-header theme-row-card" onclick="billCatOpen['${cat}']=!billCatOpen['${cat}'];renderMoney()">
-        ${themeIcon(catSticker, 'bill-cat-sticker')}
         <div class="bill-cat-left">
           <div class="bill-cat-name">${esc(cat)}</div>
           <div class="bill-cat-sub">${formatMoney(catTotal)} · ${catPaid}/${catBills.length} paid</div>
@@ -5352,7 +5567,6 @@ function renderMoneyIncome() {
     const cadenceLabel = src.schedule === 'biweekly' ? 'Biweekly' : 'Monthly';
     const acct = accounts.find(a => a.id === src.accountId);
     html += `<div class="acct-card theme-card ${isOpen?'open':''}">
-      ${themeIcon(i % 2 ? 'beans' : 'doubleMug', 'acct-card-sticker')}
       <div class="acct-card-header" onclick="moneyIncomeOpen=moneyIncomeOpen==='${src.id}'?null:'${src.id}';renderMoney()">
         <div class="acct-card-dot" style="background:var(--success);"></div>
         <div class="acct-card-info">
@@ -5401,13 +5615,13 @@ function renderMoneyIncome() {
   html += `<button class="add-btn" onclick="openIncomeAddModal()">+ Add Income Source</button>`;
 
   if (totalMonthly > 0) {
-    html += `<div class="card theme-card" style="margin-top:14px;">${themeIcon('beans', 'theme-corner')}<div class="card-title">Estimated Monthly Total</div>
+    html += `<div class="card theme-card" style="margin-top:14px;">${themeIcon('money', 'theme-corner')}<div class="card-title">Estimated Monthly Total</div>
       <div style="font-family:var(--font-display);font-size:24px;color:var(--espresso);font-weight:800;">${formatMoney(totalMonthly)}</div></div>`;
   }
 
   const paydays = incomeOccurrencesForMonth(null, billMonth);
   if (paydays.length) {
-    html += `<div class="card theme-card" style="margin-top:14px;">${themeIcon('beans', 'theme-corner bottom-right')}
+    html += `<div class="card theme-card" style="margin-top:14px;">${themeIcon('money', 'theme-corner bottom-right')}
       <div class="card-title">Paydays in ${billMonthName}</div>
       <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">Check off money after it lands.</div>`;
     paydays.forEach(occ => {
@@ -5749,14 +5963,14 @@ function renderHealth() {
   const hour = currentHour();
   const showMorningFirst = hour < 14;
 
-  let html = themePageHeader('Health', 'Take care of yourself.', ['sleepyCup', 'beans', 'bigCup']);
+  let html = themePageHeader('Health', 'Take care of yourself.');
 
   html += buildWaterBottle(h);
 
   html += buildMealPlan(h);
   html += buildGroceryList(h);
   html += buildHealthGymSummary();
-  html += themeDivider('doubleMug', 'beans');
+  html += themeDivider('puppy', 'puppy');
 
   const morningMeds = buildMedCard('Morning Meds', MEDS.morning, h);
   const eveningMeds = buildMedCard('Evening Meds', MEDS.evening, h);
@@ -5767,7 +5981,7 @@ function renderHealth() {
     html += eveningMeds + morningMeds;
   }
 
-  html += themeDivider('sleepyCup', 'beans');
+  html += themeDivider('puppy', 'puppy');
 
   document.getElementById('page-health').innerHTML = html;
 }
@@ -5775,7 +5989,7 @@ function renderHealth() {
 function buildWaterBottle(h) {
   const water = h.water || 0;
   const pct = Math.min(100, (water / 8) * 100);
-  return `<div class="card water-card theme-card">${themeIcon('sleepyCup', 'theme-corner')}
+  return `<div class="card water-card theme-card">${themeIcon('evening', 'theme-corner')}
     <div class="card-title-row"><div class="card-title">Water</div></div>
     <div class="water-wrap">
       <button class="water-bottle" onclick="tapWaterBottle()" title="Add one glass" aria-label="Add one glass of water">
@@ -5809,7 +6023,7 @@ function buildMealPlan(h) {
   const dayMap = { mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday' };
   const dayKeys = ['mon', 'tue', 'wed', 'thu', 'fri'];
 
-  let html = `<div class="card theme-card">${themeIcon('beans', 'theme-corner bottom-right')}
+  let html = `<div class="card theme-card">
     <div class="card-title-row"><div class="card-title">Meal Plan</div></div>
     <div class="edit-hint" style="margin-bottom:10px;">M-F plan — pick meals for each day. Weekends are free.</div>`;
 
@@ -5886,7 +6100,7 @@ function buildGroceryList(h) {
   const dayKeys = ['mon', 'tue', 'wed', 'thu', 'fri'];
   const days = getGroceryDays();
   const avgCals = dayKeys.slice(0, days).reduce((sum, d) => sum + mealCaloriesForDay(d), 0) / (days || 1);
-  return `<div class="card theme-card">${themeIcon('beans', 'theme-corner')}
+  return `<div class="card theme-card">
     <div class="editable-head"><div><div class="card-title-row"><div class="card-title">Grocery List</div></div><div class="edit-hint">Avg ~${Math.round(avgCals).toLocaleString()} cal/day across ${days} weekday${days>1?'s':''}.</div></div></div>
     <div class="grocery-controls"><label class="field-label" for="grocery-days">Meal-plan weekdays to stock?</label><input class="num-input" id="grocery-days" type="number" min="1" max="5" value="${days}" onchange="saveGroceryDays(this.value);renderHealth()"></div>
     <div class="grocery-list">${groceries.map(g => `<div class="grocery-row"><span>${esc(g.item)}</span><span class="grocery-qty">${esc(formatGroceryQty(g.qty, g.unit))}</span></div>`).join('')}</div>
@@ -5933,7 +6147,7 @@ function buildHealthGymSummary() {
     const data = ls(`gnd-${localDateKey(addDays(weekStart, dow))}-gym`, null);
     return data?.completed;
   }).length;
-  let html = `<div class="card theme-card">${themeIcon('bigCup', 'theme-corner bottom-right')}<div class="card-title-row"><div class="card-title">Gym This Week?</div></div><div class="page-date">${done}/${gymDays.length || 0} scheduled days logged</div><div class="gym-summary-grid">`;
+  let html = `<div class="card theme-card">${themeIcon('bicep', 'theme-corner bottom-right')}<div class="card-title-row"><div class="card-title">Gym This Week?</div></div><div class="page-date">${done}/${gymDays.length || 0} scheduled days logged</div><div class="gym-summary-grid">`;
   if (!gymDays.length) {
     return html + `</div><div class="gym-summary-note">No gym sessions scheduled this week.</div></div>`;
   }
@@ -6007,8 +6221,7 @@ function deleteMealEdit() {
 
 function buildMedCard(title, meds, healthData) {
   const medsToShow = title === 'Evening Meds' && isFriday() ? meds.concat(MEDS.weekly) : meds;
-  const sticker = title === 'Morning Meds' ? 'pourBuddy' : 'sleepyCup';
-  let html = `<div class="card theme-card">${themeIcon(sticker, 'theme-corner bottom-right')}<div class="card-title-row"><div class="card-title">${title}</div></div>`;
+  let html = `<div class="card theme-card"><div class="card-title-row"><div class="card-title">${title}</div></div>`;
   medsToShow.forEach(m => {
     const taken = healthData.meds?.[m.key];
     html += `<div class="med-row ${taken?'taken':''}" onclick="toggleMed('${m.key}')"><div class="med-check">${checkSvg()}</div><div style="flex:1"><div class="med-name">${esc(m.name)}</div><div class="med-dose">${esc(m.dose)}</div><div class="med-sched">${esc(m.sched)}</div></div></div>`;
@@ -6037,7 +6250,7 @@ function openEventModal(dateKey, eventId = '', customKey = '') {
   evEditingCustomKey = customKey || null;
 
   const existingEvent = evEditingId ? getEvents().find(e => e.id === evEditingId) : null;
-  const existingCustom = evEditingCustomKey ? getScheduleBlockByKey(evEditingCustomKey) : null;
+  const existingCustom = evEditingCustomKey ? getScheduleBlockByKey(evEditingCustomKey, dateKey) : null;
   const editing = existingEvent || existingCustom;
 
   evType = editing?.type || 'appointment';
