@@ -9,17 +9,16 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#F7F2EB">
 <meta name="msapplication-TileColor" content="#A2BFFE">
-<link rel="manifest" href="./manifest.webmanifest">
-<link rel="shortcut icon" href="./favicon.ico">
-<link rel="icon" type="image/png" sizes="32x32" href="./images/favicon-32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="./images/favicon-16.png">
-<link rel="icon" type="image/svg+xml" href="./images/app-icon.svg">
-<link rel="apple-touch-icon" href="./apple-touch-icon.png">
-<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
-<link rel="apple-touch-icon-precomposed" sizes="180x180" href="./apple-touch-icon-precomposed.png">
-<link rel="apple-touch-icon" sizes="192x192" href="./images/app-icon-192.png">
-<link rel="apple-touch-icon" sizes="512x512" href="./images/app-icon-512.png">
-<link rel="mask-icon" href="./images/app-icon.svg" color="#A2BFFE">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="images/app-icon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16.png">
+<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+<link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png">
+<link rel="apple-touch-icon-precomposed" sizes="192x192" href="images/apple-touch-icon-precomposed.png">
+<link rel="apple-touch-icon" sizes="192x192" href="images/app-icon-192.png">
+<link rel="apple-touch-icon" sizes="512x512" href="images/app-icon-512.png">
+<link rel="mask-icon" href="images/app-icon.svg" color="#A2BFFE">
 <title>Grounded</title>
 <script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.9.14/dist/dotlottie-wc.js" type="module"></script>
 <style>
@@ -422,10 +421,17 @@ select:focus-visible {
   position: relative;
 }
 .top-btn svg { width: 16px; height: 16px; stroke-width: 1.8; }
+.top-btn-sticker {
+  width: 20px; height: 20px; object-fit: contain; display: block;
+}
 .top-btn.brain-btn {
   background: #E0EAFF;
   border-color: #A2BFFE;
   color: #4A6FAA;
+}
+.top-btn.sync-btn {
+  background: #DEF1FF;
+  border-color: #A8D7FB;
 }
 .brain-count {
   position: absolute; right: -3px; top: -3px;
@@ -438,58 +444,41 @@ select:focus-visible {
 .app { display: flex; flex-direction: column; min-height: 100vh; }
 .tab-page {
   display: none; flex: 1;
-  padding: var(--page-pad) var(--page-pad) calc(var(--nav-h) + var(--safe-bottom) + 16px);
+  padding: var(--page-pad) var(--page-pad) calc(var(--safe-bottom) + 16px);
   padding-top: calc(var(--safe-top) + 52px);
   overflow-y: auto; -webkit-overflow-scrolling: touch;
   max-width: 540px; margin: 0 auto; width: 100%;
 }
 .tab-page.active { display: block; }
 
-/* ── Bottom Nav ── */
-.bottom-nav {
-  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
-  display: flex; align-items: stretch; justify-content: space-around;
-  height: calc(var(--nav-h) + var(--safe-bottom));
-  padding-bottom: var(--safe-bottom);
-  background: var(--bg-card);
-  border-top: 1px solid var(--border-soft);
-  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+/* ── Homepage Hub Nav ── */
+.hub-nav {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+  margin-bottom: 14px;
 }
-.bottom-nav::before {
-  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-  background: var(--rainbow); opacity: 0.85;
-  pointer-events: none;
+.hub-nav-btn {
+  min-height: 58px; border-radius: var(--radius); border: 1px solid var(--border-soft);
+  background: var(--bg-card); color: var(--icon-pink);
+  box-shadow: var(--shadow-sm); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
 }
-[data-theme="dark"] .bottom-nav { background: rgba(30,25,21,0.92); }
-.nav-item {
-  flex: 1; display: flex; flex-direction: column; align-items: center;
-  justify-content: center; gap: 2px; position: relative;
-  background: none; border: none; cursor: pointer;
-  color: var(--icon-pink); transition: color 0.2s, opacity 0.2s;
-  padding: 6px 2px; -webkit-tap-highlight-color: transparent;
-  opacity: 0.72;
+.hub-nav-btn:active { transform: scale(0.97); background: var(--bg-hover); }
+.hub-nav-btn[data-tab="routines"] { color: var(--pal-purple-strong); }
+.hub-nav-btn[data-tab="gym"] { color: var(--pal-pink-strong); }
+.hub-nav-btn[data-tab="money"] { color: var(--pal-green-strong); }
+.hub-nav-btn[data-tab="health"] { color: var(--pal-yellow-strong); }
+[data-theme="dark"] .hub-nav-btn[data-tab="routines"] { color: var(--pal-purple); }
+[data-theme="dark"] .hub-nav-btn[data-tab="gym"] { color: var(--pal-pink); }
+[data-theme="dark"] .hub-nav-btn[data-tab="money"] { color: var(--pal-green); }
+[data-theme="dark"] .hub-nav-btn[data-tab="health"] { color: var(--pal-yellow); }
+.hub-nav-btn svg { width: 24px; height: 24px; stroke-width: 1.8; }
+.hub-nav-btn .theme-sticker { --sticker-size: 34px; }
+.hub-nav-sticker {
+  width: 40px; height: 40px; object-fit: contain; display: block;
+  filter: drop-shadow(0 2px 2px rgba(60,40,25,0.08));
 }
-.nav-item[data-tab="today"] { color: var(--pal-blue-strong); }
-.nav-item[data-tab="routines"] { color: var(--pal-purple-strong); }
-.nav-item[data-tab="gym"] { color: var(--pal-pink-strong); }
-.nav-item[data-tab="money"] { color: var(--pal-green-strong); }
-.nav-item[data-tab="health"] { color: var(--pal-yellow-strong); }
-[data-theme="dark"] .nav-item[data-tab="today"] { color: var(--pal-blue); }
-[data-theme="dark"] .nav-item[data-tab="routines"] { color: var(--pal-purple); }
-[data-theme="dark"] .nav-item[data-tab="gym"] { color: var(--pal-pink); }
-[data-theme="dark"] .nav-item[data-tab="money"] { color: var(--pal-green); }
-[data-theme="dark"] .nav-item[data-tab="health"] { color: var(--pal-yellow); }
-.nav-item.active { opacity: 1; }
-.nav-item.active::after {
-  content: ''; position: absolute; bottom: 4px; left: 50%;
-  width: 18px; height: 3px; border-radius: 999px;
-  transform: translateX(-50%); background: currentColor; opacity: 0.9;
-}
-.nav-item:focus-visible { outline-offset: -5px; border-radius: 14px; }
-.nav-item svg { width: 20px; height: 20px; stroke-width: 1.8; }
-.nav-item img { width: 20px; height: 20px; object-fit: contain; filter: brightness(0) saturate(100%) invert(80%) sepia(20%) saturate(1000%) hue-rotate(305deg) brightness(105%); }
-.nav-icon-text { font-size: 22px; font-weight: 900; line-height: 20px; }
-.nav-label { font-size: 9px; font-weight: 500; letter-spacing: 0.3px; }
 
 /* ── Cards & Components ── */
 .card {
@@ -574,6 +563,12 @@ img.card-icon, img.page-icon { filter: brightness(0) saturate(100%) invert(80%) 
 }
 .work-task-row .work-task-delete:active {
   opacity: 1; transform: scale(0.94);
+}
+.cleaning-add-row {
+  display: flex; gap: 8px; margin-top: 10px;
+}
+.cleaning-add-row .modal-submit {
+  padding: 8px 14px; margin: 0; white-space: nowrap;
 }
 
 /* ── Completion Ring ── */
@@ -821,20 +816,43 @@ img.card-icon, img.page-icon { filter: brightness(0) saturate(100%) invert(80%) 
 }
 .due-soon-card { overflow: hidden; }
 .due-soon-head {
+  width: 100%; border: none; background: transparent; color: inherit;
   display: flex; align-items: flex-start; justify-content: space-between;
-  gap: 12px; margin-bottom: 10px; padding-right: 34px;
+  gap: 12px; margin-bottom: 10px; padding: 0 34px 0 0;
+  text-align: left; cursor: pointer;
 }
+.due-soon-head-right {
+  display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0;
+}
+.due-soon-head .card-title,
+.due-soon-head .page-date { display: block; }
 .due-soon-count {
-  min-width: 34px; height: 34px; border-radius: 50%;
+  min-width: 42px; height: 34px; border-radius: 999px; padding: 0 10px;
   display: inline-flex; align-items: center; justify-content: center;
   background: #DCEBFF; color: #234D83; font-size: 14px; font-weight: 900;
   flex-shrink: 0;
 }
+.due-soon-chevron {
+  width: 18px; height: 18px; color: var(--text-muted);
+  transition: transform 0.25s ease; margin-top: 8px;
+}
+.due-soon-card.collapsed .due-soon-chevron { transform: rotate(-90deg); }
 .due-soon-list { display: grid; gap: 0; }
 .due-soon-row {
+  display: flex; align-items: flex-start; gap: 10px;
   padding: 11px 0; border-top: 1px solid var(--border-soft);
 }
 .due-soon-row:first-child { border-top: none; padding-top: 2px; }
+.due-soon-main { flex: 1; min-width: 0; }
+.due-soon-check {
+  margin-top: 4px; cursor: pointer;
+}
+.due-soon-row.checked .due-soon-check { background: var(--espresso); border-color: var(--espresso); }
+.due-soon-row.checked .due-soon-check svg { opacity: 1; }
+.due-soon-row.checked .due-soon-title {
+  color: var(--text-muted); text-decoration: line-through; text-decoration-color: var(--nude);
+}
+.due-soon-edit { margin-top: 5px; flex-shrink: 0; }
 .due-soon-top {
   display: flex; align-items: flex-start; justify-content: space-between;
   gap: 8px;
@@ -1343,6 +1361,47 @@ img.card-icon, img.page-icon { filter: brightness(0) saturate(100%) invert(80%) 
   color: var(--text-secondary); border-radius: 999px; padding: 6px 10px;
   font-size: 11px; cursor: pointer;
 }
+.smoking-card { overflow: hidden; }
+.smoking-total {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  margin: 12px 0 10px; padding: 12px 14px; border-radius: var(--radius-sm);
+  background: var(--latte-light); border: 1px solid var(--border-soft);
+}
+.smoking-total-label { font-size: 12px; color: var(--text-muted); font-weight: 700; }
+.smoking-total-value { font-size: 30px; line-height: 1; font-weight: 800; color: var(--espresso); }
+.smoking-actions {
+  display: grid; gap: 10px;
+}
+.smoking-row {
+  display: grid; grid-template-columns: 32px 1fr auto auto;
+  align-items: center; gap: 12px;
+  padding: 10px 14px; border-radius: var(--radius-sm);
+  background: var(--bg-input); border: 1px solid var(--border-soft);
+}
+.smoking-joint-icon {
+  width: 26px; height: 52px;
+  overflow: hidden; position: relative;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 2px rgba(60,40,25,0.1));
+}
+.smoking-joint-icon img {
+  width: 52px; height: 52px; display: block;
+  position: absolute; left: 0; top: 0;
+}
+.smoking-joint-icon.half { height: 26px; }
+.smoking-joint-icon.half img { top: -26px; }
+.smoking-row-label {
+  font-size: 13px; font-weight: 700; color: var(--espresso);
+}
+.smoking-row-btn {
+  width: 38px; height: 38px; border-radius: 50%;
+  border: 1px solid var(--border); background: var(--bg-card);
+  color: var(--espresso); font-size: 20px; font-weight: 900;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+.smoking-row-btn:active { background: var(--espresso); color: #fff; border-color: var(--espresso); }
+.smoking-note { font-size: 12px; color: var(--text-muted); margin-top: 10px; }
 @keyframes waterWave {
   0%, 100% { transform: translateX(0); }
   50% { transform: translateX(10px); }
@@ -1643,10 +1702,9 @@ img.card-icon, img.page-icon { filter: brightness(0) saturate(100%) invert(80%) 
   .page-date { font-size: 16px; }
   .card { padding: 22px; }
   .card-title { font-size: 18px; }
-  .bottom-nav { border-radius: 20px 20px 0 0; }
-  .nav-item img { width: 24px; height: 24px; }
-  .nav-item svg { width: 24px; height: 24px; }
-  .nav-label { font-size: 11px; }
+  .hub-nav-btn { min-height: 66px; }
+  .hub-nav-btn svg { width: 28px; height: 28px; }
+  .hub-nav-sticker { width: 46px; height: 46px; }
   .sticky-grid { grid-template-columns: repeat(3, 1fr); }
   .sticky-note { min-height: 140px; padding: 16px; }
   .sticky-note textarea { font-size: 14px; }
@@ -1678,17 +1736,18 @@ img.card-icon, img.page-icon { filter: brightness(0) saturate(100%) invert(80%) 
 </div>
 
 <div class="top-bar" id="top-bar" style="display:none;">
+  <button class="top-btn home-return" id="btn-home" title="Home" aria-label="Home" onclick="switchTab('today')" style="display:none;">
+    <img class="top-btn-sticker" src="images/home.png" alt="" aria-hidden="true">
+  </button>
   <button class="top-btn brain-btn" id="btn-brain-dump" title="Brain dump" onclick="openBrainDump()">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M8.5 7.5a3 3 0 0 1 5.2-2.1A3.2 3.2 0 0 1 19 8a3 3 0 0 1-.8 5.8A3.2 3.2 0 0 1 15 18h-1.2"/>
-      <path d="M9.8 18H8a3.2 3.2 0 0 1-3.2-4.2A3.1 3.1 0 0 1 5.6 8a3 3 0 0 1 2.9-.5"/>
-      <path d="M12 6.5v12M8.2 11.3H12M12 10h3.6M12 14h3"/>
-      <path d="M9 19.5c.6 1 1.8 1 2.4 0"/>
-    </svg>
+    <img class="top-btn-sticker" src="images/thought-leadership.png" alt="" aria-hidden="true">
     <span class="brain-count" id="brain-count" style="display:none;">0</span>
   </button>
+  <button class="top-btn sync-btn" id="btn-force-sync" title="Force sync now" aria-label="Force sync now" onclick="forceSyncAll()">
+    <img class="top-btn-sticker" src="images/cloud-sync.png" alt="" aria-hidden="true">
+  </button>
   <button class="top-btn" id="btn-settings" title="Settings" onclick="openSettings()">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    <img class="top-btn-sticker" src="images/gear.png" alt="" aria-hidden="true">
   </button>
   <button class="top-btn" id="btn-theme" title="Toggle dark mode" onclick="toggleTheme()">
     <svg id="ico-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
@@ -1711,25 +1770,6 @@ img.card-icon, img.page-icon { filter: brightness(0) saturate(100%) invert(80%) 
   <div class="tab-page" id="page-gym"></div>
   <div class="tab-page" id="page-money"></div>
   <div class="tab-page" id="page-health"></div>
-
-  <nav class="bottom-nav">
-    <button class="nav-item active" data-tab="today" onclick="switchTab('today')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-      <span class="nav-label">Home</span>
-    </button>
-    <button class="nav-item" data-tab="routines" onclick="switchTab('routines')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><rect x="7" y="14" width="3" height="3" rx="0.5" fill="currentColor" stroke="none"/></svg>
-      <span class="nav-label">Routines</span>
-    </button>
-    <button class="nav-item" data-tab="money" onclick="switchTab('money')">
-      <span class="nav-icon-text" aria-hidden="true">$</span>
-      <span class="nav-label">Money</span>
-    </button>
-    <button class="nav-item" data-tab="health" onclick="switchTab('health')">
-      <span class="nav-icon-text" aria-hidden="true">+</span>
-      <span class="nav-label">Health</span>
-    </button>
-  </nav>
 </div>
 
 <!-- Transaction Modal -->
@@ -2077,6 +2117,27 @@ img.card-icon, img.page-icon { filter: brightness(0) saturate(100%) invert(80%) 
   </div>
 </div>
 
+<!-- Due Soon Modal -->
+<div class="modal-overlay" id="due-soon-modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Edit Due Item</div>
+    <div class="modal-field">
+      <div class="field-label">Task</div>
+      <input type="text" class="modal-input" id="due-soon-title" placeholder="Assignment">
+    </div>
+    <div class="modal-field">
+      <div class="field-label">Class</div>
+      <input type="text" class="modal-input" id="due-soon-class" placeholder="Class">
+    </div>
+    <div class="modal-field">
+      <div class="field-label">Due Date</div>
+      <input type="date" class="modal-input" id="due-soon-date">
+    </div>
+    <button class="modal-submit" onclick="saveDueSoonEdit()">Save Due Item</button>
+  </div>
+</div>
+
 <!-- Meal Modal -->
 <div class="modal-overlay" id="meal-modal">
   <div class="modal-sheet">
@@ -2299,7 +2360,6 @@ SELECT 'Grounded planner sync table is ready' AS status;</pre>
   <div class="card">
     <div class="card-title" style="margin-bottom:8px;">Data</div>
     <button class="add-btn" style="margin-bottom:8px;border-style:solid;color:var(--danger);" onclick="if(confirm('Clear ALL local data? This cannot be undone.')){localStorage.clear();location.reload();}">Reset All Local Data</button>
-    <button class="modal-submit" onclick="forceSyncAll()">Force Sync Now</button>
   </div>
 </div>
 
@@ -2486,6 +2546,8 @@ const ACCOUNT_COLORS = [
 ];
 const WATER_PRAISE = ['Good job.', 'Nice sip.', 'Bottle is building.', 'That counts.', 'Keep it easy.'];
 const GYM_PRAISE = ['Good job showing up.', 'That one counts.', 'Future you gets the win.', 'Solid. Keep it simple.'];
+const MEAL_DAY_KEYS = ['mon', 'tue', 'wed', 'thu', 'fri'];
+const MEAL_DAY_LABELS = { mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday' };
 const MEAL_OPTIONS = {
   breakfast: {
     oatmeal: {
@@ -2535,6 +2597,17 @@ const MEAL_OPTIONS = {
     },
   },
 };
+
+const DEFAULT_CLEANING_TASKS = [
+  { id: 'dishes', title: 'Dishes' },
+  { id: 'laundry', title: 'Laundry' },
+  { id: 'litter-boxes', title: 'Litter boxes' },
+  { id: 'trash', title: 'Trash' },
+  { id: 'bathroom', title: 'Bathroom' },
+  { id: 'floors', title: 'Floors' },
+  { id: 'meal-prep', title: 'Meal prep' },
+  { id: 'room-reset', title: 'Room reset' },
+];
 
 /* ── Coffee Doodle SVGs ── */
 const DOODLE = {
@@ -2605,6 +2678,10 @@ const THEME_ICONS = {
 function themeIcon(name, cls = '') {
   if (!THEME_ICONS[name]) return '';
   return `<span class="theme-sticker ${cls}" aria-hidden="true">${THEME_ICONS[name]}</span>`;
+}
+
+function pngSticker(src, cls = '') {
+  return `<img class="${cls}" src="${attr(src)}" alt="" aria-hidden="true">`;
 }
 
 function themeSprinkles(items = []) {
@@ -2999,6 +3076,13 @@ function todayKey() { return localDateKey(); }
 function dateFromKey(key) { return new Date(key + 'T00:00:00'); }
 function addDays(date, days) { const d = new Date(date); d.setDate(d.getDate() + days); return d; }
 function startOfWeek(date) { const d = new Date(date); d.setHours(0,0,0,0); d.setDate(d.getDate() - d.getDay()); return d; }
+function startOfMondayWeek(date) {
+  const d = new Date(date);
+  d.setHours(0,0,0,0);
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  return d;
+}
+function currentMondayKey(date = new Date()) { return localDateKey(startOfMondayWeek(date)); }
 
 let _celebrateTimer = null;
 function celebrate(message = 'Great job!', duration = 2400) {
@@ -3053,6 +3137,58 @@ function lsSave(k, v) {
 function dayData(section) { return ls(`gnd-${todayKey()}-${section}`, null); }
 function saveDayData(section, d) { lsSave(`gnd-${todayKey()}-${section}`, d); }
 function saveDayDataForDate(dateKey, section, d) { lsSave(`gnd-${dateKey}-${section}`, d); }
+
+function weeklyRangeLabel(date = new Date()) {
+  const start = startOfMondayWeek(date);
+  const end = addDays(start, 6);
+  return `${formatShortDate(start)} - ${formatShortDate(end)}`;
+}
+
+function formatHalfUnits(halfUnits) {
+  const n = Math.max(0, Math.round(Number(halfUnits) || 0));
+  const whole = Math.floor(n / 2);
+  return n % 2 ? `${whole}.5` : String(whole);
+}
+
+function smokingWeekKey(date = new Date()) { return `gnd-smoking-${currentMondayKey(date)}`; }
+function getSmokingWeek() {
+  const raw = ls(smokingWeekKey(), null) || {};
+  const fromHalfUnits = Number(raw.halfUnits);
+  const fromTotal = Number(raw.total);
+  const halfUnits = Number.isFinite(fromHalfUnits)
+    ? Math.round(fromHalfUnits)
+    : Number.isFinite(fromTotal)
+      ? Math.round(fromTotal * 2)
+      : 0;
+  return { halfUnits: Math.max(0, halfUnits) };
+}
+function saveSmokingWeek(data) {
+  lsSave(smokingWeekKey(), { halfUnits: Math.max(0, Math.round(Number(data.halfUnits) || 0)) });
+}
+
+function cleaningWeekKey(date = new Date()) { return `gnd-cleaning-${currentMondayKey(date)}`; }
+function normalizeCleaningTask(task, i) {
+  const title = typeof task === 'string' ? task : task?.title;
+  if (!String(title || '').trim()) return null;
+  const rawId = typeof task === 'object' && task?.id ? task.id : `cleaning-${i}`;
+  const id = String(rawId).replace(/[^a-zA-Z0-9_-]/g, '-');
+  return { id, title: String(title).trim() };
+}
+function getCleaningTasks() {
+  let tasks = ls('gnd-cleaning-tasks', null);
+  if (!Array.isArray(tasks) || !tasks.length) {
+    tasks = DEFAULT_CLEANING_TASKS.map(t => ({ ...t }));
+    lsSeed('gnd-cleaning-tasks', tasks);
+  }
+  const normalized = tasks.map(normalizeCleaningTask).filter(Boolean);
+  return normalized.length ? normalized : DEFAULT_CLEANING_TASKS.map(t => ({ ...t }));
+}
+function saveCleaningTasks(tasks) { lsSave('gnd-cleaning-tasks', tasks.map(normalizeCleaningTask).filter(Boolean)); }
+function getCleaningWeek() {
+  const data = ls(cleaningWeekKey(), null) || {};
+  return { done: data.done && typeof data.done === 'object' ? data.done : {} };
+}
+function saveCleaningWeek(data) { lsSave(cleaningWeekKey(), { done: data.done || {} }); }
 
 function defRoutine(type) {
   const items = type === 'morning' ? MORNING_ITEMS : EVENING_ITEMS;
@@ -3234,7 +3370,19 @@ function getSavings() { return ls('gnd-savings', []); }
 function saveSavings(s) { lsSave('gnd-savings', s); }
 function getEvents() { return ls('gnd-events', []); }
 function saveEvents(e) { lsSave('gnd-events', e); }
-function getAcademicAssignments() { return ls('gnd-academic-assignments', []); }
+function getAcademicAssignments() {
+  const assignments = ls('gnd-academic-assignments', []);
+  if (!Array.isArray(assignments)) return [];
+  let changed = false;
+  assignments.forEach((assignment, i) => {
+    if (assignment && !assignment.id) {
+      assignment.id = `as-manual-${Date.now()}-${i}`;
+      changed = true;
+    }
+  });
+  if (changed) saveAcademicAssignments(assignments);
+  return assignments;
+}
 function saveAcademicAssignments(a) { lsSave('gnd-academic-assignments', a); }
 function getAcademicBalanceStatus() { return ls('gnd-academic-balance-status', null); }
 function saveAcademicBalanceStatus(s) { lsSave('gnd-academic-balance-status', s); }
@@ -3242,18 +3390,27 @@ function getScheduleCustom() { return ls('gnd-schedule-custom', {}); }
 function saveScheduleCustom(s) { lsSave('gnd-schedule-custom', s); }
 function getTodos() { return dayData('todos') || defTodos(); }
 function saveTodos(todos) { saveDayData('todos', todos); }
-function getGroceryDays() { return ls('gnd-grocery-days', 5); }
-function saveGroceryDays(days) { lsSave('gnd-grocery-days', Math.max(1, Math.min(5, Number(days) || 1))); }
+function normalizeGroceryDays(days, fallback = MEAL_DAY_KEYS.length) {
+  return Math.max(1, Math.min(MEAL_DAY_KEYS.length, Math.round(Number(days) || fallback)));
+}
+function getGroceryDays() { return normalizeGroceryDays(ls('gnd-grocery-days', MEAL_DAY_KEYS.length)); }
+function saveGroceryDays(days) { lsSave('gnd-grocery-days', normalizeGroceryDays(days, 1)); }
 function getGymPlans() { return ls('gnd-gym-plans', {}); }
 function saveGymPlans(p) { lsSave('gnd-gym-plans', p); }
 function getMealSettings() {
   const raw = ls('gnd-meal-settings', null);
-  if (!raw || !raw.days) {
-    const old = raw || { breakfast: 'oatmeal', oatPackets: 3, lunch: 'chicken', dinner: 'chicken' };
-    const d = { breakfast: old.breakfast || 'oatmeal', lunch: old.lunch || 'chicken', dinner: old.dinner || 'chicken' };
-    return { oatPackets: old.oatPackets || 3, days: { mon:{...d}, tue:{...d}, wed:{...d}, thu:{...d}, fri:{...d} } };
-  }
-  return raw;
+  const old = raw || { breakfast: 'oatmeal', oatPackets: 3, lunch: 'chicken', dinner: 'chicken' };
+  const fallback = { breakfast: old.breakfast || 'oatmeal', lunch: old.lunch || 'chicken', dinner: old.dinner || 'chicken' };
+  const days = {};
+  MEAL_DAY_KEYS.forEach(day => {
+    const d = old.days?.[day] || fallback;
+    days[day] = {
+      breakfast: d.breakfast || 'oatmeal',
+      lunch: d.lunch || 'chicken',
+      dinner: d.dinner || 'chicken'
+    };
+  });
+  return { ...old, oatPackets: Number(old.oatPackets) || 3, days };
 }
 function saveMealSettings(s) { lsSave('gnd-meal-settings', s); }
 
@@ -3375,6 +3532,7 @@ function ordinal(n) { const s = ['th','st','nd','rd']; const v = n % 100; return
 const ESC_MAP = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 function esc(v) { return String(v ?? '').replace(/[&<>"']/g, ch => ESC_MAP[ch]); }
 function attr(v) { return esc(v); }
+function jsArg(v) { return attr(JSON.stringify(String(v ?? ''))); }
 
 function checkSvg() {
   return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
@@ -3411,7 +3569,7 @@ function switchTab(t) {
   currentTab = t;
   document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-' + t).classList.add('active');
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.tab === t));
+  updateHomeReturnButton();
   render(t);
   window.scrollTo(0, 0);
 }
@@ -3419,6 +3577,11 @@ function switchTab(t) {
 function render(t) {
   const R = { today: renderToday, routines: renderRoutines, gym: renderGym, money: renderMoney, health: renderHealth };
   if (R[t]) R[t]();
+}
+
+function updateHomeReturnButton() {
+  const btn = document.getElementById('btn-home');
+  if (btn) btn.style.display = currentTab === 'today' ? 'none' : '';
 }
 
 /* ═══════════════════════ HOME / TODAY ═══════════════════════ */
@@ -3490,6 +3653,7 @@ function renderToday() {
 
   let html = buildMonthCalendar();
   html += buildNextShiftCard();
+  html += buildHomeHubNav();
   html += buildDueSoonSection();
   html += buildScheduleSection();
   html += buildHomeGymCheck(gym);
@@ -3516,6 +3680,18 @@ function renderToday() {
   html += themeDivider('puppy', 'puppy');
 
   document.getElementById('page-today').innerHTML = html;
+}
+
+function buildHomeHubNav() {
+  const items = [
+    { tab: 'routines', label: 'Routines', icon: pngSticker('images/sleep-quality.png', 'hub-nav-sticker') },
+    { tab: 'gym', label: 'Gym', icon: pngSticker('images/treadmill.png', 'hub-nav-sticker') },
+    { tab: 'money', label: 'Money', icon: pngSticker('images/jar.png', 'hub-nav-sticker') },
+    { tab: 'health', label: 'Health', icon: pngSticker('images/mental-health.png', 'hub-nav-sticker') },
+  ];
+  return `<div class="hub-nav" aria-label="Main navigation">
+    ${items.map(item => `<button class="hub-nav-btn" data-tab="${item.tab}" type="button" onclick="switchTab('${item.tab}')" title="${esc(item.label)}" aria-label="${esc(item.label)}">${item.icon}</button>`).join('')}
+  </div>`;
 }
 
 function buildMonthCalendar() {
@@ -3815,6 +3991,7 @@ function getDueSoonAcademicItems() {
     })
     .filter(Boolean)
     .sort((a, b) =>
+      Number(!!a.assignment.done) - Number(!!b.assignment.done) ||
       a.daysUntil - b.daysUntil ||
       academicTextKey(a.assignment.className).localeCompare(academicTextKey(b.assignment.className)) ||
       academicTextKey(a.assignment.title).localeCompare(academicTextKey(b.assignment.title))
@@ -3827,42 +4004,118 @@ function academicBlockLinkLabel(block) {
   return `${day} ${formatTime(block.start)}`;
 }
 
+function isDueSoonOpen() { return ls('gnd-due-soon-open', true) !== false; }
+
+function toggleDueSoonSection() {
+  lsSave('gnd-due-soon-open', !isDueSoonOpen());
+  renderToday();
+}
+
 function buildDueSoonSection() {
   const items = getDueSoonAcademicItems();
   if (!items.length) return '';
 
-  const visible = items.slice(0, 6);
-  let html = `<div class="card theme-card due-soon-card">
+  const open = isDueSoonOpen();
+  const remaining = items.filter(item => !item.assignment.done).length;
+  const chevron = `<svg class="due-soon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>`;
+  let html = `<div class="card theme-card due-soon-card ${open?'':'collapsed'}">
     ${themeIcon('academic', 'theme-corner bottom-right')}
-    <div class="due-soon-head">
-      <div><div class="card-title">Due Soon</div><div class="page-date">Next 7 days</div></div>
-      <div class="due-soon-count">${items.length}</div>
-    </div>
-    <div class="due-soon-list">`;
+    <button class="due-soon-head" type="button" onclick="toggleDueSoonSection()" aria-expanded="${open ? 'true' : 'false'}">
+      <span><span class="card-title">Due in the Next 7 Days</span><span class="page-date">${remaining}/${items.length} still needs done</span></span>
+      <span class="due-soon-head-right"><span class="due-soon-count">${remaining}/${items.length}</span>${chevron}</span>
+    </button>`;
 
-  visible.forEach(item => {
+  if (!open) return html + `</div>`;
+
+  html += `<div class="due-soon-list">`;
+
+  items.forEach(item => {
+    const done = !!item.assignment.done;
+    const id = item.assignment.id || '';
     const countdownClass = item.daysUntil === 0 ? 'now' : item.daysUntil <= 2 ? 'soon' : '';
     const links = item.blocks.length
       ? item.blocks.slice(0, 3).map(block => `<button class="due-soon-link" onclick="openDayModal('${attr(block.date)}','${attr(block.id || '')}')">${esc(academicBlockLinkLabel(block))}</button>`).join('')
       : `<span class="due-soon-muted">No block scheduled</span>`;
     const extraBlocks = item.blocks.length > 3 ? `<span class="due-soon-muted">+${item.blocks.length - 3} more</span>` : '';
 
-    html += `<div class="due-soon-row">
-      <div class="due-soon-top">
-        <span class="due-soon-class">${esc(item.assignment.className || 'Class')}</span>
-        <span class="due-soon-countdown ${countdownClass}">${esc(academicCountdownText(item.daysUntil))}</span>
+    html += `<div class="due-soon-row ${done?'checked':''}">
+      <button class="check-box due-soon-check" type="button" onclick="toggleDueSoonDone(${jsArg(id)})" aria-label="${done ? 'Mark not done' : 'Mark done'}">${checkSvg()}</button>
+      <div class="due-soon-main">
+        <div class="due-soon-top">
+          <span class="due-soon-class">${esc(item.assignment.className || 'Class')}</span>
+          <span class="due-soon-countdown ${countdownClass}">${esc(academicCountdownText(item.daysUntil))}</span>
+        </div>
+        <div class="due-soon-title">${esc(item.assignment.title || 'Assignment')}</div>
+        <div class="due-soon-date">Due ${formatShortDate(item.due)}</div>
+        <div class="due-soon-links">${links}${extraBlocks}</div>
       </div>
-      <div class="due-soon-title">${esc(item.assignment.title || 'Assignment')}</div>
-      <div class="due-soon-date">Due ${formatShortDate(item.due)}</div>
-      <div class="due-soon-links">${links}${extraBlocks}</div>
+      ${pencilBtn('Edit due item', `openDueSoonEdit(${jsArg(id)})`, 'inline-edit-btn due-soon-edit')}
     </div>`;
   });
 
-  if (items.length > visible.length) {
-    html += `<div class="due-soon-more">+${items.length - visible.length} more this week</div>`;
-  }
-
   return html + `</div></div>`;
+}
+
+let editingDueSoonId = null;
+
+function findAcademicAssignmentIndex(id, assignments = getAcademicAssignments()) {
+  return assignments.findIndex(a => String(a?.id || '') === String(id || ''));
+}
+
+function toggleDueSoonDone(id) {
+  const assignments = getAcademicAssignments();
+  const idx = findAcademicAssignmentIndex(id, assignments);
+  if (idx < 0) return;
+  assignments[idx].done = !assignments[idx].done;
+  saveAcademicAssignments(assignments);
+  renderToday();
+}
+
+function openDueSoonEdit(id) {
+  const assignments = getAcademicAssignments();
+  const idx = findAcademicAssignmentIndex(id, assignments);
+  if (idx < 0) return;
+  const assignment = assignments[idx];
+  editingDueSoonId = assignment.id;
+  document.getElementById('due-soon-title').value = assignment.title || '';
+  document.getElementById('due-soon-class').value = assignment.className || '';
+  document.getElementById('due-soon-date').value = assignment.dueDate || todayKey();
+  document.getElementById('due-soon-modal').classList.add('open');
+}
+
+function syncAcademicEventsForAssignment(assignment) {
+  const events = getEvents();
+  let changed = false;
+  events.forEach(event => {
+    if (event.type === 'academic' && event.academicAssignmentId === assignment.id) {
+      event.academicClass = assignment.className || event.academicClass || '';
+      event.academicAssignmentTitle = assignment.title || event.academicAssignmentTitle || '';
+      event.academicDueDate = assignment.dueDate || event.academicDueDate || '';
+      changed = true;
+    }
+  });
+  if (changed) saveEvents(events);
+}
+
+function saveDueSoonEdit() {
+  if (!editingDueSoonId) return;
+  const assignments = getAcademicAssignments();
+  const idx = findAcademicAssignmentIndex(editingDueSoonId, assignments);
+  if (idx < 0) return;
+  const title = document.getElementById('due-soon-title').value.trim();
+  const dueDate = document.getElementById('due-soon-date').value || todayKey();
+  if (!title || !dueDate) return;
+  assignments[idx] = {
+    ...assignments[idx],
+    title,
+    className: document.getElementById('due-soon-class').value.trim() || 'Class',
+    dueDate
+  };
+  saveAcademicAssignments(assignments);
+  syncAcademicEventsForAssignment(assignments[idx]);
+  document.getElementById('due-soon-modal').classList.remove('open');
+  editingDueSoonId = null;
+  renderToday();
 }
 
 function buildScheduleSection() {
@@ -4670,6 +4923,13 @@ function resetWater() {
   renderHealth();
 }
 
+function adjustSmoking(deltaHalfUnits) {
+  const smoking = getSmokingWeek();
+  smoking.halfUnits = Math.max(0, smoking.halfUnits + Math.round(Number(deltaHalfUnits) || 0));
+  saveSmokingWeek(smoking);
+  renderHealth();
+}
+
 function toggleGymForDate(dateKey) {
   const d = ls(`gnd-${dateKey}-gym`, null) || defGym();
   const wasCompleted = !!d.completed;
@@ -4706,6 +4966,7 @@ function getDefaultRoutineOpen() {
   return {
     morning: h >= 5 && h < 12,
     work: hasWork && h >= 7 && h < 19,
+    home: h >= 9 && h < 21,
     evening: h >= 17,
     todo: h >= 12 && h < 17 || (!hasWork && h >= 12),
   };
@@ -4744,6 +5005,24 @@ function addWorkTask() {
   renderRoutines();
 }
 
+function toggleCleaningTask(id) {
+  const week = getCleaningWeek();
+  week.done[id] = !week.done[id];
+  saveCleaningWeek(week);
+  renderRoutines();
+}
+
+function addCleaningTask() {
+  const input = document.getElementById('cleaning-task-input');
+  if (!input) return;
+  const title = input.value.trim();
+  if (!title) return;
+  const tasks = getCleaningTasks();
+  tasks.push({ id: `clean-${Date.now()}`, title });
+  saveCleaningTasks(tasks);
+  renderRoutines();
+}
+
 function buildCollapseSection(id, title, sub, isOpen, content, icon = '') {
   const chevron = `<svg class="collapse-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>`;
   const inlineSticker = icon ? themeIcon(icon, 'collapse-title-sticker') : '';
@@ -4777,10 +5056,14 @@ function renderRoutines() {
   const eDone = EVENING_ITEMS.filter(i => eve[i.key]).length;
   const workTasks = getWorkTasks();
   const wDone = workTasks.filter(t => t.done).length;
+  const cleaningTasks = getCleaningTasks();
+  const cleaningWeek = getCleaningWeek();
+  const cDone = cleaningTasks.filter(t => cleaningWeek.done[t.id]).length;
   const todos = getTodos();
   const tDone = todos.filter(t => t.done).length;
 
   if (!routineOpenState) routineOpenState = getDefaultRoutineOpen();
+  if (routineOpenState.home === undefined) routineOpenState.home = getDefaultRoutineOpen().home;
 
   let html = themePageHeader('Routines', 'Just do the next thing.', ['morning', 'sleep']);
   const morningBlock = getMorningRoutineBlockForDate(todayKey());
@@ -4796,6 +5079,11 @@ function renderRoutines() {
   html += buildCollapseSection('work', 'Work', workSub + (wDone ? ` · ${wDone}/${workTasks.length} tasks` : ''), routineOpenState.work,
     buildWorkBlock(workTasks),
     'work'
+  );
+
+  html += buildCollapseSection('home', 'Home', `${cDone}/${cleaningTasks.length} done this week`, routineOpenState.home,
+    buildCleaningBlock(cleaningTasks, cleaningWeek),
+    'home'
   );
 
   html += buildCollapseSection('evening', 'Evening', `${eDone}/${EVENING_ITEMS.length} done · 8 – 10 PM`, routineOpenState.evening,
@@ -4830,6 +5118,22 @@ function buildWorkBlock(tasks) {
   html += `<div style="display:flex;gap:8px;margin-top:10px;">
     <input type="text" class="text-input" id="work-task-input" placeholder="Add a shift task..." onkeydown="if(event.key==='Enter')addWorkTask()">
     <button class="modal-submit" style="padding:8px 14px;margin:0;white-space:nowrap;" onclick="addWorkTask()">Add</button>
+  </div>`;
+  return html;
+}
+
+function buildCleaningBlock(tasks, week) {
+  let html = `<div class="edit-hint" style="margin-bottom:8px;">${weeklyRangeLabel()} reset</div>`;
+  tasks.forEach(task => {
+    const done = !!week.done[task.id];
+    html += `<div class="check-item cleaning-task-row ${done?'checked':''}" onclick="toggleCleaningTask('${attr(task.id)}')">
+      <div class="check-box">${checkSvg()}</div>
+      <div class="check-label">${esc(task.title)}</div>
+    </div>`;
+  });
+  html += `<div class="cleaning-add-row">
+    <input type="text" class="text-input" id="cleaning-task-input" placeholder="Add a cleaning task..." onkeydown="if(event.key==='Enter')addCleaningTask()">
+    <button class="modal-submit" type="button" onclick="addCleaningTask()">Add</button>
   </div>`;
   return html;
 }
@@ -6431,6 +6735,7 @@ function renderHealth() {
   let html = themePageHeader('Health', 'Take care of yourself.');
 
   html += buildWaterBottle(h);
+  html += buildSmokingTracker();
 
   html += buildMealPlan(h);
   html += buildGroceryList(h);
@@ -6476,7 +6781,46 @@ function buildWaterBottle(h) {
   </div>`;
 }
 
+function buildSmokingTracker() {
+  const smoking = getSmokingWeek();
+  return `<div class="card smoking-card theme-card">
+    <div class="card-title-row"><div class="card-title">Smoking This Week</div></div>
+    <div class="page-date">${weeklyRangeLabel()}</div>
+    <div class="smoking-total">
+      <div class="smoking-total-label">Weekly total</div>
+      <div class="smoking-total-value">${formatHalfUnits(smoking.halfUnits)}</div>
+    </div>
+    <div class="smoking-actions" aria-label="Adjust smoking weekly total">
+      ${smokingRow('full', 'Whole joint', 2, 'Add one', 'Subtract one')}
+      ${smokingRow('half', 'Half joint', 1, 'Add one half', 'Subtract one half')}
+    </div>
+    <div class="smoking-note">Half marks keep shared/social logs accurate.</div>
+  </div>`;
+}
+
+function smokingRow(size, label, delta, addLabel, subLabel) {
+  return `<div class="smoking-row">
+    <span class="smoking-joint-icon ${size}" aria-hidden="true"><img src="images/joints.png" alt=""></span>
+    <div class="smoking-row-label">${esc(label)}</div>
+    <button type="button" class="smoking-row-btn" onclick="adjustSmoking(${-delta})" aria-label="${esc(subLabel)}" title="${esc(subLabel)}">−</button>
+    <button type="button" class="smoking-row-btn" onclick="adjustSmoking(${delta})" aria-label="${esc(addLabel)}" title="${esc(addLabel)}">+</button>
+  </div>`;
+}
+
 let mealDayOpen = {};
+
+function healthSectionKey(id) { return `gnd-health-section-open-${id}`; }
+function isHealthSectionOpen(id, defaultOpen = true) {
+  const saved = ls(healthSectionKey(id), null);
+  return saved === null ? defaultOpen : !!saved;
+}
+function toggleHealthSection(id) {
+  lsSave(healthSectionKey(id), !isHealthSectionOpen(id));
+  renderHealth();
+}
+function collapseChevronIcon() {
+  return `<svg class="collapse-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>`;
+}
 
 function toggleMealDay(day) {
   mealDayOpen[day] = !mealDayOpen[day];
@@ -6485,31 +6829,34 @@ function toggleMealDay(day) {
 
 function buildMealPlan(h) {
   const s = getMealSettings();
-  const dayMap = { mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday' };
-  const dayKeys = ['mon', 'tue', 'wed', 'thu', 'fri'];
+  const isOpen = isHealthSectionOpen('meal-plan');
 
-  let html = `<div class="card theme-card">
-    <div class="card-title-row"><div class="card-title">Meal Plan</div></div>
-    <div class="edit-hint" style="margin-bottom:10px;">M-F plan — pick meals for each day. Weekends are free.</div>`;
+  let html = `<div class="collapse-section theme-card">
+    <div class="collapse-header ${isOpen?'open':''}" onclick="toggleHealthSection('meal-plan')">
+      <div class="collapse-header-left"><div><div class="collapse-title">Meal Plan</div><div class="collapse-sub">M-F plan - pick meals for each day. Weekends are free.</div></div></div>
+      ${collapseChevronIcon()}
+    </div>
+    <div class="collapse-body ${isOpen?'open':''}">`;
 
-  if (dayKeys.some(dk => (s.days[dk]?.breakfast || 'oatmeal') === 'oatmeal')) {
+  if (MEAL_DAY_KEYS.some(dk => (s.days[dk]?.breakfast || 'oatmeal') === 'oatmeal')) {
     html += `<div class="meal-choice-row" style="margin-bottom:10px;"><div class="meal-choice-label">Oat packets</div><div class="meal-choice-options">
       ${[2,3].map(n => `<button class="meal-choice-btn ${s.oatPackets===n?'active':''}" onclick="setMealSetting('oatPackets',${n})">${n} packets</button>`).join('')}
     </div></div>`;
   }
 
-  dayKeys.forEach(day => {
+  MEAL_DAY_KEYS.forEach(day => {
     const d = s.days[day] || { breakfast: 'oatmeal', lunch: 'chicken', dinner: 'chicken' };
-    const bOpt = MEAL_OPTIONS.breakfast[d.breakfast] || MEAL_OPTIONS.breakfast.oatmeal;
-    const lOpt = MEAL_OPTIONS.entree[d.lunch] || MEAL_OPTIONS.entree.chicken;
-    const dOpt = MEAL_OPTIONS.entree[d.dinner] || MEAL_OPTIONS.entree.chicken;
-    const cals = mealCaloriesForDay(day);
+    const mealOptions = getMealOptionsForDay(day, s);
+    const bOpt = mealOptions.breakfast;
+    const lOpt = mealOptions.lunch;
+    const dOpt = mealOptions.dinner;
+    const cals = mealCaloriesForDay(day, s);
     const isOpen = !!mealDayOpen[day];
-    const chevron = `<svg class="collapse-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>`;
+    const chevron = collapseChevronIcon();
 
     html += `<div class="collapse-section" style="margin-bottom:8px;">
       <div class="collapse-header ${isOpen?'open':''}" onclick="toggleMealDay('${day}')" style="padding:10px 14px;">
-        <div><div class="collapse-title-row"><div class="collapse-title" style="font-size:14px;">${dayMap[day]}</div></div>
+        <div><div class="collapse-title-row"><div class="collapse-title" style="font-size:14px;">${MEAL_DAY_LABELS[day]}</div></div>
         <div class="collapse-sub">${esc(bOpt.label)} · ${esc(lOpt.label)} · ${esc(dOpt.label)} · ${Math.round(cals)} cal</div></div>
         ${chevron}
       </div>
@@ -6526,7 +6873,7 @@ function buildMealPlan(h) {
     </div>`;
   });
 
-  html += `</div>`;
+  html += `</div></div>`;
   return html;
 }
 
@@ -6551,42 +6898,59 @@ function setMealSetting(key, value) {
   renderHealth();
 }
 
-function mealCaloriesForDay(day) {
-  const s = getMealSettings();
-  const d = s.days[day] || { breakfast: 'oatmeal', lunch: 'chicken', dinner: 'chicken' };
-  const breakfast = MEAL_OPTIONS.breakfast[d.breakfast] || MEAL_OPTIONS.breakfast.oatmeal;
-  const lunch = MEAL_OPTIONS.entree[d.lunch] || MEAL_OPTIONS.entree.chicken;
-  const dinner = MEAL_OPTIONS.entree[d.dinner] || MEAL_OPTIONS.entree.chicken;
-  return breakfast.calories(s) + lunch.calories(s) + dinner.calories(s);
+function getMealOptionsForDay(day, settings = getMealSettings()) {
+  const d = settings.days[day] || { breakfast: 'oatmeal', lunch: 'chicken', dinner: 'chicken' };
+  return {
+    breakfast: MEAL_OPTIONS.breakfast[d.breakfast] || MEAL_OPTIONS.breakfast.oatmeal,
+    lunch: MEAL_OPTIONS.entree[d.lunch] || MEAL_OPTIONS.entree.chicken,
+    dinner: MEAL_OPTIONS.entree[d.dinner] || MEAL_OPTIONS.entree.chicken
+  };
+}
+
+function mealCaloriesForDay(day, settings = getMealSettings()) {
+  const meals = getMealOptionsForDay(day, settings);
+  return meals.breakfast.calories(settings) + meals.lunch.calories(settings) + meals.dinner.calories(settings);
 }
 
 function buildGroceryList(h) {
-  const groceries = estimateGroceries();
-  const dayKeys = ['mon', 'tue', 'wed', 'thu', 'fri'];
-  const days = getGroceryDays();
-  const avgCals = dayKeys.slice(0, days).reduce((sum, d) => sum + mealCaloriesForDay(d), 0) / (days || 1);
-  return `<div class="card theme-card">
-    <div class="editable-head"><div><div class="card-title-row"><div class="card-title">Grocery List</div></div><div class="edit-hint">Avg ~${Math.round(avgCals).toLocaleString()} cal/day across ${days} weekday${days>1?'s':''}.</div></div></div>
-    <div class="grocery-controls"><label class="field-label" for="grocery-days">Meal-plan weekdays to stock?</label><input class="num-input" id="grocery-days" type="number" min="1" max="5" value="${days}" onchange="saveGroceryDays(this.value);renderHealth()"></div>
-    <div class="grocery-list">${groceries.map(g => `<div class="grocery-row"><span>${esc(g.item)}</span><span class="grocery-qty">${esc(formatGroceryQty(g.qty, g.unit))}</span></div>`).join('')}</div>
+  const data = getGroceryPlanData();
+  const isOpen = isHealthSectionOpen('grocery-list');
+  return `<div class="collapse-section theme-card">
+    <div class="collapse-header ${isOpen?'open':''}" onclick="toggleHealthSection('grocery-list')">
+      <div class="collapse-header-left"><div><div class="collapse-title">Grocery List</div><div class="collapse-sub">Avg ~${Math.round(data.avgCalories).toLocaleString()} cal/day across ${data.days} weekday${data.days>1?'s':''}.</div></div></div>
+      ${collapseChevronIcon()}
+    </div>
+    <div class="collapse-body ${isOpen?'open':''}">
+      <div class="grocery-controls"><label class="field-label" for="grocery-days">Meal-plan weekdays to stock?</label><input class="num-input" id="grocery-days" type="number" min="1" max="${MEAL_DAY_KEYS.length}" step="1" value="${data.days}" onchange="saveGroceryDays(this.value);renderHealth()"></div>
+      <div class="grocery-list">${data.groceries.map(g => `<div class="grocery-row"><span>${esc(g.item)}</span><span class="grocery-qty">${esc(formatGroceryQty(g.qty, g.unit))}</span></div>`).join('')}</div>
+    </div>
   </div>`;
 }
 
-function estimateGroceries() {
-  const s = getMealSettings();
-  const found = new Map();
-  const dayKeys = ['mon', 'tue', 'wed', 'thu', 'fri'];
+function getGroceryPlanData() {
+  const settings = getMealSettings();
   const days = getGroceryDays();
-  dayKeys.slice(0, days).forEach(day => {
-    const d = s.days[day] || { breakfast: 'oatmeal', lunch: 'chicken', dinner: 'chicken' };
-    const breakfast = MEAL_OPTIONS.breakfast[d.breakfast] || MEAL_OPTIONS.breakfast.oatmeal;
-    const lunch = MEAL_OPTIONS.entree[d.lunch] || MEAL_OPTIONS.entree.chicken;
-    const dinner = MEAL_OPTIONS.entree[d.dinner] || MEAL_OPTIONS.entree.chicken;
-    [breakfast, lunch, dinner].forEach(option => {
-      option.groceries(s).forEach(g => addGrocery(found, g.item, g.qty, g.unit));
+  const dayKeys = MEAL_DAY_KEYS.slice(0, days);
+  const found = new Map();
+  let calorieTotal = 0;
+  dayKeys.forEach(day => {
+    const meals = getMealOptionsForDay(day, settings);
+    calorieTotal += meals.breakfast.calories(settings) + meals.lunch.calories(settings) + meals.dinner.calories(settings);
+    [meals.breakfast, meals.lunch, meals.dinner].forEach(option => {
+      option.groceries(settings).forEach(g => addGrocery(found, g.item, g.qty, g.unit));
     });
   });
-  return [...found.values()].sort((a, b) => a.item.localeCompare(b.item));
+  return {
+    settings,
+    days,
+    dayKeys,
+    avgCalories: calorieTotal / (dayKeys.length || 1),
+    groceries: [...found.values()].sort((a, b) => a.item.localeCompare(b.item))
+  };
+}
+
+function estimateGroceries() {
+  return getGroceryPlanData().groceries;
 }
 
 function addGrocery(map, item, qty, unit) {
