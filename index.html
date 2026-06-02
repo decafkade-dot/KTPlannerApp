@@ -570,6 +570,383 @@ img.card-icon, img.page-icon { filter: brightness(0) saturate(100%) invert(80%) 
 .cleaning-add-row .modal-submit {
   padding: 8px 14px; margin: 0; white-space: nowrap;
 }
+/* ── Cleaning task drag-and-drop ── */
+.cleaning-task-row { cursor: grab; position: relative; }
+.cleaning-task-row:active { cursor: grabbing; }
+.cleaning-drag-grip {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 18px; flex-shrink: 0; font-size: 14px; letter-spacing: -1px;
+  color: var(--text-muted); opacity: 0.55; cursor: grab; user-select: none;
+}
+.cleaning-task-row:hover .cleaning-drag-grip { opacity: 0.9; }
+.cleaning-day-badge, .cleaning-assign-btn {
+  margin-left: auto; flex-shrink: 0;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.02em;
+  padding: 4px 9px; border-radius: 999px; cursor: pointer;
+  border: 1px solid transparent; transition: transform 0.12s ease, background 0.15s ease;
+}
+.cleaning-day-badge {
+  background: var(--caramel-light, #f3d9c1); color: var(--espresso);
+  border-color: rgba(92,61,46,0.15);
+}
+.cleaning-day-badge:hover { transform: scale(1.04); }
+.cleaning-assign-btn {
+  background: transparent; color: var(--text-muted);
+  border-color: var(--border-soft); border-style: dashed;
+}
+.cleaning-assign-btn:hover { color: var(--espresso); border-color: var(--espresso); }
+body.cleaning-dragging { cursor: grabbing; }
+body.cleaning-dragging .week-day-btn { transition: transform 0.15s ease, box-shadow 0.15s ease; }
+.week-day-btn.drop-target {
+  transform: translateY(-3px); box-shadow: 0 10px 18px -10px rgba(92,61,46,0.45);
+  border-color: var(--espresso) !important; background: var(--caramel-light, #f3d9c1) !important;
+}
+.week-day-btn.drop-target .wdn, .week-day-btn.drop-target .wdd { color: var(--espresso) !important; }
+.cleaning-picker-sheet {
+  position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%) translateY(140%);
+  width: min(420px, calc(100% - 24px)); padding: 18px;
+  background: var(--bg-card); border-radius: 20px;
+  border: 1px solid var(--border-soft);
+  box-shadow: 0 20px 40px -12px rgba(45,30,22,0.32);
+  z-index: 90; transition: transform 0.28s cubic-bezier(.2,.85,.25,1);
+}
+.cleaning-picker-sheet.open { transform: translateX(-50%) translateY(0); }
+.cleaning-picker-title { font-size: 15px; font-weight: 800; color: var(--espresso); margin-bottom: 12px; }
+.cleaning-picker-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;
+}
+.cleaning-picker-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 10px 4px; border-radius: 12px;
+  background: var(--bg-input); border: 1px solid var(--border-soft);
+  cursor: pointer; transition: transform 0.12s ease, background 0.15s ease;
+}
+.cleaning-picker-btn:hover { transform: translateY(-2px); background: var(--caramel-light, #f3d9c1); border-color: var(--espresso); }
+.cleaning-picker-day { font-size: 10px; font-weight: 700; color: var(--text-muted); }
+.cleaning-picker-date { font-size: 15px; font-weight: 800; color: var(--text); }
+
+/* ── Week planner: 7-day strip + at-a-glance day view ── */
+.week-planner-card { position: relative; }
+.day-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+
+.week-strip {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;
+  padding: 4px 0 10px; margin-bottom: 8px;
+}
+.week-strip .week-day-btn {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+  gap: 2px; padding: 8px 4px; min-height: 70px;
+  border-radius: 14px;
+  border: 1px solid var(--border-soft); background: var(--bg-input);
+  cursor: pointer; transition: all 0.18s ease;
+}
+.week-strip .week-day-btn:hover {
+  transform: translateY(-1px); border-color: var(--mocha, var(--espresso));
+}
+.week-strip .week-day-btn.today {
+  border-color: var(--espresso);
+  background: var(--caramel-light, #f3d9c1);
+  box-shadow: inset 0 0 0 2px rgba(92,61,46,0.08);
+}
+.week-strip .week-day-btn.active {
+  background: var(--espresso); border-color: var(--espresso);
+}
+.week-strip .week-day-btn.active .wdn,
+.week-strip .week-day-btn.active .wdd { color: #fff; }
+.week-strip .week-day-btn .wdn {
+  font-size: 10px; font-weight: 700; color: var(--text-muted);
+  letter-spacing: 0.06em; text-transform: uppercase;
+}
+.week-strip .week-day-btn.today .wdn { color: var(--espresso); }
+.week-strip .week-day-btn .wdd {
+  font-size: 18px; font-weight: 800; color: var(--text); line-height: 1; margin-top: 2px;
+}
+.week-strip .dot-row { display: flex; gap: 3px; margin-top: 4px; min-height: 6px; }
+.week-strip .week-day-btn.drop-target {
+  transform: translateY(-2px);
+  border-color: var(--espresso) !important; background: var(--caramel-light, #f3d9c1) !important;
+  box-shadow: 0 10px 18px -10px rgba(92,61,46,0.45);
+}
+.cleaning-flag {
+  position: absolute; top: 4px; right: 4px;
+  font-size: 11px; opacity: 0.85; pointer-events: none;
+}
+
+.week-day-headline {
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 8px;
+  padding: 4px 2px 8px; margin-bottom: 4px;
+  border-bottom: 1px dashed var(--border-soft);
+}
+.week-day-headline-main strong {
+  font-size: 16px; color: var(--espresso); margin-right: 8px;
+}
+.week-day-headline-main .page-date { display: inline; font-size: 12px; color: var(--text-muted); }
+.week-action-row { display: flex; gap: 8px; margin-top: 10px; }
+.week-action-btn { flex: 1; margin: 0; }
+
+/* At-a-glance day view: fixed height, no scroll, blocks are %-positioned. */
+.day-glance {
+  position: relative;
+  display: grid; grid-template-columns: 44px 1fr; gap: 8px;
+  height: min(58vh, 540px); min-height: 320px;
+  border-radius: 12px; padding: 8px 8px 8px 4px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.4), rgba(255,255,255,0));
+  border: 1px solid var(--border-soft);
+  margin-bottom: 12px;
+}
+.day-glance.empty {
+  display: flex; align-items: center; justify-content: center;
+  height: 160px; min-height: 0;
+}
+.day-glance-empty { color: var(--text-muted); font-size: 13px; }
+.day-glance-axis {
+  position: relative; height: 100%; padding: 2px 0;
+}
+.day-glance-hour {
+  position: absolute; left: 0; right: 0;
+  transform: translateY(-50%);
+  font-size: 10px; font-weight: 700; color: var(--text-muted);
+  text-align: right; padding-right: 4px;
+  white-space: nowrap;
+}
+.day-glance-lane {
+  position: relative; height: 100%;
+  border-left: 1.5px solid var(--border-soft);
+  border-radius: 0 8px 8px 0;
+}
+.day-glance-grid-line {
+  position: absolute; left: 0; right: 0; height: 1px;
+  border-top: 1px dashed var(--border-soft); pointer-events: none;
+}
+.day-glance-block {
+  position: absolute;
+  border-radius: 10px;
+  background: var(--bg-card);
+  border: 1px solid rgba(92,61,46,0.1);
+  box-shadow: var(--shadow-sm, 0 4px 12px -8px rgba(45,30,22,0.18));
+  overflow: hidden; cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  min-height: 22px;
+}
+.day-glance-block::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+  background: var(--block-color);
+}
+.day-glance-block:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px -10px rgba(45,30,22,0.35);
+  z-index: 2;
+}
+.day-glance-block-inner {
+  padding: 4px 8px 4px 10px;
+  display: flex; flex-direction: column; gap: 1px;
+  height: 100%; overflow: hidden;
+}
+.day-glance-block-time {
+  font-size: 9px; font-weight: 700; color: var(--text-muted);
+  letter-spacing: 0.02em; line-height: 1.1;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.day-glance-block-title {
+  font-size: 12px; font-weight: 800; color: var(--text);
+  line-height: 1.15;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.day-glance-block-detail {
+  font-size: 10px; color: var(--text-secondary, var(--text-muted));
+  line-height: 1.2;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.day-glance-block-edit {
+  position: absolute; right: 4px; top: 4px;
+  transform: scale(0.85);
+}
+.day-glance-block.cleaning {
+  background: linear-gradient(135deg, #fff, #ffe7f3);
+  border-color: rgba(214,118,166,0.35);
+}
+.day-glance-block.cleaning .day-glance-block-title { color: #B14687; }
+.day-glance-block.cleaning.done .day-glance-block-title { text-decoration: line-through; opacity: 0.65; }
+.day-glance-block.cleaning.done { opacity: 0.78; }
+.day-glance-block-x {
+  position: absolute; right: 4px; bottom: 4px;
+  width: 18px; height: 18px; border-radius: 50%;
+  border: 1px solid var(--border-soft); background: rgba(255,255,255,0.9);
+  color: var(--text-muted); font-size: 10px; line-height: 1; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.day-glance-block-x:hover { color: var(--danger); border-color: var(--danger); }
+.day-glance-now {
+  position: absolute; left: -6px; right: 0; height: 0;
+  border-top: 2px solid var(--danger);
+  pointer-events: none; z-index: 3;
+}
+.day-glance-now::before {
+  content: ''; position: absolute; left: -2px; top: -5px;
+  width: 8px; height: 8px; border-radius: 50%; background: var(--danger);
+}
+.day-glance-now-label {
+  position: absolute; right: 4px; top: -14px;
+  font-size: 9px; font-weight: 800; color: var(--danger);
+  background: rgba(255,255,255,0.9); padding: 1px 5px; border-radius: 4px;
+}
+
+/* ── Paycheck planner tab ── */
+.paycheck-toolbar {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 10px; margin-bottom: 12px;
+  padding: 10px 12px; background: var(--bg-card); border-radius: 14px;
+  border: 1px solid var(--border-soft);
+}
+.paycheck-toolbar-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.paycheck-action-btn {
+  font-size: 12px; font-weight: 700; padding: 7px 12px; border-radius: 999px;
+  border: 1px solid var(--border-soft); background: var(--bg-input); color: var(--text);
+  cursor: pointer; transition: transform 0.12s ease, background 0.15s ease;
+}
+.paycheck-action-btn:hover:not(:disabled) { transform: translateY(-1px); }
+.paycheck-action-btn.danger-soft { color: var(--danger); border-color: rgba(192,40,40,0.35); }
+.paycheck-action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.paycheck-row {
+  display: grid; gap: 12px; margin-bottom: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+.paycheck-card {
+  background: var(--bg-card); border-radius: 16px;
+  border: 1px solid var(--border-soft);
+  box-shadow: var(--shadow-sm, 0 4px 12px -8px rgba(45,30,22,0.18));
+  position: relative; transition: transform 0.18s ease, border-color 0.18s ease;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.paycheck-card.overdraft { border-color: rgba(192,40,40,0.4); background: linear-gradient(180deg, #fff, #fff2f2); }
+.paycheck-card.drop-target {
+  transform: translateY(-3px);
+  border-color: var(--espresso); box-shadow: 0 16px 28px -16px rgba(92,61,46,0.45);
+}
+.paycheck-card-toggle {
+  width: 100%; text-align: left; background: transparent; border: 0;
+  padding: 14px 36px 14px 14px; cursor: pointer; position: relative;
+  display: flex; flex-direction: column; gap: 10px;
+  transition: background 0.15s ease;
+}
+.paycheck-card-toggle:hover { background: rgba(92,61,46,0.04); }
+.paycheck-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.paycheck-card-label { font-size: 13px; font-weight: 800; color: var(--espresso); }
+.paycheck-card-date { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.paycheck-card-amount { font-size: 15px; font-weight: 800; color: var(--text); }
+.paycheck-card-bar {
+  width: 100%; height: 6px; border-radius: 3px;
+  background: var(--border-soft); overflow: hidden;
+}
+.paycheck-card-bar-fill {
+  height: 100%; background: var(--success); transition: width 0.3s ease;
+}
+.paycheck-card-bar-fill.over { background: var(--danger); }
+.paycheck-card-stats {
+  display: flex; justify-content: space-between; font-size: 11px; font-weight: 700;
+  color: var(--text-muted);
+}
+.paycheck-card-stats .over { color: var(--danger); }
+.paycheck-card-stats .left { color: var(--success); }
+.paycheck-card-chev {
+  position: absolute; right: 14px; top: 16px;
+  width: 16px; height: 16px; color: var(--text-muted);
+  transition: transform 0.2s ease;
+}
+.paycheck-card.open .paycheck-card-chev { transform: rotate(180deg); }
+.paycheck-card-body {
+  max-height: 0; overflow: hidden;
+  transition: max-height 0.28s ease, padding 0.2s ease;
+}
+.paycheck-card.open .paycheck-card-body {
+  max-height: 800px;
+  padding: 4px 14px 14px;
+  border-top: 1px dashed var(--border-soft);
+}
+.paycheck-bill-list { display: flex; flex-direction: column; gap: 6px; }
+.paycheck-bill-empty {
+  text-align: center; font-size: 11px; color: var(--text-muted);
+  padding: 14px 6px; border: 1.5px dashed var(--border-soft); border-radius: 12px;
+}
+.paycheck-bill-chip {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 9px; border-radius: 10px; cursor: grab;
+  background: var(--bg-input); border: 1px solid var(--border-soft);
+  transition: transform 0.12s ease, border-color 0.15s ease;
+}
+.paycheck-bill-chip:active { cursor: grabbing; }
+.paycheck-bill-chip-name {
+  flex: 1; min-width: 0; font-size: 12px; font-weight: 700; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.paycheck-bill-chip-amt { font-size: 12px; font-weight: 800; color: var(--espresso); }
+.paycheck-bill-chip-x {
+  width: 18px; height: 18px; border-radius: 50%;
+  border: 1px solid var(--border-soft); background: #fff; color: var(--text-muted);
+  font-size: 11px; line-height: 1; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.paycheck-bill-chip-x:hover { color: var(--danger); border-color: var(--danger); }
+.paycheck-bill-chip.next-month {
+  background: linear-gradient(135deg, #fff, #fff6e0);
+  border-color: rgba(170,130,40,0.35);
+}
+.paycheck-bill-chip-tag {
+  font-size: 9px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase;
+  padding: 2px 6px; border-radius: 999px;
+  background: #FFF6C2; color: #6b5400;
+  border: 1px solid rgba(170,130,40,0.25);
+}
+.paycheck-bill-chip-tag.cc {
+  background: #E2B3F2; color: #5a2b6b;
+  border-color: rgba(110,55,140,0.3);
+}
+.paycheck-pool-next {
+  background: linear-gradient(180deg, #fff, #fff8e8);
+  border-color: rgba(170,130,40,0.35);
+}
+.paycheck-pool-row.next-month {
+  background: #fff8e8; border-color: rgba(170,130,40,0.35);
+}
+.paycheck-pool-chip {
+  font-size: 9px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase;
+  padding: 1px 6px; border-radius: 999px;
+  background: #FFF6C2; color: #6b5400;
+  border: 1px solid rgba(170,130,40,0.3);
+  margin-left: 4px;
+}
+.paycheck-pool { margin-bottom: 14px; }
+.paycheck-pool-total { font-size: 13px; font-weight: 800; color: var(--espresso); margin-left: auto; }
+.paycheck-pool-hint { font-size: 12px; color: var(--text-muted); margin: 4px 0 10px; }
+.paycheck-pool-list { display: flex; flex-direction: column; gap: 6px; }
+.paycheck-pool-empty {
+  text-align: center; font-size: 12px; color: var(--text-muted); padding: 18px 8px;
+  border: 1.5px dashed var(--border-soft); border-radius: 12px;
+}
+.paycheck-pool-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px; border-radius: 12px; cursor: grab;
+  background: var(--bg-input); border: 1px solid var(--border-soft);
+  transition: transform 0.12s ease, box-shadow 0.15s ease;
+}
+.paycheck-pool-row:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm, 0 6px 14px -8px rgba(45,30,22,0.18)); }
+.paycheck-pool-row:active { cursor: grabbing; }
+.paycheck-pool-grip {
+  font-size: 14px; letter-spacing: -1px; color: var(--text-muted); opacity: 0.55;
+  user-select: none; flex-shrink: 0;
+}
+.paycheck-pool-info { flex: 1; min-width: 0; }
+.paycheck-pool-name { font-size: 13px; font-weight: 700; color: var(--text); }
+.paycheck-pool-meta { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+.paycheck-pool-amt { font-size: 13px; font-weight: 800; color: var(--espresso); }
+.paycheck-picker-grid {
+  display: flex; flex-direction: column; gap: 6px;
+}
+.paycheck-picker-btn { flex-direction: column; align-items: stretch; gap: 4px; padding: 12px; }
+.paycheck-picker-amt { font-size: 13px; font-weight: 800; color: var(--espresso); }
+body.bill-dragging .paycheck-card { transition: transform 0.15s ease, box-shadow 0.15s ease; }
 
 /* ── Completion Ring ── */
 .ring-wrap { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
@@ -977,6 +1354,21 @@ img.card-icon, img.page-icon { filter: brightness(0) saturate(100%) invert(80%) 
 .timeline-block .inline-edit-btn {
   position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
 }
+.timeline-block.cleaning {
+  background: linear-gradient(135deg, #fff, #ffe7f3);
+  border-color: rgba(214,118,166,0.35);
+}
+.timeline-block.cleaning .timeline-block-title { color: #B14687; }
+.timeline-block.cleaning.done .timeline-block-title { text-decoration: line-through; opacity: 0.65; }
+.timeline-block.cleaning.done { opacity: 0.78; }
+.timeline-block-action {
+  position: absolute; right: 6px; top: 6px;
+  width: 22px; height: 22px; border-radius: 50%;
+  border: 1px solid var(--border-soft); background: rgba(255,255,255,0.85);
+  color: var(--text-muted); font-size: 13px; line-height: 1; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.timeline-block-action:hover { color: var(--danger); border-color: var(--danger); }
 .timeline-pins {
   display: grid; gap: 7px; margin-top: 12px; padding-top: 10px;
   border-top: 1px dashed var(--border-soft);
@@ -1749,10 +2141,6 @@ img.card-icon, img.page-icon { filter: brightness(0) saturate(100%) invert(80%) 
   <button class="top-btn" id="btn-settings" title="Settings" onclick="openSettings()">
     <img class="top-btn-sticker" src="images/gear.png" alt="" aria-hidden="true">
   </button>
-  <button class="top-btn" id="btn-theme" title="Toggle dark mode" onclick="toggleTheme()">
-    <svg id="ico-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-    <svg id="ico-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-  </button>
 </div>
 
 <div class="app" id="app" style="display:none;">
@@ -1914,6 +2302,11 @@ img.card-icon, img.page-icon { filter: brightness(0) saturate(100%) invert(80%) 
     <div class="modal-field">
       <div class="field-label">Paid From (Account)</div>
       <select class="modal-input" id="bill-edit-account"></select>
+    </div>
+    <div class="modal-field" id="bill-edit-pays-field" style="display:none;">
+      <div class="field-label">Pays Down (Credit Card)</div>
+      <div class="field-hint">When this bill is marked paid, this card's balance goes up by the same amount.</div>
+      <select class="modal-input" id="bill-edit-pays"></select>
     </div>
     <div class="modal-field">
       <div class="field-label">Note (optional)</div>
@@ -2088,6 +2481,9 @@ img.card-icon, img.page-icon { filter: brightness(0) saturate(100%) invert(80%) 
 <div class="modal-overlay day-modal-overlay" id="day-modal">
   <div class="day-modal-sheet" id="day-modal-sheet"></div>
 </div>
+
+<!-- Cleaning Day Picker Sheet -->
+<div class="cleaning-picker-sheet" id="cleaning-picker" onclick="if(event.target===this)closeCleaningPicker()"></div>
 
 <!-- Today To-Do Modal -->
 <div class="modal-overlay" id="todo-modal">
@@ -2446,7 +2842,7 @@ const MEDS = {
     { key: 'clindamycinPM', name: 'Clindamycin Phosphate 1%', dose: 'Topical', sched: 'Evening' },
   ],
   weekly: [
-    { key: 'testosterone', name: 'Testosterone CYP', dose: '0.45ml injection', sched: 'Fridays' },
+    { key: 'testosterone', name: 'Testosterone CYP', dose: '0.45ml injection', sched: 'Mondays' },
   ]
 };
 
@@ -2492,6 +2888,7 @@ function normalizeBillRecord(bill) {
     category: normalizeBillCategory(bill),
     source: bill.source || '',
     note: bill.note || '',
+    paysAccountId: bill.paysAccountId || '',
   };
 }
 
@@ -3190,6 +3587,72 @@ function getCleaningWeek() {
 }
 function saveCleaningWeek(data) { lsSave(cleaningWeekKey(), { done: data.done || {} }); }
 
+/* ─── Cleaning task day assignments (drag-and-drop onto planner) ─── */
+function getCleaningAssignments() {
+  const data = ls('gnd-cleaning-assignments', null);
+  if (!data || typeof data !== 'object') return {};
+  return data;
+}
+function saveCleaningAssignments(map) { lsSave('gnd-cleaning-assignments', map); }
+function assignCleaningTaskToDate(taskId, dateKey, time = '10:00', end = '10:30') {
+  if (!taskId || !dateKey) return;
+  const map = getCleaningAssignments();
+  // Remove from any other day first (single assignment per task)
+  Object.keys(map).forEach(k => {
+    if (Array.isArray(map[k])) {
+      map[k] = map[k].filter(a => a.taskId !== taskId);
+      if (!map[k].length) delete map[k];
+    }
+  });
+  if (!Array.isArray(map[dateKey])) map[dateKey] = [];
+  map[dateKey].push({ taskId, time, end });
+  saveCleaningAssignments(map);
+}
+function unassignCleaningTask(taskId) {
+  const map = getCleaningAssignments();
+  let changed = false;
+  Object.keys(map).forEach(k => {
+    if (Array.isArray(map[k])) {
+      const before = map[k].length;
+      map[k] = map[k].filter(a => a.taskId !== taskId);
+      if (map[k].length !== before) changed = true;
+      if (!map[k].length) delete map[k];
+    }
+  });
+  if (changed) saveCleaningAssignments(map);
+}
+function getCleaningAssignmentForTask(taskId) {
+  const map = getCleaningAssignments();
+  for (const dateKey of Object.keys(map)) {
+    const found = (map[dateKey] || []).find(a => a.taskId === taskId);
+    if (found) return { dateKey, ...found };
+  }
+  return null;
+}
+function getCleaningBlocksForDate(dateKey) {
+  const list = getCleaningAssignments()[dateKey] || [];
+  if (!list.length) return [];
+  const tasks = getCleaningTasks();
+  const week = getCleaningWeek();
+  return list.map(a => {
+    const task = tasks.find(t => t.id === a.taskId);
+    if (!task) return null;
+    const done = !!week.done[task.id];
+    return {
+      id: `cleaning-${task.id}`,
+      source: 'cleaning',
+      time: a.time || '10:00',
+      end: a.end || '10:30',
+      title: task.title,
+      type: 'cleaning',
+      detail: done ? 'Done ✓' : 'Home cleaning',
+      cleaningTaskId: task.id,
+      cleaningDone: done,
+      editable: false
+    };
+  }).filter(Boolean);
+}
+
 function defRoutine(type) {
   const items = type === 'morning' ? MORNING_ITEMS : EVENING_ITEMS;
   const d = {}; items.forEach(i => d[i.key] = false); return d;
@@ -3485,6 +3948,62 @@ function paidBillEntriesForAccount(acctId) {
   return entries;
 }
 
+/* ─── Credit-card payment auto-credit ──────────────────────────────
+   A bill in the "Credit Card Payments" category whose name or note
+   text contains an account's name (case-insensitive) is treated as
+   a payment toward that account. When such a bill is marked paid,
+   its amount is credited to the target account's running balance. */
+function billPaysAccountId(bill, accounts = getAccounts()) {
+  if (!bill || bill.category !== 'Credit Card Payments') return null;
+  // Prefer explicit structured field set in the bill modal.
+  if (bill.paysAccountId && accounts.some(a => a.id === bill.paysAccountId)) {
+    return bill.paysAccountId;
+  }
+  const haystack = ((bill.name || '') + ' ' + (bill.note || '')).toLowerCase();
+  if (!haystack.trim()) return null;
+  // Fallback: name/note substring match. Prefer the longest-matching account
+  // name so e.g. "Cash App Debit" isn't shadowed by a "Cash" account.
+  let best = null;
+  accounts.forEach(a => {
+    const needle = String(a.name || '').toLowerCase().trim();
+    if (!needle) return;
+    if (haystack.includes(needle) && (!best || needle.length > best.needleLen)) {
+      best = { id: a.id, needleLen: needle.length };
+    }
+  });
+  return best?.id || null;
+}
+
+function paidCreditCardCreditsForAccount(acctId, accounts = getAccounts()) {
+  let total = 0;
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    const m = key && key.match(/^gnd-bills-(\d{4})-(\d{1,2})$/);
+    if (!m) continue;
+    const paid = ls(key, {});
+    Object.keys(paid).forEach(billKey => {
+      if (!paid[billKey]) return;
+      const bill = BILLS.find(b => b.key === billKey);
+      if (!bill) return;
+      if (billPaysAccountId(bill, accounts) === acctId) {
+        total += Number(bill.amount || 0);
+      }
+    });
+  }
+  return total;
+}
+
+function upcomingCreditCardCreditsForAccount(acctId, monthDate = getBillMonthDate(), accounts = getAccounts()) {
+  const paid = getBillsPaid(monthDate);
+  let total = 0;
+  BILLS.forEach(b => {
+    if (billPaysAccountId(b, accounts) !== acctId) return;
+    if (paid[b.key]) return;
+    total += Number(b.amount || 0);
+  });
+  return total;
+}
+
 function accountCurrentBalance(acctId) {
   const today = todayKey();
   const txTotal = getTransactions()
@@ -3492,7 +4011,8 @@ function accountCurrentBalance(acctId) {
     .reduce((sum, t) => sum + Number(t.amount || 0), 0);
   const paidBills = paidBillEntriesForAccount(acctId).reduce((sum, e) => sum + e.amount, 0);
   const receivedIncome = isDiscoverAccountId(acctId) ? 0 : receivedIncomeEntriesForAccount(acctId).reduce((sum, e) => sum + Number(e.amount || 0), 0);
-  return accountStartingBalance(acctId) + txTotal + paidBills + receivedIncome;
+  const ccPayments = paidCreditCardCreditsForAccount(acctId);
+  return accountStartingBalance(acctId) + txTotal + paidBills + receivedIncome + ccPayments;
 }
 
 function acctBalance(acctId) {
@@ -3522,6 +4042,7 @@ function getGymPlanForDate(date = new Date()) {
 }
 function isGymDay(date = new Date()) { return getGymTypeInfo(getGymPlanForDate(date)) !== null; }
 function isFriday() { return new Date().getDay() === 5; }
+function isMonday() { return new Date().getDay() === 1; }
 function getWorkout(dow) { return GYM_SCHEDULE[dow === undefined ? new Date().getDay() : dow] || null; }
 function getGymTypeInfo(kind) { const k = normalizeGymKind(kind); return ['gym','upper','lower'].includes(k) ? GYM_TYPES.gym : null; }
 function currentHour() { return new Date().getHours(); }
@@ -3643,6 +4164,156 @@ function getBillMonthDate() {
 function moveBillMonth(delta) {
   billMonthOffset = Math.max(0, Math.min(2, billMonthOffset + delta));
   renderMoney();
+}
+
+/* ─── Paycheck-Bill Plan helpers (drag bills onto paychecks) ───
+   Storage: gnd-paycheck-plan = { [planMonthKey]: { assignments, snapshot, mode } }
+   Each assignment key is an "occurrence id" so the same bill can be planned
+   separately for different months (e.g. assigning May 31's Crimson Cup
+   paycheck to a June bill). Occurrence id format: `${billKey}@${YYYY-MM}`.
+   Old plain billKey entries are read transparently as belonging to the
+   plan's own month and rewritten in the new format on next save. */
+function paycheckPlanKey(monthDate = getBillMonthDate()) {
+  return `${monthDate.getFullYear()}-${String(monthDate.getMonth()+1).padStart(2,'0')}`;
+}
+function monthDateFromPlanKey(planKey) {
+  const m = /^(\d{4})-(\d{2})$/.exec(planKey || '');
+  if (!m) return null;
+  return new Date(Number(m[1]), Number(m[2]) - 1, 1);
+}
+function billOccId(billKey, monthDate) {
+  return `${billKey}@${paycheckPlanKey(monthDate)}`;
+}
+function parseBillOccId(occId, fallbackPlanKey = null) {
+  const s = String(occId || '');
+  const idx = s.lastIndexOf('@');
+  if (idx === -1) return { billKey: s, monthKey: fallbackPlanKey };
+  return { billKey: s.slice(0, idx), monthKey: s.slice(idx + 1) };
+}
+function nextMonthDate(monthDate = getBillMonthDate()) {
+  return new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 1);
+}
+function getAllPaycheckPlans() {
+  const data = ls('gnd-paycheck-plan', null);
+  return (data && typeof data === 'object') ? data : {};
+}
+function savePaycheckPlans(plans) { lsSave('gnd-paycheck-plan', plans); }
+function normalizePlanAssignments(assignments, planMonthKey) {
+  // Rewrite plain billKey entries (legacy) into occurrence ids tied to the
+  // plan's own month so the rest of the code can treat them uniformly.
+  const out = {};
+  Object.keys(assignments || {}).forEach(k => {
+    if (!assignments[k]) return;
+    if (k.includes('@')) out[k] = assignments[k];
+    else out[`${k}@${planMonthKey}`] = assignments[k];
+  });
+  return out;
+}
+function getPaycheckPlan(monthDate = getBillMonthDate()) {
+  const plans = getAllPaycheckPlans();
+  const key = paycheckPlanKey(monthDate);
+  const plan = plans[key] || {};
+  return {
+    assignments: normalizePlanAssignments(plan.assignments, key),
+    snapshot: plan.snapshot && typeof plan.snapshot === 'object'
+      ? { assignments: normalizePlanAssignments(plan.snapshot.assignments, key), mode: plan.snapshot.mode || 'manual' }
+      : null,
+    mode: plan.mode || 'manual'
+  };
+}
+function savePaycheckPlan(plan, monthDate = getBillMonthDate()) {
+  const plans = getAllPaycheckPlans();
+  plans[paycheckPlanKey(monthDate)] = plan;
+  savePaycheckPlans(plans);
+}
+function clonePaycheckPlan(p) {
+  return JSON.parse(JSON.stringify(p || { assignments: {}, snapshot: null, mode: 'manual' }));
+}
+function findOccurrenceAssignment(occId) {
+  // Returns { planMonthKey, paycheckId } if this occurrence is assigned in
+  // any stored plan month.
+  const plans = getAllPaycheckPlans();
+  const { billKey, monthKey } = parseBillOccId(occId);
+  for (const planKey of Object.keys(plans)) {
+    const plan = plans[planKey];
+    const norm = normalizePlanAssignments(plan?.assignments, planKey);
+    if (norm[occId]) return { planMonthKey: planKey, paycheckId: norm[occId] };
+    // Also recognize legacy plain billKey within its own plan month.
+    if (plan?.assignments?.[billKey] && planKey === monthKey) {
+      return { planMonthKey: planKey, paycheckId: plan.assignments[billKey] };
+    }
+  }
+  return null;
+}
+function assignBillOccToPaycheck(occId, paycheckId, planMonthDate = getBillMonthDate()) {
+  if (!occId || !paycheckId) return;
+  // Remove any existing assignment of this occurrence in any other plan
+  // month before re-anchoring it to the current plan.
+  const plans = getAllPaycheckPlans();
+  Object.keys(plans).forEach(planKey => {
+    const plan = plans[planKey];
+    if (!plan?.assignments) return;
+    const { billKey, monthKey } = parseBillOccId(occId);
+    if (plan.assignments[occId]) {
+      delete plan.assignments[occId];
+    }
+    if (planKey === monthKey && plan.assignments[billKey]) {
+      delete plan.assignments[billKey];
+    }
+  });
+  savePaycheckPlans(plans);
+
+  const plan = getPaycheckPlan(planMonthDate);
+  plan.assignments[occId] = paycheckId;
+  plan.mode = 'manual';
+  savePaycheckPlan(plan, planMonthDate);
+}
+function unassignBillOcc(occId) {
+  const plans = getAllPaycheckPlans();
+  let changed = false;
+  Object.keys(plans).forEach(planKey => {
+    const plan = plans[planKey];
+    if (!plan?.assignments) return;
+    const { billKey, monthKey } = parseBillOccId(occId);
+    if (plan.assignments[occId]) {
+      delete plan.assignments[occId];
+      plan.mode = 'manual';
+      changed = true;
+    }
+    if (planKey === monthKey && plan.assignments[billKey]) {
+      delete plan.assignments[billKey];
+      plan.mode = 'manual';
+      changed = true;
+    }
+  });
+  if (changed) savePaycheckPlans(plans);
+}
+// Backward-compat shims for callers that still think in billKey-only terms.
+function assignBillToPaycheck(billKeyOrOccId, paycheckId, monthDate = getBillMonthDate()) {
+  const occId = String(billKeyOrOccId || '').includes('@')
+    ? billKeyOrOccId
+    : billOccId(billKeyOrOccId, monthDate);
+  assignBillOccToPaycheck(occId, paycheckId, monthDate);
+}
+function unassignBillFromPaycheck(billKeyOrOccId, monthDate = getBillMonthDate()) {
+  const occId = String(billKeyOrOccId || '').includes('@')
+    ? billKeyOrOccId
+    : billOccId(billKeyOrOccId, monthDate);
+  unassignBillOcc(occId);
+}
+function clearAllPaycheckAssignments(monthDate = getBillMonthDate()) {
+  const plan = getPaycheckPlan(monthDate);
+  plan.assignments = {};
+  savePaycheckPlan(plan, monthDate);
+}
+
+// Categories that are charged to a credit card (Discover) rather than paid
+// directly from a paycheck. These bills shouldn't appear in the Paychecks
+// tab — only the credit-card payment bill itself should.
+const PAYCHECK_TAB_EXCLUDED_CATEGORIES = new Set(['Variable', 'Subscriptions']);
+function billBelongsOnPaychecksTab(bill) {
+  if (!bill) return false;
+  return !PAYCHECK_TAB_EXCLUDED_CATEGORIES.has(bill.category);
 }
 
 function renderToday() {
@@ -4127,32 +4798,154 @@ function buildScheduleSection() {
   const viewDate = getScheduleViewDate();
   const viewKey = localDateKey(viewDate);
   const weekEnd = addDays(weekStart, 6);
+  const viewDay = viewDate.getDay();
+  const dayName = DAY_NAMES[viewDay];
+  const dayLong = viewDate.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
 
-  let html = `<div class="card theme-card"><div class="week-planner-head"><div><div class="week-planner-title">Week Planner</div><div class="page-date">${formatShortDate(weekStart)} - ${formatShortDate(weekEnd)}</div></div><div class="week-planner-actions">
+  let html = `<div class="card theme-card week-planner-card">${themeIcon('morning', 'theme-corner')}
+    <div class="week-planner-head"><div><div class="week-planner-title">Week Planner</div><div class="page-date">${formatShortDate(weekStart)} - ${formatShortDate(weekEnd)}</div></div><div class="week-planner-actions">
     <button class="tiny-nav-btn" onclick="moveScheduleWeek(-1)" title="Previous week">&#8249;</button>
     <button class="tiny-nav-btn" onclick="resetScheduleWeek()" title="This week">•</button>
     <button class="tiny-nav-btn" onclick="moveScheduleWeek(1)" title="Next week">&#8250;</button>
   </div></div>`;
 
-  html += `<div class="week-nav">`;
+  // Seven-day strip. Today is highlighted; the active day picks the schedule.
+  html += `<div class="week-strip">`;
   for (let i = 0; i < 7; i++) {
     const d = addDays(weekStart, i);
     const dk = localDateKey(d);
     const isToday = dk === todayKey();
     const isActive = i === scheduleDay;
-    const events = getEventsForDate(dk);
-    html += `<button class="week-day-btn ${isToday?'today':''} ${isActive?'active':''}" onclick="scheduleDay=${i};renderToday()">
+    const blocks = getScheduleBlocksForDate(dk);
+    const dayCleaning = (getCleaningAssignments()[dk] || []).length;
+    const pillTypes = [...new Set(blocks.map(b => b.type))].slice(0, 4);
+    const dots = pillTypes.map(t => `<span class="day-dot" style="background:${evColor(t)}"></span>`).join('');
+    html += `<button class="week-day-btn ${isToday?'today':''} ${isActive?'active':''}" type="button"
+      onclick="scheduleDay=${i};renderToday()"
+      ondragover="onDayDragOver(event)" ondragleave="onDayDragLeave(event)" ondrop="onDayDrop(event,'${dk}')"
+      aria-label="${esc(d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }))}">
       <span class="wdn">${DAY_NAMES[i].slice(0,3)}</span>
       <span class="wdd">${d.getDate()}</span>
-      ${events.length ? `<div class="dot-row">${events.slice(0,3).map(e=>`<div class="ev-dot" style="background:${evColor(e.type)}"></div>`).join('')}</div>` : ''}
+      <span class="dot-row">${dots}</span>
+      ${dayCleaning ? `<span class="cleaning-flag" title="${dayCleaning} cleaning task${dayCleaning===1?'':'s'}">🧽</span>` : ''}
     </button>`;
   }
   html += `</div>`;
 
-  html += buildScheduleListHtml(viewKey, true);
+  html += `<div class="week-day-headline"><div class="week-day-headline-main"><strong>${esc(dayName)}</strong><span class="page-date">${esc(dayLong)}</span></div></div>`;
 
-  html += `<button class="add-btn" onclick="openEventModal('${viewKey}')">+ Add Event</button>`;
-  html += `<button class="add-btn" onclick="openGymWeekEdit()" style="border-style:solid;">Edit Gym Week</button>`;
+  html += buildDayGlanceHtml(viewKey, true);
+
+  html += `<div class="week-action-row">
+    <button class="add-btn week-action-btn" onclick="openEventModal('${viewKey}')">+ Add Event</button>
+    <button class="add-btn week-action-btn" onclick="openGymWeekEdit()" style="border-style:solid;">Edit Gym Week</button>
+  </div>`;
+
+  html += `</div>`;
+  return html;
+}
+
+/* "Glance" timeline — the entire day fits inside a fixed-height container.
+   Blocks are positioned with percentages so nothing scrolls horizontally or
+   vertically. Overlapping blocks split the lane into side-by-side columns. */
+function buildDayGlanceHtml(dateKey, allowEdit = true) {
+  const blocks = getScheduleBlocksForDate(dateKey);
+  if (blocks.length === 0) {
+    return `<div class="day-glance empty"><div class="day-glance-empty">Nothing scheduled</div></div>`;
+  }
+
+  const normalized = blocks.map((b, idx) => {
+    const start = timeToMinutes(b.time);
+    let end = b.end && b.end !== b.time ? timeToMinutes(b.end) : start + 30;
+    if (end <= start) end = start + 30;
+    return { ...b, idx, start, end, duration: end - start };
+  }).sort((a, b) => a.start - b.start || a.end - b.end);
+
+  // Snap the time window to the actual range so the day uses the full
+  // vertical space — no wasted hours of empty timeline.
+  const minStart = Math.min(...normalized.map(b => b.start));
+  const maxEnd = Math.max(...normalized.map(b => b.end));
+  const windowStart = Math.max(0, Math.floor((minStart - 15) / 60) * 60);
+  const windowEnd = Math.min(1440, Math.ceil((maxEnd + 15) / 60) * 60);
+  const span = Math.max(60, windowEnd - windowStart);
+
+  // Greedy column assignment for overlapping blocks. Each overlap-cluster
+  // gets its own column count; blocks lay out side-by-side within the lane.
+  const sorted = normalized.slice().sort((a, b) => a.start - b.start);
+  const columns = []; // columns[i] = end minute of last block in that column
+  sorted.forEach(b => {
+    let placed = false;
+    for (let i = 0; i < columns.length; i++) {
+      if (columns[i] <= b.start) {
+        b.col = i;
+        columns[i] = b.end;
+        placed = true;
+        break;
+      }
+    }
+    if (!placed) {
+      b.col = columns.length;
+      columns.push(b.end);
+    }
+  });
+  const colCount = Math.max(1, columns.length);
+
+  // Hour marks for the axis on the left.
+  const hourMarks = [];
+  for (let h = Math.ceil(windowStart / 60) * 60; h <= windowEnd; h += 60) {
+    hourMarks.push(h);
+  }
+
+  const isToday = dateKey === todayKey();
+  const nowMin = isToday ? nowMinutes() : null;
+  const showNow = nowMin !== null && nowMin >= windowStart && nowMin <= windowEnd;
+  const nowPct = showNow ? ((nowMin - windowStart) / span) * 100 : 0;
+  const nowLabel = showNow ? formatTime(minutesToClock(nowMin)) : '';
+
+  let html = `<div class="day-glance" style="--glance-span:${span};">`;
+
+  // Hour axis labels (left)
+  html += `<div class="day-glance-axis">`;
+  hourMarks.forEach(mark => {
+    const pct = ((mark - windowStart) / span) * 100;
+    html += `<div class="day-glance-hour" style="top:${pct}%;">${formatTime(minutesToClock(mark))}</div>`;
+  });
+  html += `</div>`;
+
+  // Block lane with grid lines + blocks
+  html += `<div class="day-glance-lane">`;
+  hourMarks.forEach(mark => {
+    const pct = ((mark - windowStart) / span) * 100;
+    html += `<div class="day-glance-grid-line" style="top:${pct}%;"></div>`;
+  });
+
+  normalized.forEach(b => {
+    const canEdit = allowEdit && b.editable !== false;
+    const topPct = ((b.start - windowStart) / span) * 100;
+    const heightPct = (b.duration / span) * 100;
+    const colWidth = 100 / colCount;
+    const leftPct = b.col * colWidth;
+    const cleaningClass = b.source === 'cleaning' ? ' cleaning' : '';
+    const doneClass = b.cleaningDone ? ' done' : '';
+    const cleaningBtn = b.source === 'cleaning'
+      ? `<button class="day-glance-block-x" type="button" title="Unassign cleaning task" aria-label="Unassign cleaning task" onclick="event.stopPropagation();unassignCleaningTaskFromUI('${attr(b.cleaningTaskId)}')">✕</button>`
+      : '';
+    const titleAttr = `${b.title}${b.end && b.end !== b.time ? ` · ${formatTime(b.time)} – ${formatTime(b.end)}` : ''}${b.detail ? ` · ${b.detail}` : ''}`;
+    html += `<div class="day-glance-block${cleaningClass}${doneClass}" title="${attr(titleAttr)}" style="top:${topPct}%;height:${heightPct}%;left:calc(${leftPct}% + 2px);width:calc(${colWidth}% - 4px);--block-color:${evColor(b.type)};">
+      <div class="day-glance-block-inner">
+        <div class="day-glance-block-time">${formatTime(b.time)}${b.end && b.end !== b.time ? ` – ${formatTime(b.end)}` : ''}</div>
+        <div class="day-glance-block-title">${esc(b.title)}</div>
+        ${b.detail ? `<div class="day-glance-block-detail">${esc(b.detail)}</div>` : ''}
+      </div>
+      ${canEdit ? pencilBtn('Edit schedule item', `openEventModal('${dateKey}','${b.id || ''}','${b.customKey || ''}')`, 'day-glance-block-edit') : ''}
+      ${cleaningBtn}
+    </div>`;
+  });
+
+  if (showNow) {
+    html += `<div class="day-glance-now" style="top:${nowPct}%;"><span class="day-glance-now-label">${esc(nowLabel)}</span></div>`;
+  }
+  html += `</div>`;
 
   html += `</div>`;
   return html;
@@ -4169,6 +4962,8 @@ function getScheduleBlocksForDate(dateKey, events = getEvents()) {
   getEventsForDateFromList(dateKey, events).forEach(ev => {
     blocks.push({ id: ev.id, source: 'event', time: ev.start, end: ev.end || ev.start, title: ev.title, type: ev.type, detail: ev.detail, date: ev.date, recurring: ev.recurring, recurDays: ev.recurDays });
   });
+
+  getCleaningBlocksForDate(dateKey).forEach(b => blocks.push(b));
 
   return blocks.sort((a, b) => a.time.localeCompare(b.time) || a.title.localeCompare(b.title));
 }
@@ -4247,11 +5042,17 @@ function buildTimelineHtml(dateKey, allowEdit = true) {
     const top = Math.max(0, (b.start - windowStart) * pxPerMinute);
     const height = Math.max(34, b.duration * pxPerMinute);
     const highlightClass = highlightedAcademicEventId && b.id === highlightedAcademicEventId ? ' highlighted' : '';
-    html += `<div class="timeline-block${highlightClass}" style="top:${top}px;height:${height}px;--block-color:${evColor(b.type)};">
+    const cleaningClass = b.source === 'cleaning' ? ' cleaning' : '';
+    const doneClass = b.cleaningDone ? ' done' : '';
+    const cleaningBtn = b.source === 'cleaning'
+      ? `<button class="timeline-block-action" type="button" title="Unassign from this day" aria-label="Unassign cleaning task" onclick="event.stopPropagation();unassignCleaningTaskFromUI('${attr(b.cleaningTaskId)}')">✕</button>`
+      : '';
+    html += `<div class="timeline-block${highlightClass}${cleaningClass}${doneClass}" style="top:${top}px;height:${height}px;--block-color:${evColor(b.type)};">
       <div class="timeline-block-title">${esc(b.title)}</div>
       <div class="timeline-block-time">${formatTime(b.time)}${b.end && b.end !== b.time ? ` - ${formatTime(b.end)}` : ''}</div>
       ${b.detail ? `<div class="timeline-block-detail">${esc(b.detail)}</div>` : ''}
       ${canEdit ? pencilBtn('Edit schedule item', `openEventModal('${dateKey}','${b.id || ''}','${b.customKey || ''}')`) : ''}
+      ${cleaningBtn}
     </div>`;
   });
   html += `</div></div>`;
@@ -4391,7 +5192,7 @@ function getEventsForDateFromList(dateKey, events = getEvents()) {
 }
 
 function evColor(type) {
-  const colors = { work: 'var(--mocha)', routine: 'var(--latte)', gym: '#E8FFD8', appointment: 'var(--espresso)', personal: 'var(--nude)', academic: '#7DA8E8', sleep: 'var(--text-muted)', bill: 'var(--danger)', 'income-monthly': '#A2BFFE', 'income-biweekly': '#E2B3F2' };
+  const colors = { work: 'var(--mocha)', routine: 'var(--latte)', gym: '#E8FFD8', appointment: 'var(--espresso)', personal: 'var(--nude)', academic: '#7DA8E8', sleep: 'var(--text-muted)', bill: 'var(--danger)', cleaning: '#FAB6DC', 'income-monthly': '#A2BFFE', 'income-biweekly': '#E2B3F2' };
   return colors[type] || 'var(--nude)';
 }
 
@@ -5049,10 +5850,22 @@ function morningRoutineSub(done, total, block) {
   return `${done}/${total} done · ${label}`;
 }
 
+function getMorningItemsForToday() {
+  if (isMonday()) {
+    const shot = MEDS.weekly[0];
+    return [
+      ...MORNING_ITEMS,
+      { key: 'testosterone', label: 'Weekly Shot', detail: `${shot.name} · ${shot.dose}`, weekly: true }
+    ];
+  }
+  return MORNING_ITEMS;
+}
+
 function renderRoutines() {
   const morn = dayData('morning') || defRoutine('morning');
   const eve = dayData('evening') || defRoutine('evening');
-  const mDone = MORNING_ITEMS.filter(i => morn[i.key]).length;
+  const morningItems = getMorningItemsForToday();
+  const mDone = morningItems.filter(i => morn[i.key]).length;
   const eDone = EVENING_ITEMS.filter(i => eve[i.key]).length;
   const workTasks = getWorkTasks();
   const wDone = workTasks.filter(t => t.done).length;
@@ -5068,8 +5881,8 @@ function renderRoutines() {
   let html = themePageHeader('Routines', 'Just do the next thing.', ['morning', 'sleep']);
   const morningBlock = getMorningRoutineBlockForDate(todayKey());
 
-  html += buildCollapseSection('morning', 'Morning', morningRoutineSub(mDone, MORNING_ITEMS.length, morningBlock), routineOpenState.morning,
-    ring(mDone, MORNING_ITEMS.length) + buildRoutineChecklist('morning', MORNING_ITEMS, morn),
+  html += buildCollapseSection('morning', 'Morning', morningRoutineSub(mDone, morningItems.length, morningBlock), routineOpenState.morning,
+    ring(mDone, morningItems.length) + buildRoutineChecklist('morning', morningItems, morn),
     'morning'
   );
 
@@ -5123,12 +5936,29 @@ function buildWorkBlock(tasks) {
 }
 
 function buildCleaningBlock(tasks, week) {
-  let html = `<div class="edit-hint" style="margin-bottom:8px;">${weeklyRangeLabel()} reset</div>`;
+  const assignments = getCleaningAssignments();
+  const dateToDay = {};
+  Object.keys(assignments).forEach(dk => {
+    (assignments[dk] || []).forEach(a => { dateToDay[a.taskId] = dk; });
+  });
+  let html = `<div class="edit-hint" style="margin-bottom:8px;">${weeklyRangeLabel()} reset · drag a task to a day on the Week Planner</div>`;
   tasks.forEach(task => {
     const done = !!week.done[task.id];
-    html += `<div class="check-item cleaning-task-row ${done?'checked':''}" onclick="toggleCleaningTask('${attr(task.id)}')">
+    const assignedKey = dateToDay[task.id];
+    let badge = '';
+    if (assignedKey) {
+      const d = dateFromKey(assignedKey);
+      const dayShort = DAY_NAMES[d.getDay()].slice(0,3);
+      const dateLabel = `${dayShort} ${d.getMonth()+1}/${d.getDate()}`;
+      badge = `<button class="cleaning-day-badge" type="button" title="Tap to unassign" aria-label="Unassign from ${esc(dateLabel)}" onclick="event.stopPropagation();unassignCleaningTaskFromUI('${attr(task.id)}')">${esc(dateLabel)} ✕</button>`;
+    } else {
+      badge = `<button class="cleaning-assign-btn" type="button" title="Assign to a day" aria-label="Assign to a day" onclick="event.stopPropagation();openCleaningAssignPicker('${attr(task.id)}')">+ day</button>`;
+    }
+    html += `<div class="check-item cleaning-task-row ${done?'checked':''}" draggable="true" data-cleaning-task="${attr(task.id)}" ondragstart="onCleaningDragStart(event,'${attr(task.id)}')" ondragend="onCleaningDragEnd(event)" onclick="toggleCleaningTask('${attr(task.id)}')">
+      <span class="cleaning-drag-grip" aria-hidden="true">⋮⋮</span>
       <div class="check-box">${checkSvg()}</div>
       <div class="check-label">${esc(task.title)}</div>
+      ${badge}
     </div>`;
   });
   html += `<div class="cleaning-add-row">
@@ -5136,6 +5966,86 @@ function buildCleaningBlock(tasks, week) {
     <button class="modal-submit" type="button" onclick="addCleaningTask()">Add</button>
   </div>`;
   return html;
+}
+
+let _cleaningDragTaskId = null;
+function onCleaningDragStart(ev, taskId) {
+  _cleaningDragTaskId = taskId;
+  try {
+    ev.dataTransfer.effectAllowed = 'move';
+    ev.dataTransfer.setData('text/plain', `cleaning:${taskId}`);
+  } catch {}
+  document.body.classList.add('cleaning-dragging');
+}
+function onCleaningDragEnd() {
+  _cleaningDragTaskId = null;
+  document.body.classList.remove('cleaning-dragging');
+  document.querySelectorAll('.week-day-row.drop-target, .week-day-btn.drop-target').forEach(el => el.classList.remove('drop-target'));
+}
+function onDayDragOver(ev) {
+  if (!_cleaningDragTaskId) return;
+  ev.preventDefault();
+  try { ev.dataTransfer.dropEffect = 'move'; } catch {}
+  ev.currentTarget?.classList?.add('drop-target');
+}
+function onDayDragLeave(ev) {
+  ev.currentTarget?.classList?.remove('drop-target');
+}
+function onDayDrop(ev, dateKey) {
+  ev.preventDefault();
+  ev.currentTarget?.classList?.remove('drop-target');
+  let taskId = _cleaningDragTaskId;
+  if (!taskId) {
+    try {
+      const raw = ev.dataTransfer.getData('text/plain') || '';
+      if (raw.startsWith('cleaning:')) taskId = raw.slice('cleaning:'.length);
+    } catch {}
+  }
+  if (!taskId || !dateKey) return;
+  assignCleaningTaskToDate(taskId, dateKey);
+  _cleaningDragTaskId = null;
+  document.body.classList.remove('cleaning-dragging');
+  if (currentTab === 'routines') renderRoutines();
+  if (currentTab === 'today') renderToday();
+  refreshDayModalIfOpen();
+}
+function unassignCleaningTaskFromUI(taskId) {
+  unassignCleaningTask(taskId);
+  if (currentTab === 'routines') renderRoutines();
+  if (currentTab === 'today') renderToday();
+  refreshDayModalIfOpen();
+}
+function openCleaningAssignPicker(taskId) {
+  const weekStart = getScheduleWeekStart();
+  let html = `<div class="cleaning-picker-title">Assign to a day</div><div class="cleaning-picker-grid">`;
+  for (let i = 0; i < 7; i++) {
+    const d = addDays(weekStart, i);
+    const dk = localDateKey(d);
+    html += `<button class="cleaning-picker-btn" type="button" onclick="pickCleaningDay('${attr(taskId)}','${dk}')">
+      <span class="cleaning-picker-day">${DAY_NAMES[d.getDay()].slice(0,3)}</span>
+      <span class="cleaning-picker-date">${d.getDate()}</span>
+    </button>`;
+  }
+  html += `</div>
+    <button class="add-btn" style="margin-top:10px;border-style:solid;color:var(--text-muted);" type="button" onclick="closeCleaningPicker()">Cancel</button>`;
+  const sheet = document.getElementById('cleaning-picker');
+  if (!sheet) return;
+  sheet.innerHTML = html;
+  sheet.classList.add('open');
+}
+function pickCleaningDay(taskId, dateKey) {
+  assignCleaningTaskToDate(taskId, dateKey);
+  closeCleaningPicker();
+  if (currentTab === 'routines') renderRoutines();
+  if (currentTab === 'today') renderToday();
+  refreshDayModalIfOpen();
+}
+function closeCleaningPicker() {
+  const sheet = document.getElementById('cleaning-picker');
+  if (sheet) {
+    sheet.classList.remove('open');
+    sheet.innerHTML = '';
+  }
 }
 
 function buildTodayTodosContent() {
@@ -6001,6 +6911,11 @@ let moneySubTab = 'accounts';
 let moneyAcctOpen = null;
 let moneyIncomeOpen = null;
 let billCatOpen = { Necessities: true, 'Credit Card Payments': false, Subscriptions: false, Variable: false, Other: false };
+let paycheckCardOpen = {}; // paycheckId -> bool
+function togglePaycheckCardOpen(id) {
+  paycheckCardOpen[id] = !paycheckCardOpen[id];
+  renderMoney();
+}
 
 function renderMoney() {
   BILLS = getBillsList();
@@ -6011,12 +6926,14 @@ function renderMoney() {
     <button class="money-tab ${moneySubTab==='accounts'?'active':''}" onclick="moneySubTab='accounts';renderMoney()">Accounts</button>
     <button class="money-tab ${moneySubTab==='transactions'?'active':''}" onclick="moneySubTab='transactions';renderMoney()">Log</button>
     <button class="money-tab ${moneySubTab==='bills'?'active':''}" onclick="moneySubTab='bills';renderMoney()">Bills</button>
+    <button class="money-tab ${moneySubTab==='paychecks'?'active':''}" onclick="moneySubTab='paychecks';renderMoney()">Paychecks</button>
     <button class="money-tab ${moneySubTab==='income'?'active':''}" onclick="moneySubTab='income';renderMoney()">Income</button>
   </div>`;
 
   if (moneySubTab === 'accounts') html += renderMoneyAccounts();
   else if (moneySubTab === 'transactions') html += renderMoneyTransactions();
   else if (moneySubTab === 'bills') html += renderMoneyBills();
+  else if (moneySubTab === 'paychecks') html += renderMoneyPaychecks();
   else if (moneySubTab === 'income') html += renderMoneyIncome();
 
   html += themeDivider('money', 'puppy');
@@ -6046,6 +6963,10 @@ function accountBalanceBreakdown(acctId) {
   incomeOccurrencesForMonth(acctId, billMonth).forEach(occ => {
     if (!occ.received) upcomingIncome += Number(occ.amount || 0);
   });
+
+  // Credit-card payment bills targeting this account add to projected balance.
+  const ccCreditsThisMonth = upcomingCreditCardCreditsForAccount(acctId, billMonth);
+  upcomingIncome += ccCreditsThisMonth;
 
   const today = todayKey();
   const monthY = billMonth.getFullYear();
@@ -6315,6 +7236,230 @@ function renderMoneyBills() {
   return html;
 }
 
+let _billDragOccId = null;
+function onBillDragStart(ev, occId) {
+  _billDragOccId = occId;
+  try {
+    ev.dataTransfer.effectAllowed = 'move';
+    ev.dataTransfer.setData('text/plain', `billocc:${occId}`);
+  } catch {}
+  document.body.classList.add('bill-dragging');
+}
+function onBillDragEnd() {
+  _billDragOccId = null;
+  document.body.classList.remove('bill-dragging');
+  document.querySelectorAll('.paycheck-card.drop-target').forEach(el => el.classList.remove('drop-target'));
+}
+function onPaycheckDragOver(ev) {
+  if (!_billDragOccId) return;
+  ev.preventDefault();
+  try { ev.dataTransfer.dropEffect = 'move'; } catch {}
+  ev.currentTarget?.classList?.add('drop-target');
+}
+function onPaycheckDragLeave(ev) {
+  ev.currentTarget?.classList?.remove('drop-target');
+}
+function onPaycheckDrop(ev, paycheckId) {
+  ev.preventDefault();
+  ev.currentTarget?.classList?.remove('drop-target');
+  let occId = _billDragOccId;
+  if (!occId) {
+    try {
+      const raw = ev.dataTransfer.getData('text/plain') || '';
+      if (raw.startsWith('billocc:')) occId = raw.slice('billocc:'.length);
+      else if (raw.startsWith('bill:')) occId = raw.slice('bill:'.length); // legacy
+    } catch {}
+  }
+  if (!occId || !paycheckId) return;
+  assignBillOccToPaycheck(occId, paycheckId, getBillMonthDate());
+  paycheckCardOpen[paycheckId] = true; // auto-expand on drop so the user sees what they just added
+  _billDragOccId = null;
+  document.body.classList.remove('bill-dragging');
+  renderMoney();
+}
+
+function pickPaycheckForBill(occId) {
+  const paychecks = incomeOccurrencesForMonth(null, getBillMonthDate()).slice().sort((a, b) => a.date - b.date);
+  if (!paychecks.length) { alert('Add an income source first so we have paychecks to assign to.'); return; }
+  const sheet = document.getElementById('cleaning-picker');
+  if (!sheet) return;
+  let html = `<div class="cleaning-picker-title">Assign to which paycheck?</div><div class="paycheck-picker-grid">`;
+  paychecks.forEach(p => {
+    const dateLabel = p.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    html += `<button class="cleaning-picker-btn paycheck-picker-btn" type="button" onclick="closeCleaningPicker();assignBillOccToPaycheck('${attr(occId)}','${attr(p.id)}',getBillMonthDate());paycheckCardOpen['${attr(p.id)}']=true;renderMoney()">
+      <span class="cleaning-picker-day">${esc(p.label)}</span>
+      <span class="cleaning-picker-date">${esc(dateLabel)}</span>
+      <span class="paycheck-picker-amt">${formatMoney(p.amount || 0)}</span>
+    </button>`;
+  });
+  html += `</div>
+    <button class="add-btn" style="margin-top:10px;border-style:solid;color:var(--text-muted);" type="button" onclick="closeCleaningPicker()">Cancel</button>`;
+  sheet.innerHTML = html;
+  sheet.classList.add('open');
+}
+
+function renderMoneyPaychecks() {
+  const monthDate = getBillMonthDate();
+  const monthName = monthDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const planMonthKey = paycheckPlanKey(monthDate);
+  const next = nextMonthDate(monthDate);
+  const nextMonthKey = paycheckPlanKey(next);
+  const nextMonthShort = next.toLocaleDateString('en-US', { month: 'short' });
+  const paychecks = incomeOccurrencesForMonth(null, monthDate).slice().sort((a, b) => a.date - b.date);
+  const plan = getPaycheckPlan(monthDate);
+  // Only bills paid directly from a paycheck belong here; Variable and
+  // Subscriptions are charged to the Discover card and live on the Bills tab.
+  const bills = BILLS.slice().filter(billBelongsOnPaychecksTab);
+  const billsByKey = Object.fromEntries(bills.map(b => [b.key, b]));
+  const accounts = getAccounts();
+
+  // Build the set of occurrences for this view: every bill in this month and
+  // every bill in next month (both lots are candidates for assignment).
+  const thisMonthOccs = bills.map(b => ({ occId: `${b.key}@${planMonthKey}`, billKey: b.key, monthKey: planMonthKey, fromNextMonth: false, bill: b }));
+  const nextMonthOccs = bills.map(b => ({ occId: `${b.key}@${nextMonthKey}`, billKey: b.key, monthKey: nextMonthKey, fromNextMonth: true, bill: b }));
+  const allOccs = thisMonthOccs.concat(nextMonthOccs);
+
+  const assignedTo = {}; // paycheckId -> [occ]
+  paychecks.forEach(p => { assignedTo[p.id] = []; });
+  const unassignedThis = [];
+  const unassignedNext = [];
+
+  allOccs.forEach(o => {
+    // Where is this occurrence assigned, if anywhere?
+    const localPid = plan.assignments[o.occId];
+    if (localPid && assignedTo[localPid] !== undefined) {
+      assignedTo[localPid].push(o);
+      return;
+    }
+    // If the occurrence is assigned in a different plan month, it's not
+    // unassigned but doesn't belong on any card here either — hide it.
+    const elsewhere = findOccurrenceAssignment(o.occId);
+    if (elsewhere) return;
+    if (o.fromNextMonth) unassignedNext.push(o);
+    else unassignedThis.push(o);
+  });
+
+  let html = `<div class="bill-month-nav">
+    <button class="tiny-nav-btn" onclick="moveBillMonth(-1)" ${billMonthOffset===0?'disabled':''}>&#8249;</button>
+    <div>
+      <div class="bill-month-label">${esc(monthName)}</div>
+      <div class="bill-month-sub">Assign bills to paychecks — including next-month bills you want to pre-cover</div>
+    </div>
+    <button class="tiny-nav-btn" onclick="moveBillMonth(1)" ${billMonthOffset===2?'disabled':''}>&#8250;</button>
+  </div>`;
+
+  if (!paychecks.length) {
+    html += `<div class="card theme-card" style="text-align:center;padding:24px;">${themeIcon('money', 'theme-corner')}
+      <div style="font-size:14px;color:var(--text-muted);margin-bottom:12px;">No paychecks for this month yet.</div>
+      <button class="modal-submit" onclick="moneySubTab='income';renderMoney()">Add Income Source</button>
+    </div>`;
+    return html;
+  }
+
+  html += `<div class="paycheck-toolbar">
+    <div class="paycheck-toolbar-actions" style="margin-left:auto;">
+      <button class="paycheck-action-btn danger-soft" type="button" onclick="if(confirm('Clear every bill assignment for this month?')){clearAllPaycheckAssignments();renderMoney();}" title="Move every bill back to the unassigned list">Clear</button>
+    </div>
+  </div>`;
+
+  html += `<div class="paycheck-row">`;
+  paychecks.forEach(p => {
+    const assigned = assignedTo[p.id] || [];
+    const totalAssigned = assigned.reduce((s, o) => s + Number(o.bill?.amount || 0), 0);
+    const paycheckAmt = Number(p.amount || 0);
+    const remaining = paycheckAmt - totalAssigned;
+    const pct = paycheckAmt > 0 ? Math.min(100, (totalAssigned / paycheckAmt) * 100) : 0;
+    const over = totalAssigned > paycheckAmt;
+    const dateLabel = p.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    const isOpen = !!paycheckCardOpen[p.id];
+    html += `<div class="paycheck-card ${over?'overdraft':''} ${isOpen?'open':'collapsed'}" ondragover="onPaycheckDragOver(event)" ondragleave="onPaycheckDragLeave(event)" ondrop="onPaycheckDrop(event,'${attr(p.id)}')">
+      <button class="paycheck-card-toggle" type="button" onclick="togglePaycheckCardOpen('${attr(p.id)}')" aria-expanded="${isOpen?'true':'false'}">
+        <div class="paycheck-card-head">
+          <div>
+            <div class="paycheck-card-label">${esc(p.label)}</div>
+            <div class="paycheck-card-date">${esc(dateLabel)}</div>
+          </div>
+          <div class="paycheck-card-amount">${formatMoney(paycheckAmt)}</div>
+        </div>
+        <div class="paycheck-card-bar"><div class="paycheck-card-bar-fill ${over?'over':''}" style="width:${pct}%"></div></div>
+        <div class="paycheck-card-stats">
+          <span>${formatMoney(totalAssigned)} assigned${assigned.length ? ` · ${assigned.length} bill${assigned.length===1?'':'s'}` : ''}</span>
+          <span class="${over?'over':'left'}">${over ? formatMoney(totalAssigned - paycheckAmt) + ' over' : formatMoney(remaining) + ' left'}</span>
+        </div>
+        <svg class="paycheck-card-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="paycheck-card-body">
+        <div class="paycheck-bill-list">`;
+    if (!assigned.length) {
+      html += `<div class="paycheck-bill-empty">Drag bills here</div>`;
+    }
+    assigned.forEach(o => {
+      const b = o.bill;
+      if (!b) return;
+      const nextBadge = o.fromNextMonth ? `<span class="paycheck-bill-chip-tag">${esc(nextMonthShort)}</span>` : '';
+      const payTarget = b.category === 'Credit Card Payments' ? billPaysAccountId(b, accounts) : null;
+      const payTargetName = payTarget ? accounts.find(a => a.id === payTarget)?.name : null;
+      const ccBadge = payTargetName ? `<span class="paycheck-bill-chip-tag cc" title="Pays down ${esc(payTargetName)}">→ ${esc(payTargetName)}</span>` : '';
+      html += `<div class="paycheck-bill-chip ${o.fromNextMonth?'next-month':''}" draggable="true" data-occ="${attr(o.occId)}" ondragstart="onBillDragStart(event,'${attr(o.occId)}')" ondragend="onBillDragEnd(event)">
+        <span class="paycheck-bill-chip-name">${esc(b.name)}</span>
+        ${nextBadge}
+        ${ccBadge}
+        <span class="paycheck-bill-chip-amt">${formatMoney(b.amount)}</span>
+        <button class="paycheck-bill-chip-x" type="button" title="Remove" onclick="event.stopPropagation();unassignBillOcc('${attr(o.occId)}');renderMoney()">✕</button>
+      </div>`;
+    });
+    html += `</div></div></div>`;
+  });
+  html += `</div>`;
+
+  // Unassigned bills pool — this month
+  const renderPoolRow = (o) => {
+    const b = o.bill;
+    if (!b) return '';
+    const payTarget = b.category === 'Credit Card Payments' ? billPaysAccountId(b, accounts) : null;
+    const payTargetName = payTarget ? accounts.find(a => a.id === payTarget)?.name : null;
+    const ccBadge = payTargetName ? ` · pays ${esc(payTargetName)}` : '';
+    return `<div class="paycheck-pool-row ${o.fromNextMonth?'next-month':''}" draggable="true" data-occ="${attr(o.occId)}" ondragstart="onBillDragStart(event,'${attr(o.occId)}')" ondragend="onBillDragEnd(event)">
+      <span class="paycheck-pool-grip" aria-hidden="true">⋮⋮</span>
+      <div class="paycheck-pool-info">
+        <div class="paycheck-pool-name">${esc(b.name)}${o.fromNextMonth ? ` <span class="paycheck-pool-chip">${esc(nextMonthShort)}</span>` : ''}</div>
+        <div class="paycheck-pool-meta">Due ${ordinal(b.day)}${o.fromNextMonth ? ' · next month' : ''}${b.category ? ' · ' + esc(b.category) : ''}${ccBadge}</div>
+      </div>
+      <div class="paycheck-pool-amt">${formatMoney(b.amount)}</div>
+      <button class="cleaning-assign-btn" type="button" onclick="pickPaycheckForBill('${attr(o.occId)}')">Assign</button>
+    </div>`;
+  };
+
+  const unassignedTotal = unassignedThis.reduce((s, o) => s + Number(o.bill?.amount || 0), 0);
+  html += `<div class="card theme-card paycheck-pool">${themeIcon('bill', 'theme-corner')}
+    <div class="card-title-row"><div class="card-title">Unassigned Bills</div><div class="paycheck-pool-total">${formatMoney(unassignedTotal)}</div></div>
+    <div class="paycheck-pool-hint">Drag a bill onto a paycheck above — or tap "Assign" for a quick picker.</div>
+    <div class="paycheck-pool-list">`;
+  if (!unassignedThis.length) {
+    html += `<div class="paycheck-pool-empty">Every ${esc(monthDate.toLocaleDateString('en-US', { month: 'long' }))} bill is assigned.</div>`;
+  }
+  unassignedThis.sort((a, b) => (a.bill?.day || 0) - (b.bill?.day || 0));
+  unassignedThis.forEach(o => { html += renderPoolRow(o); });
+  html += `</div></div>`;
+
+  // Next-month bills pool — let the user pre-cover next month's bills with
+  // this month's paychecks (e.g. assign June bills to the last Crimson Cup
+  // paycheck of May).
+  const nextUnassignedTotal = unassignedNext.reduce((s, o) => s + Number(o.bill?.amount || 0), 0);
+  html += `<div class="card theme-card paycheck-pool paycheck-pool-next">${themeIcon('bill', 'theme-corner')}
+    <div class="card-title-row"><div class="card-title">${esc(nextMonthShort)} Bills (next month)</div><div class="paycheck-pool-total">${formatMoney(nextUnassignedTotal)}</div></div>
+    <div class="paycheck-pool-hint">Drag a next-month bill onto a ${esc(monthDate.toLocaleDateString('en-US', { month: 'long' }))} paycheck to pre-cover it.</div>
+    <div class="paycheck-pool-list">`;
+  if (!unassignedNext.length) {
+    html += `<div class="paycheck-pool-empty">Every next-month bill is already accounted for elsewhere.</div>`;
+  }
+  unassignedNext.sort((a, b) => (a.bill?.day || 0) - (b.bill?.day || 0));
+  unassignedNext.forEach(o => { html += renderPoolRow(o); });
+  html += `</div></div>`;
+
+  return html;
+}
+
 function renderMoneyIncome() {
   const sources = getIncomeSources();
   const accounts = getAccounts();
@@ -6474,6 +7619,10 @@ function openBillEditModal(billKey = null, defaultCategory = 'Necessities') {
   document.getElementById('bill-edit-account').innerHTML =
     `<option value="">None</option>` +
     accts.map(a => `<option value="${attr(a.name)}" ${(bill?.source || '') === a.name ? 'selected' : ''}>${esc(a.name)}</option>`).join('');
+  const guessedPaysId = bill ? (bill.paysAccountId || billPaysAccountId(bill, accts) || '') : '';
+  document.getElementById('bill-edit-pays').innerHTML =
+    `<option value="">None</option>` +
+    accts.map(a => `<option value="${attr(a.id)}" ${guessedPaysId === a.id ? 'selected' : ''}>${esc(a.name)}</option>`).join('');
   updateBillEditCategoryFields();
   document.getElementById('bill-edit-modal').classList.add('open');
 }
@@ -6481,8 +7630,11 @@ function openBillEditModal(billKey = null, defaultCategory = 'Necessities') {
 function updateBillEditCategoryFields() {
   const cat = document.getElementById('bill-edit-category').value;
   const isVariable = cat === 'Variable';
+  const isCC = cat === 'Credit Card Payments';
   document.getElementById('bill-edit-day-field').style.display = isVariable ? 'none' : '';
   document.getElementById('bill-edit-amount-label').textContent = isVariable ? 'Monthly Budget Limit' : 'Amount';
+  const paysField = document.getElementById('bill-edit-pays-field');
+  if (paysField) paysField.style.display = isCC ? '' : 'none';
 }
 
 function saveBillEdit() {
@@ -6492,14 +7644,17 @@ function saveBillEdit() {
   const category = document.getElementById('bill-edit-category').value;
   const source = document.getElementById('bill-edit-account').value;
   const note = document.getElementById('bill-edit-note').value.trim();
+  const paysAccountId = category === 'Credit Card Payments'
+    ? (document.getElementById('bill-edit-pays')?.value || '')
+    : '';
   if (!name) return;
 
   const bills = getBillsList();
   if (editingBillKey) {
     const idx = bills.findIndex(b => b.key === editingBillKey);
-    if (idx > -1) bills[idx] = { ...bills[idx], name, amount, day, category, source, note };
+    if (idx > -1) bills[idx] = { ...bills[idx], name, amount, day, category, source, note, paysAccountId };
   } else {
-    bills.push({ key: 'bill-' + Date.now(), name, amount, day, category, source, note });
+    bills.push({ key: 'bill-' + Date.now(), name, amount, day, category, source, note, paysAccountId });
   }
   saveBillsList(bills);
   BILLS = bills;
@@ -6729,8 +7884,6 @@ function saveBillAccountEdit() {}
 
 function renderHealth() {
   const h = getHealthData();
-  const hour = currentHour();
-  const showMorningFirst = hour < 14;
 
   let html = themePageHeader('Health', 'Take care of yourself.');
 
@@ -6742,14 +7895,8 @@ function renderHealth() {
   html += buildHealthGymSummary();
   html += themeDivider('puppy', 'puppy');
 
-  const morningMeds = buildMedCard('Morning Meds', MEDS.morning, h);
-  const eveningMeds = buildMedCard('Evening Meds', MEDS.evening, h);
-
-  if (showMorningFirst) {
-    html += morningMeds + eveningMeds;
-  } else {
-    html += eveningMeds + morningMeds;
-  }
+  html += buildMedCard('Morning Meds', MEDS.morning, h);
+  html += buildMedCard('Evening Meds', MEDS.evening, h);
 
   html += themeDivider('puppy', 'puppy');
 
@@ -7049,7 +8196,7 @@ function deleteMealEdit() {
 }
 
 function buildMedCard(title, meds, healthData) {
-  const medsToShow = title === 'Evening Meds' && isFriday() ? meds.concat(MEDS.weekly) : meds;
+  const medsToShow = title === 'Morning Meds' && isMonday() ? meds.concat(MEDS.weekly) : meds;
   let html = `<div class="card theme-card"><div class="card-title-row"><div class="card-title">${title}</div></div>`;
   medsToShow.forEach(m => {
     const taken = healthData.meds?.[m.key];
@@ -7201,16 +8348,12 @@ function closeSettings() {
 
 function applyTheme(mode) {
   document.documentElement.setAttribute('data-theme', mode);
-  document.getElementById('ico-sun').style.display = mode === 'dark' ? 'none' : '';
-  document.getElementById('ico-moon').style.display = mode === 'dark' ? '' : 'none';
-  document.querySelector('meta[name="theme-color"]').content = mode === 'dark' ? '#1E1915' : '#F7F2EB';
-}
-
-function toggleTheme() {
-  const s = getSettings();
-  s.theme = s.theme === 'dark' ? 'light' : 'dark';
-  saveSettings(s);
-  applyTheme(s.theme);
+  const sun = document.getElementById('ico-sun');
+  const moon = document.getElementById('ico-moon');
+  if (sun) sun.style.display = mode === 'dark' ? 'none' : '';
+  if (moon) moon.style.display = mode === 'dark' ? '' : 'none';
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.content = mode === 'dark' ? '#1E1915' : '#F7F2EB';
 }
 
 /* ═══════════════════════ MODAL CLOSE ═══════════════════════ */
