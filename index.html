@@ -424,6 +424,15 @@ select:focus-visible {
 .top-btn-sticker {
   width: 20px; height: 20px; object-fit: contain; display: block;
 }
+/* Home-return button is bigger so it's an easy target on sub-pages. */
+.top-btn.home-return {
+  width: 52px; height: 52px;
+  margin-right: auto;
+  background: var(--nude);
+  border-color: var(--caramel, var(--border-soft));
+  box-shadow: var(--shadow-md, var(--shadow-sm));
+}
+.top-btn.home-return .top-btn-sticker { width: 32px; height: 32px; }
 .top-btn.brain-btn {
   background: #E0EAFF;
   border-color: #A2BFFE;
@@ -672,6 +681,77 @@ body.cleaning-dragging .week-day-btn { transition: transform 0.15s ease, box-sha
   position: absolute; top: 4px; right: 4px;
   font-size: 11px; opacity: 0.85; pointer-events: none;
 }
+.allday-strip { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.allday-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 9px; border-radius: 999px;
+  background: var(--bg-hover); border: 1px solid var(--border-soft);
+  border-left: 4px solid var(--block-color, var(--nude));
+  font-size: 12px; font-weight: 700; color: var(--text);
+}
+.allday-chip.done { opacity: 0.6; }
+.allday-chip.done .allday-chip-title { text-decoration: line-through; }
+.allday-chip-tag {
+  font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+.allday-chip-x {
+  border: none; background: none; cursor: pointer;
+  color: var(--text-muted); font-size: 12px; line-height: 1; padding: 0 2px;
+}
+.allday-chip-x:hover { color: var(--danger); }
+
+/* ── Routine anchor banner (top of Home) ── */
+.routine-times {
+  display: flex; align-items: stretch; gap: 6px;
+  background: var(--bg-card); border: 1px solid var(--border-soft);
+  border-radius: var(--radius); box-shadow: var(--shadow-sm);
+  padding: 12px 14px; margin-bottom: 14px;
+}
+.routine-time-item { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.routine-time-when {
+  font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--pal-purple-strong, var(--text-muted));
+}
+.routine-time-label { font-size: 12px; color: var(--text-muted); font-weight: 600; }
+.routine-time-val { font-size: 16px; font-weight: 800; color: var(--espresso, var(--text)); }
+.routine-time-divider { width: 1px; background: var(--border-soft); align-self: stretch; }
+
+/* ── Week at a Glance (bullet view) ── */
+.week-glance { display: flex; flex-direction: column; gap: 6px; margin: 4px 0 12px; }
+.wg-day {
+  display: flex; gap: 10px; align-items: stretch;
+  padding: 8px; border-radius: 12px;
+  border: 1px solid var(--border-soft); background: var(--bg-card);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.wg-day.today { border-color: var(--espresso); background: var(--bg-hover); }
+.wg-day.drop-target {
+  transform: translateY(-2px);
+  border-color: var(--espresso) !important; background: var(--caramel-light, #f3d9c1) !important;
+  box-shadow: 0 10px 18px -10px rgba(92,61,46,0.45);
+}
+.wg-daycol {
+  flex: 0 0 46px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  border: none; background: none; cursor: pointer; padding: 2px 0;
+  border-right: 1px dashed var(--border-soft);
+}
+.wg-dayname { font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.wg-daynum { font-size: 20px; font-weight: 800; color: var(--text); line-height: 1.1; }
+.wg-day.today .wg-daynum { color: var(--espresso); }
+.wg-items { flex: 1; display: flex; flex-direction: column; gap: 4px; justify-content: center; min-width: 0; }
+.wg-item { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--text); }
+.wg-item.done .wg-title { text-decoration: line-through; opacity: 0.6; }
+.wg-dot { flex: 0 0 8px; width: 8px; height: 8px; border-radius: 50%; }
+.wg-time { flex: 0 0 auto; font-size: 11px; font-weight: 700; color: var(--text-muted); min-width: 58px; }
+.wg-allday {
+  flex: 0 0 auto; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em;
+  color: var(--text-muted); min-width: 58px;
+}
+.wg-title { flex: 1; font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wg-x { border: none; background: none; cursor: pointer; color: var(--text-muted); font-size: 11px; line-height: 1; padding: 0 2px; }
+.wg-x:hover { color: var(--danger); }
+.wg-empty { font-size: 12px; color: var(--text-muted); font-style: italic; }
 
 .week-day-headline {
   display: flex; align-items: flex-end; justify-content: space-between; gap: 8px;
@@ -1140,6 +1220,7 @@ body.bill-dragging .paycheck-card { transition: transform 0.15s ease, box-shadow
 .month-tag.academic { background: #DCEBFF; color: #234D83; }
 .month-tag.income.monthly { background: #A2BFFE; color: var(--espresso); }
 .month-tag.income.biweekly { background: #E2B3F2; color: var(--espresso); }
+.month-tag.shot { background: #FCEFC7; color: #8A6D1D; }
 .cal-action-row {
   display: flex; align-items: center; justify-content: center;
   gap: 10px; margin: 6px 0 10px;
@@ -2842,7 +2923,7 @@ const MEDS = {
     { key: 'clindamycinPM', name: 'Clindamycin Phosphate 1%', dose: 'Topical', sched: 'Evening' },
   ],
   weekly: [
-    { key: 'testosterone', name: 'Testosterone CYP', dose: '0.45ml injection', sched: 'Mondays' },
+    { key: 'testosterone', name: 'Testosterone CYP', dose: '0.45ml injection', sched: 'Thursdays' },
   ]
 };
 
@@ -3594,7 +3675,42 @@ function getCleaningAssignments() {
   return data;
 }
 function saveCleaningAssignments(map) { lsSave('gnd-cleaning-assignments', map); }
-function assignCleaningTaskToDate(taskId, dateKey, time = '10:00', end = '10:30') {
+const CLEANING_BLOCK_MINUTES = 60;   // ~1 hour per cleaning task…
+const CLEANING_DAY_START = 8 * 60;   // …placed between 8:00 AM…
+const CLEANING_DAY_END = 21 * 60;    // …and 9:00 PM.
+
+function isLaundryTask(taskId) {
+  if (!taskId) return false;
+  if (String(taskId).toLowerCase() === 'laundry') return true;
+  const task = getCleaningTasks().find(t => t.id === taskId);
+  return !!task && /laundry/i.test(task.title);
+}
+
+/* Pick a conflict-free 1-hour slot for a cleaning task; laundry is all-day. */
+function computeCleaningSlot(dateKey, taskId) {
+  if (isLaundryTask(taskId)) return { time: '', end: '', allDay: true };
+
+  // Everything already on the day (routine, work, gym, shot, other cleaning),
+  // ignoring this task's own block if it's already placed here.
+  const busy = getScheduleBlocksForDate(dateKey)
+    .filter(b => !(b.source === 'cleaning' && b.cleaningTaskId === taskId))
+    .map(b => {
+      const s = timeToMinutes(b.time);
+      let e = b.end && b.end !== b.time ? timeToMinutes(b.end) : s + 15;
+      if (e <= s) e = s + 15;
+      return { s, e };
+    });
+
+  for (let start = CLEANING_DAY_START; start + CLEANING_BLOCK_MINUTES <= CLEANING_DAY_END; start += 30) {
+    const end = start + CLEANING_BLOCK_MINUTES;
+    if (!busy.some(iv => start < iv.e && end > iv.s)) {
+      return { time: minutesToClock(start), end: minutesToClock(end), allDay: false };
+    }
+  }
+  return { time: '10:00', end: '11:00', allDay: false }; // fallback if the day is packed
+}
+
+function assignCleaningTaskToDate(taskId, dateKey, time = null, end = null, allDay = null) {
   if (!taskId || !dateKey) return;
   const map = getCleaningAssignments();
   // Remove from any other day first (single assignment per task)
@@ -3604,8 +3720,10 @@ function assignCleaningTaskToDate(taskId, dateKey, time = '10:00', end = '10:30'
       if (!map[k].length) delete map[k];
     }
   });
+  let slot = { time, end, allDay };
+  if (time === null) slot = computeCleaningSlot(dateKey, taskId);
   if (!Array.isArray(map[dateKey])) map[dateKey] = [];
-  map[dateKey].push({ taskId, time, end });
+  map[dateKey].push({ taskId, time: slot.time, end: slot.end, allDay: !!slot.allDay });
   saveCleaningAssignments(map);
 }
 function unassignCleaningTask(taskId) {
@@ -3638,14 +3756,17 @@ function getCleaningBlocksForDate(dateKey) {
     const task = tasks.find(t => t.id === a.taskId);
     if (!task) return null;
     const done = !!week.done[task.id];
+    const allDay = !!a.allDay || (a.time === '' && a.end === '');
+    const detail = done ? 'Done ✓' : (allDay ? 'All day · flexible' : 'Home cleaning');
     return {
       id: `cleaning-${task.id}`,
       source: 'cleaning',
-      time: a.time || '10:00',
-      end: a.end || '10:30',
+      time: allDay ? '' : (a.time || '10:00'),
+      end: allDay ? '' : (a.end || '11:00'),
+      allDay,
       title: task.title,
       type: 'cleaning',
-      detail: done ? 'Done ✓' : 'Home cleaning',
+      detail,
       cleaningTaskId: task.id,
       cleaningDone: done,
       editable: false
@@ -4043,6 +4164,9 @@ function getGymPlanForDate(date = new Date()) {
 function isGymDay(date = new Date()) { return getGymTypeInfo(getGymPlanForDate(date)) !== null; }
 function isFriday() { return new Date().getDay() === 5; }
 function isMonday() { return new Date().getDay() === 1; }
+function isThursday() { return new Date().getDay() === 4; }
+/* Injection day for the weekly testosterone shot (0=Sun … 4=Thu). */
+const SHOT_DOW = 4;
 function getWorkout(dow) { return GYM_SCHEDULE[dow === undefined ? new Date().getDay() : dow] || null; }
 function getGymTypeInfo(kind) { const k = normalizeGymKind(kind); return ['gym','upper','lower'].includes(k) ? GYM_TYPES.gym : null; }
 function currentHour() { return new Date().getHours(); }
@@ -4162,7 +4286,7 @@ function getBillMonthDate() {
 }
 
 function moveBillMonth(delta) {
-  billMonthOffset = Math.max(0, Math.min(2, billMonthOffset + delta));
+  billMonthOffset = Math.max(0, Math.min(4, billMonthOffset + delta));
   renderMoney();
 }
 
@@ -4322,7 +4446,8 @@ function renderToday() {
 
   const plan = ls(`gnd-${todayKey()}-plan`, null);
 
-  let html = buildMonthCalendar();
+  let html = buildRoutineTimesBanner();
+  html += buildMonthCalendar();
   html += buildNextShiftCard();
   html += buildHomeHubNav();
   html += buildDueSoonSection();
@@ -4471,6 +4596,7 @@ function monthTagsForDate(date) {
     tags.push({ label: gymKind === 'lower' ? 'Lower' : 'Upper', cls: 'gym', icon: gymKind === 'lower' ? 'leg' : 'bicep', sticker: 'tiny-gym' });
   }
   if (events.some(e => e.type === 'academic')) tags.push({ label: 'Academic', cls: 'academic', icon: 'academic' });
+  if (date.getDay() === SHOT_DOW) tags.push({ label: '💉 Shot', cls: 'shot' });
   if (events.some(e => e.type !== 'work' && e.type !== 'academic')) tags.push({ label: 'Plans', cls: '' });
   return tags;
 }
@@ -4528,7 +4654,8 @@ function getBaseScheduleBlocks(dayOfWeek, dateKey = null) {
 
 const MORNING_ROUTINE_BUFFER_MINUTES = 15;
 const MORNING_ROUTINE_MIN_MINUTES = 20;
-const MORNING_ROUTINE_EARLIEST_AUTO_MINUTE = 4 * 60;
+const MORNING_ROUTINE_EARLIEST_AUTO_MINUTE = 4 * 60;   // 4:00 AM anchor for early shifts
+const MORNING_ROUTINE_EARLY_SHIFT_CUTOFF = 7 * 60;     // shifts starting before 7:00 AM count as "early"
 
 function getEarliestWorkShiftForDate(dateKey, events = getEvents()) {
   return getEventsForDateFromList(dateKey, events)
@@ -4540,44 +4667,49 @@ function addAutoRoutineDetail(block, note) {
   return { ...block, detail: block.detail || note };
 }
 
+/* Auto-arrange the morning routine around the day's work shift:
+   - Early shift (starts before 7:00 AM) → routine starts at 4:00 AM.
+   - Later shift or no shift → default 6:00 AM (block unchanged). */
 function adaptMorningRoutineBlockForDate(dateKey, block, events = getEvents()) {
   if (!dateKey || !block || block.blockKey !== 'morning') return block;
   const work = getEarliestWorkShiftForDate(dateKey, events);
   if (!work) return block;
 
   const workStart = timeToMinutes(work.start);
+  if (workStart >= MORNING_ROUTINE_EARLY_SHIFT_CUTOFF) return block; // later shift → keep 6:00 AM
+
   const start = timeToMinutes(block.time);
   let end = timeToMinutes(block.end || block.time);
   if (end <= start) end = start + 60;
-  if (workStart >= end) return block;
+  const duration = Math.max(MORNING_ROUTINE_MIN_MINUTES, end - start);
 
-  const targetEnd = workStart - MORNING_ROUTINE_BUFFER_MINUTES;
-  const earliestStart = Math.min(start, MORNING_ROUTINE_EARLIEST_AUTO_MINUTE);
-  const originalDuration = Math.max(MORNING_ROUTINE_MIN_MINUTES, end - start);
-  const available = targetEnd - earliestStart;
+  const earlyStart = MORNING_ROUTINE_EARLIEST_AUTO_MINUTE;          // 4:00 AM
+  const latestEnd = workStart - MORNING_ROUTINE_BUFFER_MINUTES;     // finish before the shift
+  const newEnd = Math.min(earlyStart + duration, latestEnd);
+  const available = newEnd - earlyStart;
 
-  if (available >= originalDuration) {
+  if (available >= duration) {
     return addAutoRoutineDetail({
       ...block,
-      time: minutesToClock(targetEnd - originalDuration),
-      end: minutesToClock(targetEnd),
+      time: minutesToClock(earlyStart),
+      end: minutesToClock(earlyStart + duration),
       routineAdjust: 'shifted',
       workStart: work.start
-    }, 'Early shift: moved before work with a little breathing room.');
+    }, 'Early shift: starts at 4:00 AM to get ahead of work.');
   }
 
   if (available >= MORNING_ROUTINE_MIN_MINUTES) {
     return addAutoRoutineDetail({
       ...block,
       title: 'Morning Basics',
-      time: minutesToClock(earliestStart),
-      end: minutesToClock(targetEnd),
+      time: minutesToClock(earlyStart),
+      end: minutesToClock(newEnd),
       routineAdjust: 'shortened',
       workStart: work.start
-    }, 'Early shift: shortened to the essentials before work.');
+    }, 'Early shift: shortened essentials from 4:00 AM before work.');
   }
 
-  const pinTime = Math.max(0, Math.min(workStart, earliestStart));
+  const pinTime = Math.max(0, Math.min(earlyStart, latestEnd));
   return addAutoRoutineDetail({
     ...block,
     title: 'Morning Basics',
@@ -4789,55 +4921,93 @@ function saveDueSoonEdit() {
   renderToday();
 }
 
-function buildScheduleSection() {
-  const today = new Date();
-  const dow = today.getDay();
-  if (scheduleDay === null) scheduleDay = dow;
+/* Base routine blocks that are the same every day are hidden from the
+   week-at-a-glance so it stays a quick "what's notable" list. */
+const WEEK_GLANCE_HIDDEN_BLOCKS = ['sleep', 'evening', 'morning'];
 
-  const weekStart = getScheduleWeekStart();
-  const viewDate = getScheduleViewDate();
-  const viewKey = localDateKey(viewDate);
+/* Routine anchors at the top of Home: tonight's evening routine and
+   tomorrow morning's routine (auto-adjusted for tomorrow's shift). */
+function routineTimeSpan(block) {
+  if (!block || !block.time) return '—';
+  return block.end && block.end !== block.time
+    ? `${formatTime(block.time)} – ${formatTime(block.end)}`
+    : formatTime(block.time);
+}
+
+function buildRoutineTimesBanner() {
+  const todayK = todayKey();
+  const tomorrowK = localDateKey(addDays(new Date(), 1));
+  const evening = getScheduleBlocksForDate(todayK).find(b => b.blockKey === 'evening');
+  const morning = getMorningRoutineBlockForDate(tomorrowK);
+  const morningNote = morning && morning.routineAdjust ? ' · early shift' : '';
+  return `<div class="routine-times">
+    <div class="routine-time-item">
+      <span class="routine-time-when">Tonight</span>
+      <span class="routine-time-label">Evening routine</span>
+      <span class="routine-time-val">${esc(routineTimeSpan(evening))}</span>
+    </div>
+    <div class="routine-time-divider" aria-hidden="true"></div>
+    <div class="routine-time-item">
+      <span class="routine-time-when">Tomorrow</span>
+      <span class="routine-time-label">Morning routine${morningNote}</span>
+      <span class="routine-time-val">${esc(routineTimeSpan(morning))}</span>
+    </div>
+  </div>`;
+}
+
+function buildScheduleSection() {
+  if (scheduleDay === null) scheduleDay = new Date().getDay();
+
+  // Monday-based week so it reads Monday → Sunday.
+  const weekStart = addDays(startOfMondayWeek(new Date()), scheduleWeekOffset * 7);
   const weekEnd = addDays(weekStart, 6);
-  const viewDay = viewDate.getDay();
-  const dayName = DAY_NAMES[viewDay];
-  const dayLong = viewDate.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+  const todayK = todayKey();
 
   let html = `<div class="card theme-card week-planner-card">${themeIcon('morning', 'theme-corner')}
-    <div class="week-planner-head"><div><div class="week-planner-title">Week Planner</div><div class="page-date">${formatShortDate(weekStart)} - ${formatShortDate(weekEnd)}</div></div><div class="week-planner-actions">
+    <div class="week-planner-head"><div><div class="week-planner-title">Week at a Glance</div><div class="page-date">${formatShortDate(weekStart)} - ${formatShortDate(weekEnd)}</div></div><div class="week-planner-actions">
     <button class="tiny-nav-btn" onclick="moveScheduleWeek(-1)" title="Previous week">&#8249;</button>
     <button class="tiny-nav-btn" onclick="resetScheduleWeek()" title="This week">•</button>
     <button class="tiny-nav-btn" onclick="moveScheduleWeek(1)" title="Next week">&#8250;</button>
   </div></div>`;
 
-  // Seven-day strip. Today is highlighted; the active day picks the schedule.
-  html += `<div class="week-strip">`;
+  html += `<div class="week-glance">`;
   for (let i = 0; i < 7; i++) {
     const d = addDays(weekStart, i);
     const dk = localDateKey(d);
-    const isToday = dk === todayKey();
-    const isActive = i === scheduleDay;
-    const blocks = getScheduleBlocksForDate(dk);
-    const dayCleaning = (getCleaningAssignments()[dk] || []).length;
-    const pillTypes = [...new Set(blocks.map(b => b.type))].slice(0, 4);
-    const dots = pillTypes.map(t => `<span class="day-dot" style="background:${evColor(t)}"></span>`).join('');
-    html += `<button class="week-day-btn ${isToday?'today':''} ${isActive?'active':''}" type="button"
-      onclick="scheduleDay=${i};renderToday()"
-      ondragover="onDayDragOver(event)" ondragleave="onDayDragLeave(event)" ondrop="onDayDrop(event,'${dk}')"
-      aria-label="${esc(d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }))}">
-      <span class="wdn">${DAY_NAMES[i].slice(0,3)}</span>
-      <span class="wdd">${d.getDate()}</span>
-      <span class="dot-row">${dots}</span>
-      ${dayCleaning ? `<span class="cleaning-flag" title="${dayCleaning} cleaning task${dayCleaning===1?'':'s'}">🧽</span>` : ''}
-    </button>`;
+    const isToday = dk === todayK;
+    const blocks = getScheduleBlocksForDate(dk)
+      .filter(b => !(b.blockKey && WEEK_GLANCE_HIDDEN_BLOCKS.includes(b.blockKey)));
+
+    let items = '';
+    if (!blocks.length) {
+      items = `<div class="wg-empty">Clear day</div>`;
+    } else {
+      items = blocks.map(b => {
+        const cleaning = b.source === 'cleaning';
+        const timeLabel = b.allDay
+          ? `<span class="wg-allday">all day</span>`
+          : (b.time ? `<span class="wg-time">${formatTime(b.time)}</span>` : '');
+        const x = cleaning
+          ? `<button class="wg-x" type="button" title="Unassign" aria-label="Unassign cleaning task" onclick="event.stopPropagation();unassignCleaningTaskFromUI('${attr(b.cleaningTaskId)}')">✕</button>`
+          : '';
+        const doneClass = b.cleaningDone ? ' done' : '';
+        return `<div class="wg-item${doneClass}"><span class="wg-dot" style="background:${evColor(b.type)}"></span>${timeLabel}<span class="wg-title">${esc(b.title)}</span>${x}</div>`;
+      }).join('');
+    }
+
+    html += `<div class="wg-day${isToday ? ' today' : ''}"
+      ondragover="onDayDragOver(event)" ondragleave="onDayDragLeave(event)" ondrop="onDayDrop(event,'${dk}')">
+      <button class="wg-daycol" type="button" onclick="openDayModal('${dk}')" aria-label="Open ${esc(d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }))}">
+        <span class="wg-dayname">${DAY_NAMES[d.getDay()].slice(0,3)}</span>
+        <span class="wg-daynum">${d.getDate()}</span>
+      </button>
+      <div class="wg-items">${items}</div>
+    </div>`;
   }
   html += `</div>`;
 
-  html += `<div class="week-day-headline"><div class="week-day-headline-main"><strong>${esc(dayName)}</strong><span class="page-date">${esc(dayLong)}</span></div></div>`;
-
-  html += buildDayGlanceHtml(viewKey, true);
-
   html += `<div class="week-action-row">
-    <button class="add-btn week-action-btn" onclick="openEventModal('${viewKey}')">+ Add Event</button>
+    <button class="add-btn week-action-btn" onclick="openEventModal('${todayK}')">+ Add Event</button>
     <button class="add-btn week-action-btn" onclick="openGymWeekEdit()" style="border-style:solid;">Edit Gym Week</button>
   </div>`;
 
@@ -4965,7 +5135,26 @@ function getScheduleBlocksForDate(dateKey, events = getEvents()) {
 
   getCleaningBlocksForDate(dateKey).forEach(b => blocks.push(b));
 
+  const shot = getShotBlockForDate(dateKey);
+  if (shot) blocks.push(shot);
+
   return blocks.sort((a, b) => a.time.localeCompare(b.time) || a.title.localeCompare(b.title));
+}
+
+/* Weekly testosterone shot — a fixed reminder block on injection day (Thu). */
+function getShotBlockForDate(dateKey) {
+  if (dateFromKey(dateKey).getDay() !== SHOT_DOW) return null;
+  const shot = MEDS.weekly[0];
+  return {
+    id: `shot-${dateKey}`,
+    source: 'shot',
+    time: '08:00',
+    end: '08:00',
+    title: 'Weekly Shot',
+    type: 'health',
+    detail: `${shot.name} · ${shot.dose}`,
+    editable: false
+  };
 }
 
 function buildScheduleListHtml(dateKey, allowEdit = true) {
@@ -5001,11 +5190,29 @@ function minutesToClock(mins) {
   return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
 }
 
+/* All-day / flexible items (e.g. laundry) shown as chips above the timeline. */
+function buildAllDayStrip(allDayBlocks) {
+  if (!allDayBlocks || !allDayBlocks.length) return '';
+  const chips = allDayBlocks.map(b => {
+    const doneClass = b.cleaningDone ? ' done' : '';
+    const x = b.source === 'cleaning'
+      ? `<button class="allday-chip-x" type="button" title="Unassign" aria-label="Unassign cleaning task" onclick="event.stopPropagation();unassignCleaningTaskFromUI('${attr(b.cleaningTaskId)}')">✕</button>`
+      : '';
+    return `<div class="allday-chip${doneClass}" style="--block-color:${evColor(b.type)};"><span class="allday-chip-tag">All day</span><span class="allday-chip-title">${esc(b.title)}</span>${x}</div>`;
+  }).join('');
+  return `<div class="allday-strip">${chips}</div>`;
+}
+
 function buildTimelineHtml(dateKey, allowEdit = true) {
   const blocks = getScheduleBlocksForDate(dateKey);
   if (blocks.length === 0) return `<div class="timeline"><div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px;">Nothing scheduled</div></div>`;
 
-  const normalized = blocks.map((b, idx) => {
+  const allDayBlocks = blocks.filter(b => b.allDay);
+  const timedBlocks = blocks.filter(b => !b.allDay);
+  if (!timedBlocks.length && allDayBlocks.length) {
+    return `<div class="timeline">${buildAllDayStrip(allDayBlocks)}</div>`;
+  }
+  const normalized = timedBlocks.map((b, idx) => {
     const start = timeToMinutes(b.time);
     let end = b.end && b.end !== b.time ? timeToMinutes(b.end) : start;
     if (end <= start) end = start;
@@ -5025,7 +5232,7 @@ function buildTimelineHtml(dateKey, allowEdit = true) {
     hourMarks.push(h);
   }
 
-  let html = `<div class="timeline"><div class="timeline-shell" style="--timeline-height:${laneHeight}px;">`;
+  let html = `<div class="timeline">${buildAllDayStrip(allDayBlocks)}<div class="timeline-shell" style="--timeline-height:${laneHeight}px;">`;
   html += `<div class="timeline-ruler">`;
   hourMarks.forEach(mark => {
     const top = ((mark - windowStart) / (windowEnd - windowStart)) * laneHeight;
@@ -5192,7 +5399,7 @@ function getEventsForDateFromList(dateKey, events = getEvents()) {
 }
 
 function evColor(type) {
-  const colors = { work: 'var(--mocha)', routine: 'var(--latte)', gym: '#E8FFD8', appointment: 'var(--espresso)', personal: 'var(--nude)', academic: '#7DA8E8', sleep: 'var(--text-muted)', bill: 'var(--danger)', cleaning: '#FAB6DC', 'income-monthly': '#A2BFFE', 'income-biweekly': '#E2B3F2' };
+  const colors = { work: 'var(--mocha)', routine: 'var(--latte)', gym: '#E8FFD8', appointment: 'var(--espresso)', personal: 'var(--nude)', academic: '#7DA8E8', sleep: 'var(--text-muted)', bill: 'var(--danger)', cleaning: '#FAB6DC', health: '#F2C14E', 'income-monthly': '#A2BFFE', 'income-biweekly': '#E2B3F2' };
   return colors[type] || 'var(--nude)';
 }
 
@@ -5851,7 +6058,7 @@ function morningRoutineSub(done, total, block) {
 }
 
 function getMorningItemsForToday() {
-  if (isMonday()) {
+  if (isThursday()) {
     const shot = MEDS.weekly[0];
     return [
       ...MORNING_ITEMS,
@@ -5941,7 +6148,7 @@ function buildCleaningBlock(tasks, week) {
   Object.keys(assignments).forEach(dk => {
     (assignments[dk] || []).forEach(a => { dateToDay[a.taskId] = dk; });
   });
-  let html = `<div class="edit-hint" style="margin-bottom:8px;">${weeklyRangeLabel()} reset · drag a task to a day on the Week Planner</div>`;
+  let html = `<div class="edit-hint" style="margin-bottom:8px;">${weeklyRangeLabel()} reset · drag a task onto a day in Week at a Glance (about 1 hr each; laundry is all-day)</div>`;
   tasks.forEach(task => {
     const done = !!week.done[task.id];
     const assignedKey = dateToDay[task.id];
@@ -5980,7 +6187,7 @@ function onCleaningDragStart(ev, taskId) {
 function onCleaningDragEnd() {
   _cleaningDragTaskId = null;
   document.body.classList.remove('cleaning-dragging');
-  document.querySelectorAll('.week-day-row.drop-target, .week-day-btn.drop-target').forEach(el => el.classList.remove('drop-target'));
+  document.querySelectorAll('.week-day-row.drop-target, .week-day-btn.drop-target, .wg-day.drop-target').forEach(el => el.classList.remove('drop-target'));
 }
 function onDayDragOver(ev) {
   if (!_cleaningDragTaskId) return;
@@ -7157,7 +7364,7 @@ function renderMoneyBills() {
       <div class="bill-month-label">${billMonthName}</div>
       <div class="bill-month-sub">${formatMoney(totalAll)} total · ${paidCount}/${bills.length} paid</div>
     </div>
-    <button class="tiny-nav-btn" onclick="moveBillMonth(1)" ${billMonthOffset===2?'disabled':''}>&#8250;</button>
+    <button class="tiny-nav-btn" onclick="moveBillMonth(1)" ${billMonthOffset===4?'disabled':''}>&#8250;</button>
   </div>`;
 
   const chevron = `<svg class="collapse-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>`;
@@ -7345,7 +7552,7 @@ function renderMoneyPaychecks() {
       <div class="bill-month-label">${esc(monthName)}</div>
       <div class="bill-month-sub">Assign bills to paychecks — including next-month bills you want to pre-cover</div>
     </div>
-    <button class="tiny-nav-btn" onclick="moveBillMonth(1)" ${billMonthOffset===2?'disabled':''}>&#8250;</button>
+    <button class="tiny-nav-btn" onclick="moveBillMonth(1)" ${billMonthOffset===4?'disabled':''}>&#8250;</button>
   </div>`;
 
   if (!paychecks.length) {
@@ -8196,7 +8403,7 @@ function deleteMealEdit() {
 }
 
 function buildMedCard(title, meds, healthData) {
-  const medsToShow = title === 'Morning Meds' && isMonday() ? meds.concat(MEDS.weekly) : meds;
+  const medsToShow = title === 'Morning Meds' && isThursday() ? meds.concat(MEDS.weekly) : meds;
   let html = `<div class="card theme-card"><div class="card-title-row"><div class="card-title">${title}</div></div>`;
   medsToShow.forEach(m => {
     const taken = healthData.meds?.[m.key];
