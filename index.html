@@ -143,9 +143,22 @@ select:focus-visible {
   position: fixed; inset: 0; z-index: 9999;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   background: var(--bg); transition: opacity 0.4s ease, visibility 0.4s ease;
-  gap: 14px;
+  gap: 14px; overflow: hidden;
 }
 .splash.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+.splash-art {
+  width: min(70vw, 320px); height: min(70vw, 320px);
+  filter: saturate(0.6) brightness(1.05) opacity(0.9);
+  position: relative; z-index: 2;
+  display: block;
+}
+/* Splash-scoped bean palette: dim more so the cat reads clearly */
+.splash .beans-bg-decor { z-index: 1; }
+.splash .beans-bg-decor .bean { opacity: 0.10; }
+.splash .beans-bg-decor .bean.dark { opacity: 0.14; }
+.splash .beans-bg-decor .bean.light { opacity: 0.06; }
+[data-theme="dark"] .splash .beans-bg-decor .bean { opacity: 0.14; }
+.splash-title, .splash-sub, .splash-bar { position: relative; z-index: 2; }
 
 /* ── Celebration overlay (confetti) ── */
 .celebrate-overlay {
@@ -294,16 +307,43 @@ select:focus-visible {
 .gym-this-week-stickers { display: inline-flex; align-items: center; gap: 4px; }
 .month-head, .month-grid { position: relative; z-index: 1; }
 .month-cell { position: relative; overflow: hidden; }
-.month-day-sticker {
-  --sticker-size: 14px;
-  position: static;
-  opacity: 0.92;
+.month-day-sticker { --sticker-size: 12px; opacity: 0.92; }
+.month-day-sticker.gym-mini { --sticker-size: 10px; opacity: 0.88; }
+.month-top-row { display: none; }
+.month-cell .month-date {
+  position: absolute; top: 6px; left: 6px;
+  font-size: 12px; font-weight: 700; color: var(--text);
+  line-height: 1; z-index: 2;
 }
-.month-day-sticker.gym-mini { --sticker-size: 7px; opacity: 0.88; }
-.month-top-row {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 4px; min-height: 16px;
+.month-cell .month-icons-tr {
+  position: absolute; top: 5px; right: 5px;
+  display: flex; flex-direction: row; align-items: center; justify-content: flex-end;
+  gap: 2px; max-width: 66%; flex-wrap: nowrap; pointer-events: none; z-index: 2;
 }
+.month-cell .month-icons-tr .theme-sticker,
+.month-cell .month-icons-tr img { --sticker-size: 14px; width: 14px; height: 14px; flex-shrink: 1; min-width: 0; }
+.month-cell .month-icons-tr[data-count="3"] .theme-sticker,
+.month-cell .month-icons-tr[data-count="3"] img { --sticker-size: 12px; width: 12px; height: 12px; }
+.month-cell .month-icons-tr[data-count="4"] .theme-sticker,
+.month-cell .month-icons-tr[data-count="4"] img { --sticker-size: 11px; width: 11px; height: 11px; }
+.month-cell .month-icons-tr[data-count="5"] .theme-sticker,
+.month-cell .month-icons-tr[data-count="5"] img,
+.month-cell .month-icons-tr[data-count="6"] .theme-sticker,
+.month-cell .month-icons-tr[data-count="6"] img { --sticker-size: 9px; width: 9px; height: 9px; }
+.month-cell .month-shot-br {
+  position: absolute; bottom: 4px; right: 4px;
+  width: 16px; height: 16px; z-index: 2; pointer-events: none;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.month-cell .month-shot-br .theme-sticker,
+.month-cell .month-shot-br .month-shot-img { --sticker-size: 16px; width: 16px; height: 16px; opacity: 0.95; object-fit: contain; display: block; }
+.month-cell .month-crossout {
+  position: absolute; inset: 0; z-index: 3; pointer-events: none;
+  background-image: url('images/cross out.svg');
+  background-size: 100% 100%; background-position: center; background-repeat: no-repeat;
+  opacity: 0.55;
+}
+.month-cell.past { opacity: 0.7; }
 .month-corner {
   display: flex; gap: 2px; align-items: center; justify-content: flex-end;
   pointer-events: none;
@@ -462,16 +502,16 @@ select:focus-visible {
 
 /* ── Homepage Hub Nav ── */
 .hub-nav {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
-  margin-bottom: 14px;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
+  margin-bottom: 12px;
 }
 .hub-nav-btn {
-  min-height: 58px; border-radius: var(--radius); border: 1px solid var(--border-soft);
+  min-height: 42px; border-radius: var(--radius); border: 1px solid var(--border-soft);
   background: var(--bg-card); color: var(--icon-pink);
   box-shadow: var(--shadow-sm); cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
-  -webkit-tap-highlight-color: transparent;
+  -webkit-tap-highlight-color: transparent; padding: 4px;
 }
 .hub-nav-btn:active { transform: scale(0.97); background: var(--bg-hover); }
 .hub-nav-btn[data-tab="routines"] { color: var(--pal-purple-strong); }
@@ -482,10 +522,10 @@ select:focus-visible {
 [data-theme="dark"] .hub-nav-btn[data-tab="gym"] { color: var(--pal-pink); }
 [data-theme="dark"] .hub-nav-btn[data-tab="money"] { color: var(--pal-green); }
 [data-theme="dark"] .hub-nav-btn[data-tab="health"] { color: var(--pal-yellow); }
-.hub-nav-btn svg { width: 24px; height: 24px; stroke-width: 1.8; }
-.hub-nav-btn .theme-sticker { --sticker-size: 34px; }
+.hub-nav-btn svg { width: 20px; height: 20px; stroke-width: 1.8; }
+.hub-nav-btn .theme-sticker { --sticker-size: 26px; }
 .hub-nav-sticker {
-  width: 40px; height: 40px; object-fit: contain; display: block;
+  width: 28px; height: 28px; object-fit: contain; display: block;
   filter: drop-shadow(0 2px 2px rgba(60,40,25,0.08));
 }
 
@@ -544,6 +584,23 @@ img.card-icon, img.page-icon { filter: brightness(0) saturate(100%) invert(80%) 
 }
 .editable-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .edit-hint { font-size: 11px; color: var(--text-muted); }
+
+.morning-start-toggle {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 10px 12px; margin-bottom: 12px;
+  background: var(--bg-input); border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+}
+.morning-start-label { font-size: 12px; color: var(--text-secondary); font-weight: 700; }
+.morning-start-btns { display: inline-flex; gap: 6px; }
+.morning-start-btn {
+  padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: 700;
+  border: 1px solid var(--border); background: var(--bg-card); color: var(--text-secondary);
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.morning-start-btn.active {
+  background: var(--espresso); color: #fff; border-color: var(--espresso);
+}
 
 /* ── Checklists ── */
 .check-item {
@@ -1028,6 +1085,122 @@ body.cleaning-dragging .week-day-btn { transition: transform 0.15s ease, box-sha
 .paycheck-picker-amt { font-size: 13px; font-weight: 800; color: var(--espresso); }
 body.bill-dragging .paycheck-card { transition: transform 0.15s ease, box-shadow 0.15s ease; }
 
+/* Paycheck card state accents (colored left border). */
+.paycheck-card { border-left: 4px solid var(--caramel, #d9b48a); }
+.paycheck-card.state-received { border-left-color: var(--success, #4c8f61); }
+.paycheck-card.state-upcoming { border-left-color: var(--caramel, #d9b48a); }
+.paycheck-card.state-past { border-left-color: var(--text-muted, #a89f95); opacity: 0.85; }
+.paycheck-card.overdraft { border-left-color: var(--danger); }
+
+.paycheck-edited-badge {
+  display: inline-block; padding: 1px 6px; margin-left: 4px;
+  background: rgba(214,145,44,0.18); color: #8a5a10;
+  border-radius: 999px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px;
+  vertical-align: middle;
+}
+[data-theme="dark"] .paycheck-edited-badge { color: #f0c67a; background: rgba(240,198,122,0.22); }
+
+.paycheck-instance-controls {
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 10px; margin: 0 0 10px;
+  border: 1px dashed var(--border-soft); border-radius: 10px;
+  background: rgba(0,0,0,0.02);
+}
+[data-theme="dark"] .paycheck-instance-controls { background: rgba(255,255,255,0.03); }
+.paycheck-amount-row .field-label { font-size: 11px; margin-bottom: 4px; }
+.paycheck-amount-inputs { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.paycheck-amount-inputs .text-input { flex: 1 1 120px; min-width: 100px; }
+.paycheck-received-btn {
+  padding: 8px 12px; border-radius: 999px; font-size: 12px; font-weight: 700;
+  background: var(--bg-card); border: 1px solid var(--border-soft); color: var(--espresso);
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+  align-self: flex-start;
+}
+.paycheck-received-btn.on { background: var(--success, #4c8f61); color: #fff; border-color: transparent; }
+
+.paycheck-row-item {
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 10px; margin-bottom: 6px;
+  border: 1px solid var(--border-soft); border-radius: 10px;
+  background: var(--bg-card);
+  transition: background 0.15s ease, opacity 0.15s ease, transform 0.12s ease;
+}
+.paycheck-row-item.reschedule { background: rgba(255,214,102,0.22); border-color: rgba(214,169,66,0.55); }
+[data-theme="dark"] .paycheck-row-item.reschedule { background: rgba(255,214,102,0.14); }
+.paycheck-row-item.skip { opacity: 0.5; }
+.paycheck-row-item.skip .paycheck-row-name { text-decoration: line-through; }
+.paycheck-row-item.paid .paycheck-row-name { color: var(--success, #4c8f61); }
+.paycheck-row-head {
+  display: grid; grid-template-columns: 24px 1fr 110px; align-items: center; gap: 8px;
+}
+.paycheck-row-check input { width: 18px; height: 18px; accent-color: var(--espresso); cursor: pointer; }
+.paycheck-row-info { min-width: 0; }
+.paycheck-row-name { font-size: 13px; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; }
+.paycheck-row-meta { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+.paycheck-row-amt { text-align: right; font-weight: 700; }
+.paycheck-row-tools {
+  display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+}
+.paycheck-row-note { flex: 1 1 140px; min-width: 100px; font-size: 12px; }
+.paycheck-tool-btn {
+  padding: 5px 10px; border-radius: 999px; font-size: 11px; font-weight: 700;
+  background: var(--bg-card); border: 1px solid var(--border-soft); color: var(--text-secondary);
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.paycheck-tool-btn.on { background: var(--espresso); color: #fff; border-color: transparent; }
+.paycheck-tool-btn.danger-soft { color: var(--danger); border-color: rgba(192,40,40,0.35); }
+.paycheck-move-select { font-size: 11px; padding: 4px 6px; }
+
+.paycheck-add-extra {
+  display: grid; grid-template-columns: 1.5fr 90px 1.3fr auto; gap: 6px;
+  padding: 10px; margin-top: 4px;
+  border: 1px dashed var(--border-soft); border-radius: 10px;
+  background: rgba(0,0,0,0.02);
+}
+[data-theme="dark"] .paycheck-add-extra { background: rgba(255,255,255,0.03); }
+.paycheck-add-extra .text-input { font-size: 12px; }
+@media (max-width: 480px) {
+  .paycheck-add-extra { grid-template-columns: 1fr 1fr; }
+  .paycheck-add-extra .add-btn { grid-column: 1 / -1; }
+  .paycheck-row-head { grid-template-columns: 24px 1fr 90px; }
+}
+
+.paycheck-card-totals {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;
+  margin-top: 12px; padding: 10px 12px;
+  border-top: 1px solid var(--border-soft);
+}
+.paycheck-card-totals > div { display: flex; flex-direction: column; }
+.paycheck-card-totals span { font-size: 10px; text-transform: uppercase; letter-spacing: 0.3px; color: var(--text-muted); font-weight: 700; }
+.paycheck-card-totals strong { font-size: 15px; font-weight: 800; color: var(--espresso); margin-top: 2px; }
+.paycheck-card-totals .total-remaining strong { color: var(--success, #4c8f61); }
+.paycheck-card-totals .total-remaining.over strong { color: var(--danger); }
+
+/* Long-press drag visuals. */
+.paycheck-drag-ghost {
+  position: fixed; top: 0; left: 0; z-index: 9999;
+  padding: 8px 14px; border-radius: 999px;
+  background: var(--espresso); color: #fff; font-size: 12px; font-weight: 800;
+  box-shadow: 0 8px 24px rgba(60,40,25,0.35); pointer-events: none;
+  transform: translate(-9999px, -9999px);
+  transition: transform 0.02s linear;
+  max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+body.paycheck-dragging {
+  user-select: none; -webkit-user-select: none;
+  overscroll-behavior: contain; touch-action: none;
+}
+body.paycheck-dragging .paycheck-row-item,
+body.paycheck-dragging .paycheck-pool-row {
+  transition: opacity 0.12s ease;
+}
+.paycheck-row-item.is-dragging,
+.paycheck-pool-row.is-dragging { opacity: 0.35; }
+.paycheck-card.drop-target {
+  outline: 2px dashed var(--espresso); outline-offset: -6px;
+  transform: translateY(-1px); transition: transform 0.12s ease;
+}
+
 /* ── Completion Ring ── */
 .ring-wrap { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
 .ring-svg { width: 42px; height: 42px; }
@@ -1198,7 +1371,8 @@ body.bill-dragging .paycheck-card { transition: transform 0.15s ease, box-shadow
   padding: 2px 0 4px;
 }
 .month-cell {
-  min-height: 64px; border: 1px solid var(--border-soft);
+  aspect-ratio: 1 / 1; min-height: 0;
+  border: 1px solid var(--border-soft);
   border-radius: 12px; background: var(--bg-input);
   padding: 6px; text-align: left; cursor: pointer;
   transition: transform 0.16s ease, border-color 0.2s ease, background 0.2s ease;
@@ -1478,10 +1652,21 @@ body.bill-dragging .paycheck-card { transition: transform 0.15s ease, box-shadow
 .day-money-amount.neg { color: var(--danger); }
 .day-money-amount.pos { color: var(--success); }
 .home-gym-card {
+  position: relative; overflow: hidden;
   background: var(--caramel-light); border-radius: var(--radius);
-  padding: 16px 18px; margin-bottom: 14px; border: 1px solid var(--border-soft);
+  padding: 16px 18px 22px; margin-bottom: 14px; border: 1px solid var(--border-soft);
 }
-.home-gym-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.home-gym-card > .home-gym-sticker {
+  position: absolute; z-index: 3; pointer-events: none;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.home-gym-card > .home-gym-sticker .theme-sticker { --sticker-size: 34px; opacity: 0.9; }
+.home-gym-card > .home-gym-sticker-tl { top: 10px; left: 12px; right: auto; bottom: auto; transform: rotate(-6deg); }
+.home-gym-card > .home-gym-sticker-br { bottom: 8px; right: 12px; top: auto; left: auto; transform: rotate(6deg); }
+.home-gym-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding-left: 44px; position: relative; z-index: 2;
+}
 .home-gym-title { font-size: 15px; font-weight: 700; color: var(--espresso); }
 .home-gym-sub { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
 .home-gym-btn {
@@ -1640,6 +1825,42 @@ body.bill-dragging .paycheck-card { transition: transform 0.15s ease, box-shadow
 .acct-edit-row { margin-bottom: 12px; }
 .acct-edit-row .field-label { font-size: 12px; margin-bottom: 4px; }
 .acct-edit-row .text-input { width: 100%; }
+
+/* Discover safe-spend panel (on the Discover account card body). */
+.discover-safe-panel {
+  margin-bottom: 14px; padding: 12px 14px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border-soft); background: var(--bg-input);
+}
+.discover-safe-panel.ok { background: rgba(60,140,80,0.08); border-color: rgba(60,140,80,0.35); }
+.discover-safe-panel.danger { background: rgba(192,40,40,0.08); border-color: rgba(192,40,40,0.45); }
+.discover-safe-panel.muted { background: var(--bg-input); }
+.discover-safe-title { font-size: 12px; font-weight: 800; color: var(--espresso); letter-spacing: 0.4px; text-transform: uppercase; }
+.discover-safe-msg { font-size: 13px; color: var(--text); margin: 6px 0 10px; line-height: 1.35; }
+.discover-safe-panel.danger .discover-safe-msg { color: var(--danger); font-weight: 700; }
+.discover-safe-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 14px;
+}
+.discover-safe-grid > div { display: flex; flex-direction: column; gap: 2px; }
+.discover-safe-label { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3px; }
+.discover-safe-val { font-size: 15px; font-weight: 800; color: var(--espresso); }
+.discover-safe-free {
+  grid-column: 1 / -1; padding: 8px 10px; border-radius: 8px;
+  background: rgba(60,140,80,0.14); border: 1px dashed rgba(60,140,80,0.4);
+}
+.discover-safe-free.danger { background: rgba(192,40,40,0.12); border-color: rgba(192,40,40,0.5); }
+.discover-safe-free.danger .discover-safe-val { color: var(--danger); }
+.discover-safe-free.muted { background: var(--bg-input); border-color: var(--border-soft); }
+
+/* Green (or red) callout above the Paychecks list. */
+.discover-callout {
+  margin: 0 0 12px; padding: 12px 14px; border-radius: var(--radius-sm);
+  background: rgba(60,140,80,0.10); border: 1px solid rgba(60,140,80,0.35);
+  display: flex; flex-direction: column; gap: 4px;
+}
+.discover-callout.danger { background: rgba(192,40,40,0.10); border-color: rgba(192,40,40,0.45); }
+.discover-callout-title { font-size: 12px; font-weight: 800; color: var(--espresso); letter-spacing: 0.3px; text-transform: uppercase; }
+.discover-callout-body { font-size: 13px; color: var(--text); line-height: 1.4; }
+.discover-callout.danger .discover-callout-body { color: var(--danger); font-weight: 600; }
 
 /* ── Money Transactions View ── */
 .tx-log-row {
@@ -1842,6 +2063,9 @@ body.bill-dragging .paycheck-card { transition: transform 0.15s ease, box-shadow
 }
 .smoking-total-label { font-size: 12px; color: var(--text-muted); font-weight: 700; }
 .smoking-total-value { font-size: 30px; line-height: 1; font-weight: 800; color: var(--espresso); }
+.smoking-total-value.smoking-week-sub { font-size: 20px; color: var(--text-secondary); }
+.smoking-total.smoking-total-emph { background: var(--espresso-light); border-color: var(--espresso); }
+.smoking-total.smoking-total-emph .smoking-total-value { color: var(--espresso); }
 .smoking-actions {
   display: grid; gap: 10px;
 }
@@ -2034,23 +2258,42 @@ body.bill-dragging .paycheck-card { transition: transform 0.15s ease, box-shadow
 .modal-submit:active { opacity: 0.85; }
 
 .modal-overlay.day-modal-overlay {
-  align-items: center;
-  padding: calc(var(--safe-top) + 14px) var(--page-pad) calc(var(--safe-bottom) + 14px);
+  align-items: stretch;
+  padding: 0;
 }
 .day-modal-sheet {
-  width: 100%; max-width: 560px; max-height: 86vh; overflow-y: auto;
-  background: var(--bg-card); border: 1px solid var(--border-soft);
-  border-radius: 18px; box-shadow: 0 18px 48px rgba(60,40,25,0.22);
-  padding: 18px;
-  transform: translateY(12px) scale(0.98);
+  width: 100%; max-width: 100%; max-height: 100%; height: 100%;
+  overflow-y: auto;
+  background: var(--bg); border: none;
+  border-radius: 0; box-shadow: none;
+  padding: calc(var(--safe-top) + 12px) var(--page-pad) calc(var(--safe-bottom) + 24px);
+  transform: translateY(24px);
   transition: transform 0.28s ease;
 }
-.modal-overlay.open .day-modal-sheet { transform: translateY(0) scale(1); }
-.day-modal-head {
-  display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
-  margin-bottom: 12px;
+.modal-overlay.open .day-modal-sheet { transform: translateY(0); }
+@media (min-width: 700px) {
+  .modal-overlay.day-modal-overlay { align-items: center; padding: 24px; }
+  .day-modal-sheet {
+    max-width: 620px; height: auto; max-height: 90vh;
+    background: var(--bg-card); border: 1px solid var(--border-soft);
+    border-radius: 18px; box-shadow: 0 18px 48px rgba(60,40,25,0.22);
+    padding: 20px;
+  }
 }
-.day-modal-title { font-size: 21px; font-weight: 800; color: var(--espresso); }
+.day-modal-head {
+  display: grid; grid-template-columns: 42px 1fr 42px 42px;
+  align-items: center; gap: 8px; margin-bottom: 14px;
+}
+.day-modal-head .day-modal-title-wrap { text-align: center; min-width: 0; }
+.day-modal-nav-btn {
+  width: 40px; height: 40px; border-radius: 50%;
+  border: 1px solid var(--border-soft); background: var(--bg-input);
+  color: var(--espresso); font-size: 20px; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+.day-modal-nav-btn:active { transform: scale(0.94); }
+.day-modal-title { font-size: 20px; font-weight: 800; color: var(--espresso); }
 .day-modal-date { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
 .modal-close-btn {
   width: 30px; height: 30px; border-radius: 50%;
@@ -2157,8 +2400,23 @@ body.bill-dragging .paycheck-card { transition: transform 0.15s ease, box-shadow
 @media (max-width: 400px) {
   :root { --page-pad: 16px; }
   .page-greeting { font-size: 18px; }
-  .month-cell { min-height: 54px; padding: 5px; }
+  .month-cell { padding: 4px; }
   .month-tag { font-size: 8px; }
+  .month-cell .month-date { font-size: 11px; top: 4px; left: 4px; }
+  .month-cell .month-icons-tr { top: 3px; right: 3px; gap: 1px; }
+  .month-cell .month-icons-tr .theme-sticker,
+  .month-cell .month-icons-tr img { --sticker-size: 11px; width: 11px; height: 11px; }
+  .month-cell .month-icons-tr[data-count="3"] .theme-sticker,
+  .month-cell .month-icons-tr[data-count="3"] img { --sticker-size: 10px; width: 10px; height: 10px; }
+  .month-cell .month-icons-tr[data-count="4"] .theme-sticker,
+  .month-cell .month-icons-tr[data-count="4"] img { --sticker-size: 9px; width: 9px; height: 9px; }
+  .month-cell .month-icons-tr[data-count="5"] .theme-sticker,
+  .month-cell .month-icons-tr[data-count="5"] img,
+  .month-cell .month-icons-tr[data-count="6"] .theme-sticker,
+  .month-cell .month-icons-tr[data-count="6"] img { --sticker-size: 8px; width: 8px; height: 8px; }
+  .month-cell .month-shot-br { width: 13px; height: 13px; bottom: 3px; right: 3px; }
+  .month-cell .month-shot-br .theme-sticker,
+  .month-cell .month-shot-br .month-shot-img { --sticker-size: 13px; width: 13px; height: 13px; }
   .shift-import-card { align-items: flex-start; flex-direction: column; }
   .academic-balance-card { align-items: flex-start; flex-direction: column; }
   .money-tab { font-size: 13px; padding: 10px 6px; }
@@ -2175,9 +2433,9 @@ body.bill-dragging .paycheck-card { transition: transform 0.15s ease, box-shadow
   .page-date { font-size: 16px; }
   .card { padding: 22px; }
   .card-title { font-size: 18px; }
-  .hub-nav-btn { min-height: 66px; }
-  .hub-nav-btn svg { width: 28px; height: 28px; }
-  .hub-nav-sticker { width: 46px; height: 46px; }
+  .hub-nav-btn { min-height: 50px; }
+  .hub-nav-btn svg { width: 24px; height: 24px; }
+  .hub-nav-sticker { width: 34px; height: 34px; }
   .sticky-grid { grid-template-columns: repeat(3, 1fr); }
   .sticky-note { min-height: 140px; padding: 16px; }
   .sticky-note textarea { font-size: 14px; }
@@ -2188,7 +2446,7 @@ body.bill-dragging .paycheck-card { transition: transform 0.15s ease, box-shadow
   .time-block { padding: 10px 0; }
   .streak-card { padding: 20px 22px; }
   .toggle-row { padding: 14px 0; }
-  .month-cell { min-height: 82px; }
+  .month-cell { padding: 8px; }
   .splash-title { font-size: 38px; }
   .splash-sub { font-size: 14px; }
   .splash-bar { width: 260px; }
@@ -2198,7 +2456,16 @@ body.bill-dragging .paycheck-card { transition: transform 0.15s ease, box-shadow
 <body>
 
 <div class="splash" id="splash">
-  <dotlottie-wc src="https://lottie.host/f20a8222-a9d7-494a-a34b-36e01b0b1727/CrW7SmScJG.lottie" style="width: 300px; height: 300px; filter: saturate(0.35) brightness(1.1) opacity(0.85);" autoplay loop></dotlottie-wc>
+  <div class="beans-bg-decor" aria-hidden="true">
+    <span class="bean b1"></span><span class="bean b2 light"></span><span class="bean b3 dark"></span>
+    <span class="bean b4"></span><span class="bean b5"></span><span class="bean b6 light"></span>
+    <span class="bean b7 dark"></span><span class="bean b8"></span><span class="bean b9 light"></span>
+    <span class="bean b10"></span><span class="bean b11"></span><span class="bean b12 light"></span>
+    <span class="bean b13"></span><span class="bean b14 dark"></span><span class="bean b15"></span>
+    <span class="bean b16 light"></span><span class="bean b17"></span><span class="bean b18 dark"></span>
+    <span class="bean b19 light"></span><span class="bean b20"></span>
+  </div>
+  <img class="splash-art" src="images/Loading run cat.svg" alt="" aria-hidden="true">
 </div>
 
 <div class="celebrate-overlay" id="celebrate-overlay" aria-hidden="true" onclick="dismissCelebrate()">
@@ -3153,6 +3420,9 @@ const THEME_ICONS = {
   beans: `<svg viewBox="0 0 24 24" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M5.30798 10.1076C5.32119 9.93003 5.14351 9.80257 4.98917 9.89135C3.42339 10.792 2.84061 13.1129 3.46896 15.458C4.11514 17.8696 5.8216 19.4816 7.6834 19.3662C7.81555 19.3581 7.90693 19.2352 7.91347 19.1029C7.92892 18.7907 8.03031 18.446 8.06948 18.1558C8.17453 17.3776 7.97932 16.5981 7.52015 15.9624L5.91538 13.7403C5.39972 13.0263 5.15514 12.1621 5.22041 11.2847L5.30798 10.1076ZM9.70431 18.9966C9.71317 19.0126 9.73457 19.0043 9.75136 18.9968C11.516 18.2141 12.0948 15.7956 11.4326 13.3241C10.7969 10.9515 9.1362 9.35299 7.30865 9.41158C7.15177 9.41661 7.05238 9.58264 7.06451 9.73912C7.10073 10.2065 6.93151 10.8241 6.90173 11.2245C6.84832 11.9424 7.04843 12.6494 7.47034 13.2336L9.0751 15.4557C9.63631 16.2328 9.8749 17.1854 9.7465 18.1366C9.65887 18.7857 9.68126 18.9547 9.70431 18.9966Z" fill="#744A30" stroke="#2F2118"/><path fill-rule="evenodd" clip-rule="evenodd" d="M17.0946 5.01096C17.1948 4.86379 17.1047 4.66457 16.9266 4.66429C15.1203 4.66139 13.4551 6.37999 12.8268 8.725C12.1806 11.1366 12.8524 13.3859 14.5225 14.2169C14.641 14.2759 14.7816 14.2152 14.8534 14.1039C15.0229 13.8412 15.283 13.5934 15.462 13.3617C15.9421 12.7403 16.1628 11.9676 16.083 11.1874L15.8043 8.4607C15.7147 7.58452 15.935 6.71379 16.4302 5.98655L17.0946 5.01096ZM16.4575 14.9072C16.4571 14.9256 16.4798 14.929 16.4981 14.931C18.4177 15.1354 20.1282 13.3303 20.7904 10.8589C21.4262 8.48629 20.7872 6.27157 19.1752 5.40854C19.0369 5.33446 18.8678 5.42854 18.8 5.57013C18.5977 5.99296 18.1424 6.4432 17.9164 6.77508C17.5112 7.37009 17.331 8.0825 17.4042 8.79938L17.683 11.5261C17.7805 12.4797 17.5108 13.424 16.924 14.1835C16.5235 14.7019 16.4584 14.8594 16.4575 14.9072Z" fill="#744A30" stroke="#2F2118"/></svg>`,
 };
 
+THEME_ICONS.shot = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14.5 3.5l6 6M17 6l-9 9-2 5 5-2 9-9-3-3zM6.5 15.5l2 2" stroke="#B85C7A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><rect x="4" y="17" width="3" height="3" rx="0.5" transform="rotate(-45 5.5 18.5)" fill="#F4C6D3" stroke="#B85C7A" stroke-width="1.2"/></svg>`;
+THEME_ICONS.shower = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 10h12M10 4v6M6 14v1M10 14v2M14 14v1M18 14v2M8 18v1M12 18v2M16 18v1" stroke="#B85C7A" stroke-width="1.6" stroke-linecap="round"/><path d="M4 7c0-1.5 1.5-3 4-3s4 1.5 4 3v3" stroke="#B85C7A" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>`;
+
 function themeIcon(name, cls = '') {
   if (!THEME_ICONS[name]) return '';
   return `<span class="theme-sticker ${cls}" aria-hidden="true">${THEME_ICONS[name]}</span>`;
@@ -3629,19 +3899,38 @@ function formatHalfUnits(halfUnits) {
 }
 
 function smokingWeekKey(date = new Date()) { return `gnd-smoking-${currentMondayKey(date)}`; }
-function getSmokingWeek() {
-  const raw = ls(smokingWeekKey(), null) || {};
-  const fromHalfUnits = Number(raw.halfUnits);
-  const fromTotal = Number(raw.total);
-  const halfUnits = Number.isFinite(fromHalfUnits)
-    ? Math.round(fromHalfUnits)
-    : Number.isFinite(fromTotal)
-      ? Math.round(fromTotal * 2)
-      : 0;
-  return { halfUnits: Math.max(0, halfUnits) };
+// Per-day half-unit totals within the current Monday-Sunday week.
+// Display resets each morning; week accumulates until Sunday; hard resets on Monday (new key).
+function getSmokingWeek(date = new Date()) {
+  const raw = ls(smokingWeekKey(date), null) || {};
+  const days = {};
+  if (raw.days && typeof raw.days === 'object') {
+    Object.keys(raw.days).forEach(k => {
+      const n = Math.max(0, Math.round(Number(raw.days[k]) || 0));
+      if (n) days[k] = n;
+    });
+  } else {
+    // Legacy record: single halfUnits/total for the week — attribute to Monday.
+    const legacy = Number.isFinite(Number(raw.halfUnits))
+      ? Math.round(Number(raw.halfUnits))
+      : Number.isFinite(Number(raw.total))
+        ? Math.round(Number(raw.total) * 2)
+        : 0;
+    if (legacy > 0) days[currentMondayKey(date)] = legacy;
+  }
+  const weekTotal = Object.values(days).reduce((s, n) => s + n, 0);
+  const todayHalfUnits = days[localDateKey(date)] || 0;
+  return { days, weekTotal, todayHalfUnits, halfUnits: weekTotal };
 }
-function saveSmokingWeek(data) {
-  lsSave(smokingWeekKey(), { halfUnits: Math.max(0, Math.round(Number(data.halfUnits) || 0)) });
+function saveSmokingWeek(data, date = new Date()) {
+  const days = {};
+  if (data && data.days) {
+    Object.keys(data.days).forEach(k => {
+      const n = Math.max(0, Math.round(Number(data.days[k]) || 0));
+      if (n) days[k] = n;
+    });
+  }
+  lsSave(smokingWeekKey(date), { days });
 }
 
 function cleaningWeekKey(date = new Date()) { return `gnd-cleaning-${currentMondayKey(date)}`; }
@@ -4195,7 +4484,12 @@ function colorById(id) {
   return ACCOUNT_COLORS.find(c => c.id === id) || ACCOUNT_COLORS[0];
 }
 
-function formatMoney(n) { return `$${Number(n || 0).toFixed(2)}`; }
+function formatMoney(n) {
+  const num = Number(n || 0);
+  const sign = num < 0 ? '-' : '';
+  const abs = Math.abs(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return `${sign}$${abs}`;
+}
 
 function formatShortDate(d) {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -4431,13 +4725,181 @@ function clearAllPaycheckAssignments(monthDate = getBillMonthDate()) {
   savePaycheckPlan(plan, monthDate);
 }
 
+/* ─── Per-paycheck instance data ────────────────────────────────────────────
+   Every edit users make on a paycheck card (custom amount for that payday,
+   per-bill overrides, one-off extras) lives here — nothing writes back to
+   master Bills or Income sources, so the budget stays intact even when a
+   given paycheck goes off-script.
+
+   Shape:
+   {
+     "2026-08": {
+       "<paycheckId>": {
+         amountOverride: 1485.00 | null,
+         extras: [ { id, name, amount, note, reschedule, skip, paid } ],
+         billOverrides: { "<billKey>": { amount, note, reschedule, skip, paid } }
+       }
+     }
+   }                                                                        */
+function paycheckInstancesKey() { return 'gnd-paycheck-instances'; }
+function getAllPaycheckInstances() {
+  const data = ls(paycheckInstancesKey(), null);
+  return (data && typeof data === 'object') ? data : {};
+}
+function saveAllPaycheckInstances(map) { lsSave(paycheckInstancesKey(), map || {}); }
+function normalizePaycheckInstance(raw) {
+  const out = { amountOverride: null, extras: [], billOverrides: {} };
+  if (!raw || typeof raw !== 'object') return out;
+  if (raw.amountOverride !== undefined && raw.amountOverride !== null && !Number.isNaN(Number(raw.amountOverride))) {
+    out.amountOverride = Number(raw.amountOverride);
+  }
+  if (Array.isArray(raw.extras)) {
+    out.extras = raw.extras
+      .filter(e => e && typeof e === 'object')
+      .map(e => ({
+        id: String(e.id || `extra-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`),
+        name: String(e.name || '').slice(0, 120),
+        amount: Number(e.amount || 0),
+        note: String(e.note || '').slice(0, 200),
+        reschedule: !!e.reschedule,
+        skip: !!e.skip,
+        paid: !!e.paid,
+      }));
+  }
+  if (raw.billOverrides && typeof raw.billOverrides === 'object') {
+    Object.keys(raw.billOverrides).forEach(k => {
+      const o = raw.billOverrides[k];
+      if (!o || typeof o !== 'object') return;
+      const patch = {};
+      if (o.amount !== undefined && o.amount !== null && !Number.isNaN(Number(o.amount))) patch.amount = Number(o.amount);
+      if (typeof o.note === 'string' && o.note.length) patch.note = o.note.slice(0, 200);
+      if (o.reschedule) patch.reschedule = true;
+      if (o.skip) patch.skip = true;
+      if (o.paid) patch.paid = true;
+      if (Object.keys(patch).length) out.billOverrides[k] = patch;
+    });
+  }
+  return out;
+}
+function getPaycheckInstance(paycheckId, monthDate = getBillMonthDate()) {
+  const map = getAllPaycheckInstances();
+  const monthKey = paycheckPlanKey(monthDate);
+  return normalizePaycheckInstance(map[monthKey]?.[paycheckId]);
+}
+function savePaycheckInstance(paycheckId, instance, monthDate = getBillMonthDate()) {
+  const map = getAllPaycheckInstances();
+  const monthKey = paycheckPlanKey(monthDate);
+  const normalized = normalizePaycheckInstance(instance);
+  const isEmpty = normalized.amountOverride === null
+    && normalized.extras.length === 0
+    && Object.keys(normalized.billOverrides).length === 0;
+  if (isEmpty) {
+    if (map[monthKey]) {
+      delete map[monthKey][paycheckId];
+      if (!Object.keys(map[monthKey]).length) delete map[monthKey];
+    }
+  } else {
+    if (!map[monthKey]) map[monthKey] = {};
+    map[monthKey][paycheckId] = normalized;
+  }
+  saveAllPaycheckInstances(map);
+}
+function setPaycheckAmountOverride(paycheckId, amount, monthDate = getBillMonthDate()) {
+  const inst = getPaycheckInstance(paycheckId, monthDate);
+  inst.amountOverride = (amount === null || amount === undefined || amount === '')
+    ? null
+    : Number(amount);
+  if (!Number.isFinite(inst.amountOverride)) inst.amountOverride = null;
+  savePaycheckInstance(paycheckId, inst, monthDate);
+}
+function overrideBillOnPaycheck(paycheckId, billKey, patch, monthDate = getBillMonthDate()) {
+  const inst = getPaycheckInstance(paycheckId, monthDate);
+  const current = inst.billOverrides[billKey] || {};
+  const next = { ...current, ...patch };
+  // Strip falsy toggles so the record stays lean.
+  ['reschedule', 'skip', 'paid'].forEach(k => { if (!next[k]) delete next[k]; });
+  if (next.amount === undefined || next.amount === null || next.amount === '') delete next.amount;
+  else next.amount = Number(next.amount);
+  if (!next.note) delete next.note;
+  if (Object.keys(next).length === 0) delete inst.billOverrides[billKey];
+  else inst.billOverrides[billKey] = next;
+  savePaycheckInstance(paycheckId, inst, monthDate);
+}
+function clearBillOverride(paycheckId, billKey, monthDate = getBillMonthDate()) {
+  const inst = getPaycheckInstance(paycheckId, monthDate);
+  if (inst.billOverrides[billKey]) {
+    delete inst.billOverrides[billKey];
+    savePaycheckInstance(paycheckId, inst, monthDate);
+  }
+}
+function addPaycheckExtra(paycheckId, extra, monthDate = getBillMonthDate()) {
+  const inst = getPaycheckInstance(paycheckId, monthDate);
+  const id = `extra-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+  inst.extras.push({
+    id,
+    name: String(extra?.name || '').slice(0, 120),
+    amount: Number(extra?.amount || 0),
+    note: String(extra?.note || '').slice(0, 200),
+    reschedule: !!extra?.reschedule,
+    skip: !!extra?.skip,
+    paid: !!extra?.paid,
+  });
+  savePaycheckInstance(paycheckId, inst, monthDate);
+  return id;
+}
+function updatePaycheckExtra(paycheckId, extraId, patch, monthDate = getBillMonthDate()) {
+  const inst = getPaycheckInstance(paycheckId, monthDate);
+  const idx = inst.extras.findIndex(e => e.id === extraId);
+  if (idx < 0) return;
+  inst.extras[idx] = { ...inst.extras[idx], ...patch };
+  savePaycheckInstance(paycheckId, inst, monthDate);
+}
+function removePaycheckExtra(paycheckId, extraId, monthDate = getBillMonthDate()) {
+  const inst = getPaycheckInstance(paycheckId, monthDate);
+  const before = inst.extras.length;
+  inst.extras = inst.extras.filter(e => e.id !== extraId);
+  if (inst.extras.length !== before) savePaycheckInstance(paycheckId, inst, monthDate);
+}
+function moveExtraToPaycheck(fromPaycheckId, extraId, toPaycheckId, monthDate = getBillMonthDate()) {
+  if (fromPaycheckId === toPaycheckId) return;
+  const from = getPaycheckInstance(fromPaycheckId, monthDate);
+  const extra = from.extras.find(e => e.id === extraId);
+  if (!extra) return;
+  from.extras = from.extras.filter(e => e.id !== extraId);
+  savePaycheckInstance(fromPaycheckId, from, monthDate);
+  const to = getPaycheckInstance(toPaycheckId, monthDate);
+  to.extras.push({ ...extra });
+  savePaycheckInstance(toPaycheckId, to, monthDate);
+}
+function resetPaycheckInstance(paycheckId, monthDate = getBillMonthDate()) {
+  const map = getAllPaycheckInstances();
+  const monthKey = paycheckPlanKey(monthDate);
+  if (map[monthKey]?.[paycheckId]) {
+    delete map[monthKey][paycheckId];
+    if (!Object.keys(map[monthKey]).length) delete map[monthKey];
+    saveAllPaycheckInstances(map);
+  }
+}
+
 // Categories that are charged to a credit card (Discover) rather than paid
 // directly from a paycheck. These bills shouldn't appear in the Paychecks
 // tab — only the credit-card payment bill itself should.
 const PAYCHECK_TAB_EXCLUDED_CATEGORIES = new Set(['Variable', 'Subscriptions']);
+function billIsDiscoverSourced(bill) {
+  if (!bill) return false;
+  if (String(bill.source || '').toLowerCase() === 'discover') return true;
+  // If the bill has been folder-assigned to the Discover account, also treat it as Discover-sourced.
+  const map = (typeof getBillAccounts === 'function') ? getBillAccounts() : {};
+  const folder = map[bill.key];
+  if (!folder) return false;
+  const discoverId = (typeof getDiscoverAccountId === 'function') ? getDiscoverAccountId() : null;
+  return !!discoverId && folder === `acct:${discoverId}`;
+}
 function billBelongsOnPaychecksTab(bill) {
   if (!bill) return false;
-  return !PAYCHECK_TAB_EXCLUDED_CATEGORIES.has(bill.category);
+  if (PAYCHECK_TAB_EXCLUDED_CATEGORIES.has(bill.category)) return false;
+  if (billIsDiscoverSourced(bill)) return false;
+  return true;
 }
 
 function renderToday() {
@@ -4446,12 +4908,11 @@ function renderToday() {
 
   const plan = ls(`gnd-${todayKey()}-plan`, null);
 
-  let html = buildRoutineTimesBanner();
+  let html = buildHomeHubNav();
+  html += buildRoutineTimesBanner();
   html += buildMonthCalendar();
   html += buildNextShiftCard();
-  html += buildHomeHubNav();
   html += buildDueSoonSection();
-  html += buildScheduleSection();
   html += buildHomeGymCheck(gym);
 
   if (plan && plan.priorities.some(p => p.trim())) {
@@ -4509,33 +4970,36 @@ function buildMonthCalendar() {
     <button class="cal-action-btn" type="button" onclick="openShiftImportModal()" title="Add work shifts" aria-label="Add work shifts">${themeIcon('work')}</button>
     <button class="cal-action-btn" type="button" onclick="openSyllabusImportModal()" title="Import syllabus / study blocks" aria-label="Import syllabus">${themeIcon('academic')}</button>
     <button class="cal-action-btn" type="button" onclick="rebalanceAcademicBlocksNow(true)" title="Academic auto-balance" aria-label="Academic auto-balance">${themeIcon('morning')}</button>
-    <button class="cal-action-btn" type="button" onclick="openGymImportModal()" title="Schedule gym sessions" aria-label="Schedule gym sessions">${themeIcon('leg')}</button>
+    <button class="cal-action-btn" type="button" onclick="openGymImportModal()" title="Schedule gym sessions" aria-label="Schedule gym sessions">${themeIcon('bicep')}</button>
   </div>`;
+  const tKey = todayKey();
   html += `<div class="month-grid">${DAY_SHORT.map(d => `<div class="month-weekday">${d}</div>`).join('')}`;
   for (let i = 0; i < 42; i++) {
     const d = addDays(gridStart, i);
     const dk = localDateKey(d);
-    const tags = monthTagsForDate(d);
-    const corner = monthCornerStickersForDate(d);
+    const icons = monthTopRightIconsForDate(d);
+    const hasShot = shouldShowShotIcon(d);
+    const isPast = dk < tKey;
     const cls = [
       d.getMonth() !== month ? 'muted' : '',
-      dk === todayKey() ? 'today' : '',
-      dk === selectedKey ? 'selected' : ''
+      dk === tKey ? 'today' : '',
+      dk === selectedKey ? 'selected' : '',
+      isPast && d.getMonth() === month ? 'past' : ''
     ].filter(Boolean).join(' ');
-    const cornerHtml = corner.length
-      ? `<div class="month-corner">${corner.map(c => themeIcon(c.icon, `month-corner-sticker ${c.cls}`)).join('')}</div>`
+    const iconCap = icons.slice(0, 6);
+    const iconsHtml = iconCap.length
+      ? `<div class="month-icons-tr" data-count="${iconCap.length}">${iconCap.map(c => {
+          if (c.png) return `<img class="month-day-sticker${c.cls ? ' ' + c.cls : ''}" src="${attr(c.png)}" alt="" aria-hidden="true">`;
+          return themeIcon(c.icon, `month-day-sticker${c.cls ? ' ' + c.cls : ''}`);
+        }).join('')}</div>`
       : '';
-    const tagsHtml = tags.slice(0,3).map(t => {
-      if (!t.icon) return t.label ? `<div class="month-tag ${t.cls}">${esc(t.label)}</div>` : '';
-      const stickerCls = `month-day-sticker${t.sticker === 'tiny-gym' ? ' gym-mini' : ''}`;
-      return themeIcon(t.icon, stickerCls);
-    }).join('');
+    const shotHtml = hasShot ? `<div class="month-shot-br" title="Testosterone shot"><img class="month-shot-img" src="images/needle.svg" alt="" aria-hidden="true"></div>` : '';
+    const crossHtml = isPast && d.getMonth() === month ? `<div class="month-crossout" aria-hidden="true"></div>` : '';
     html += `<button class="month-cell ${cls}" onclick="openDayModal('${dk}')">
-      <div class="month-top-row">
-        <div class="month-date">${d.getDate()}</div>
-        ${cornerHtml}
-      </div>
-      <div class="month-tags">${tagsHtml}</div>
+      <div class="month-date">${d.getDate()}</div>
+      ${iconsHtml}
+      ${shotHtml}
+      ${crossHtml}
     </button>`;
   }
   html += `</div></div>`;
@@ -4601,6 +5065,38 @@ function monthTagsForDate(date) {
   return tags;
 }
 
+// Consolidated top-right icons for calendar cells: work, gym, academic, plans,
+// cleaning, income, bills. Excludes the shot icon (rendered separately in bottom-right).
+function monthTopRightIconsForDate(date) {
+  const dk = localDateKey(date);
+  const events = getEventsForDate(dk);
+  const out = [];
+  if (events.some(e => e.type === 'work')) out.push({ icon: 'work' });
+  const gymKind = normalizeGymKind(getGymPlans()[dk]);
+  if (['gym','upper','lower'].includes(gymKind)) {
+    out.push({ icon: gymKind === 'lower' ? 'leg' : 'bicep', cls: 'gym-mini' });
+  }
+  if (events.some(e => e.type === 'academic')) out.push({ icon: 'academic' });
+  if (events.some(e => e.type !== 'work' && e.type !== 'academic')) out.push({ icon: 'morning' });
+  // Cleaning tasks scheduled on this date via the picker or drag-drop.
+  const cleaningAssignments = getCleaningAssignments();
+  if ((cleaningAssignments[dk] || []).length) {
+    out.push({ icon: 'shower', cls: 'corner-cleaning' });
+  }
+  if (typeof incomeOccurrencesForDate === 'function' && incomeOccurrencesForDate(date).length) {
+    out.push({ icon: 'money', cls: 'corner-money' });
+  }
+  if (typeof BILLS !== 'undefined' && BILLS.some(b => b.day === date.getDate())) {
+    out.push({ icon: 'bill', cls: 'corner-bill' });
+  }
+  return out;
+}
+
+// Bottom-right slot: weekly testosterone shot on injection day.
+function shouldShowShotIcon(date) {
+  return date.getDay() === SHOT_DOW;
+}
+
 function monthCornerStickersForDate(date) {
   const stickers = [];
   if (incomeOccurrencesForDate(date).length) {
@@ -4629,16 +5125,36 @@ function buildHomeGymCheck(gym) {
   const scheduled = !!gymInfo;
   const done = !!gym.completed;
   const title = scheduled ? 'Gym today' : 'No gym scheduled today';
-  return `<div class="home-gym-card theme-row-card"><div class="home-gym-row">
-    ${scheduled ? themeIcon('bicep', 'theme-corner') : ''}
-    <div><div class="home-gym-title">${esc(title)}</div></div>
-    <button class="home-gym-btn ${done?'done':''}" onclick="toggleGymToday()">${done ? 'Went today' : 'Did I go?'}</button>
-  </div>${scheduled ? `<div class="gym-chip-row"><span class="gym-type-chip gym">Scheduled</span></div>` : ''}</div>`;
+  return `<div class="home-gym-card theme-row-card">
+    <span class="home-gym-sticker home-gym-sticker-tl theme-corner" aria-hidden="true">${themeIcon('bicep')}</span>
+    <span class="home-gym-sticker home-gym-sticker-br theme-corner" aria-hidden="true">${themeIcon('leg')}</span>
+    <div class="home-gym-row">
+      <div><div class="home-gym-title">${esc(title)}</div></div>
+      <button class="home-gym-btn ${done?'done':''}" onclick="toggleGymToday()">${done ? 'Went today' : 'Did I go?'}</button>
+    </div>${scheduled ? `<div class="gym-chip-row"><span class="gym-type-chip gym">Scheduled</span></div>` : ''}
+  </div>`;
+}
+
+function morningStartKey(dateKey) {
+  const d = dateKey ? dateFromKey(dateKey) : new Date();
+  return `gnd-morning-start-${currentMondayKey(d)}`;
+}
+function getWeekMorningStartHour(dateKey = null) {
+  const raw = ls(morningStartKey(dateKey), null);
+  const h = Number(raw);
+  return h === 4 ? 4 : 6;
+}
+function setWeekMorningStartHour(hour, dateKey = null) {
+  const h = Number(hour) === 4 ? 4 : 6;
+  lsSave(morningStartKey(dateKey), h);
 }
 
 function getBaseScheduleBlocks(dayOfWeek, dateKey = null) {
+  const morningHour = getWeekMorningStartHour(dateKey);
+  const morningTime = morningHour === 4 ? '04:00' : '06:00';
+  const morningEnd = morningHour === 4 ? '05:30' : '07:00';
   const blocks = [
-    { blockKey: 'morning', time: '06:00', end: '07:00', title: 'Morning Routine', type: 'routine' },
+    { blockKey: 'morning', time: morningTime, end: morningEnd, title: 'Morning Routine', type: 'routine' },
   ];
   const planDate = dateKey ? dateFromKey(dateKey) : getScheduleViewDate(dayOfWeek);
   const gymInfo = getGymTypeInfo(getGymPlanForDate(planDate));
@@ -5337,8 +5853,27 @@ function openDayModal(dateKey, highlightEventId = '') {
   scheduleDay = date.getDay();
   renderToday();
   renderDayModal(dateKey);
-  document.getElementById('day-modal').classList.add('open');
+  const modal = document.getElementById('day-modal');
+  modal.classList.add('open');
+  modal.dataset.dateKey = dateKey;
   setTimeout(scrollHighlightedAcademicBlock, 60);
+}
+
+function closeDayModal() {
+  document.getElementById('day-modal').classList.remove('open');
+  highlightedAcademicEventId = null;
+}
+
+function navigateDayModal(delta) {
+  const modal = document.getElementById('day-modal');
+  if (!modal || !modal.dataset.dateKey) return;
+  const nextDate = addDays(dateFromKey(modal.dataset.dateKey), delta);
+  const nextKey = localDateKey(nextDate);
+  highlightedAcademicEventId = null;
+  modal.dataset.dateKey = nextKey;
+  renderDayModal(nextKey);
+  const sheet = document.getElementById('day-modal-sheet');
+  if (sheet) sheet.scrollTop = 0;
 }
 
 function renderDayModal(dateKey) {
@@ -5351,8 +5886,10 @@ function renderDayModal(dateKey) {
   const gymScheduled = ['gym','upper','lower'].includes(gymKind);
   const gymLabel = gymKind === 'lower' ? 'Lower body' : gymKind === 'upper' ? 'Upper body' : 'Gym';
   sheet.innerHTML = `<div class="day-modal-head">
-    <div><div class="day-modal-title">${formatDate(date)}</div><div class="day-modal-date">${date.toLocaleDateString('en-US', { year: 'numeric' })}</div></div>
-    <button class="modal-close-btn" onclick="document.getElementById('day-modal').classList.remove('open')" aria-label="Close">&times;</button>
+    <button class="day-modal-nav-btn" type="button" onclick="navigateDayModal(-1)" aria-label="Previous day">&#8249;</button>
+    <div class="day-modal-title-wrap"><div class="day-modal-title">${formatDate(date)}</div><div class="day-modal-date">${date.toLocaleDateString('en-US', { year: 'numeric' })}</div></div>
+    <button class="day-modal-nav-btn" type="button" onclick="navigateDayModal(1)" aria-label="Next day">&#8250;</button>
+    <button class="modal-close-btn" onclick="closeDayModal()" aria-label="Close">&times;</button>
   </div>
   ${gymScheduled ? `<div class="day-modal-gym">
     ${themeIcon(gymKind === 'lower' ? 'leg' : 'bicep', 'small')}
@@ -5365,7 +5902,7 @@ function renderDayModal(dateKey) {
   ${themeDivider('puppy', 'puppy')}
   <div class="day-modal-actions">
     <button class="add-btn" onclick="rebalanceAcademicBlocksNow(true)" style="border-style:solid;margin:0;">Rebalance Academic Blocks</button>
-    <button class="modal-submit" onclick="document.getElementById('day-modal').classList.remove('open');openEventModal('${dateKey}')">Add Event</button>
+    <button class="modal-submit" onclick="closeDayModal();openEventModal('${dateKey}')">Add Event</button>
   </div>`;
 }
 
@@ -5932,9 +6469,14 @@ function resetWater() {
 }
 
 function adjustSmoking(deltaHalfUnits) {
-  const smoking = getSmokingWeek();
-  smoking.halfUnits = Math.max(0, smoking.halfUnits + Math.round(Number(deltaHalfUnits) || 0));
-  saveSmokingWeek(smoking);
+  const now = new Date();
+  const smoking = getSmokingWeek(now);
+  const dayKey = localDateKey(now);
+  const delta = Math.round(Number(deltaHalfUnits) || 0);
+  const nextForDay = Math.max(0, (smoking.days[dayKey] || 0) + delta);
+  const nextDays = { ...smoking.days };
+  if (nextForDay > 0) nextDays[dayKey] = nextForDay; else delete nextDays[dayKey];
+  saveSmokingWeek({ days: nextDays }, now);
   renderHealth();
 }
 
@@ -6089,7 +6631,7 @@ function renderRoutines() {
   const morningBlock = getMorningRoutineBlockForDate(todayKey());
 
   html += buildCollapseSection('morning', 'Morning', morningRoutineSub(mDone, morningItems.length, morningBlock), routineOpenState.morning,
-    ring(mDone, morningItems.length) + buildRoutineChecklist('morning', morningItems, morn),
+    buildMorningStartToggle() + ring(mDone, morningItems.length) + buildRoutineChecklist('morning', morningItems, morn),
     'morning'
   );
 
@@ -6113,6 +6655,24 @@ function renderRoutines() {
 
   html += themeDivider();
   document.getElementById('page-routines').innerHTML = html;
+}
+
+function buildMorningStartToggle() {
+  const current = getWeekMorningStartHour();
+  return `<div class="morning-start-toggle" role="group" aria-label="Morning routine start time this week">
+    <div class="morning-start-label">Start this week at</div>
+    <div class="morning-start-btns">
+      <button type="button" class="morning-start-btn ${current === 4 ? 'active' : ''}" onclick="pickMorningStart(4)">4:00 AM</button>
+      <button type="button" class="morning-start-btn ${current === 6 ? 'active' : ''}" onclick="pickMorningStart(6)">6:00 AM</button>
+    </div>
+  </div>`;
+}
+
+function pickMorningStart(hour) {
+  setWeekMorningStartHour(hour);
+  renderRoutines();
+  if (typeof renderToday === 'function' && document.getElementById('page-today')) renderToday();
+  refreshDayModalIfOpen();
 }
 
 function buildRoutineChecklist(type, items, data) {
@@ -6168,6 +6728,7 @@ function buildCleaningBlock(tasks, week) {
       ${badge}
     </div>`;
   });
+
   html += `<div class="cleaning-add-row">
     <input type="text" class="text-input" id="cleaning-task-input" placeholder="Add a cleaning task..." onkeydown="if(event.key==='Enter')addCleaningTask()">
     <button class="modal-submit" type="button" onclick="addCleaningTask()">Add</button>
@@ -7192,6 +7753,29 @@ function accountBalanceBreakdown(acctId) {
   return { current, upcomingExpenses, upcomingIncome, projected };
 }
 
+/* Discover reserve = every recurring bill charged to the Discover card each
+   month. The user pays with cash-substitute income going into other accounts,
+   so the Discover balance must always keep enough headroom to cover subs. */
+function discoverMonthlyReserve() {
+  const bills = (typeof BILLS !== 'undefined' ? BILLS : getBillsList());
+  return bills.reduce((sum, b) => sum + (billIsDiscoverSourced(b) ? Number(b.amount || 0) : 0), 0);
+}
+function discoverSafeSpendInfo(account) {
+  const acct = account || getDiscoverAccount();
+  if (!acct) return null;
+  const limit = Math.max(0, Number(acct.creditLimit || 0));
+  const reserve = discoverMonthlyReserve();
+  const safeCeiling = Math.max(0, limit - reserve);
+  const current = accountCurrentBalance(acct.id);
+  const availableNow = Math.max(0, limit - current);
+  const freeAfterReserve = availableNow - reserve;
+  const underwater = freeAfterReserve < 0;
+  return {
+    account: acct, limit, reserve, safeCeiling,
+    current, availableNow, freeAfterReserve, underwater
+  };
+}
+
 function renderMoneyAccounts() {
   const accounts = getAccounts();
   const chevron = `<svg class="collapse-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>`;
@@ -7207,6 +7791,8 @@ function renderMoneyAccounts() {
     const b = accountBalanceBreakdown(acct.id);
     const isOpen = moneyAcctOpen === acct.id;
     const color = colorById(acct.color || ACCOUNT_COLORS[0].id);
+    const isDiscover = isDiscoverAccountId(acct.id);
+    const discInfo = isDiscover ? discoverSafeSpendInfo(acct) : null;
     html += `<div class="acct-card theme-card ${isOpen?'open':''}">
       <div class="acct-card-header" onclick="moneyAcctOpen=moneyAcctOpen==='${acct.id}'?null:'${acct.id}';renderMoney()">
         <div class="acct-card-dot" style="background:${color.bg}"></div>
@@ -7218,6 +7804,7 @@ function renderMoneyAccounts() {
         ${chevron}
       </div>
       <div class="acct-card-body">
+        ${isDiscover ? buildDiscoverSafeSpendPanel(discInfo) : ''}
         <div class="balance-breakdown">
           <div class="balance-breakdown-row">
             <span>Current Balance</span>
@@ -7253,6 +7840,11 @@ function renderMoneyAccounts() {
           <div class="field-hint">Advanced — the baseline number the math is built on. Use "Set Current Balance" above unless you know what you're doing.</div>
           <input type="number" class="text-input" step="0.01" inputmode="decimal" value="${Number(acct.startingBalance || 0)}" onchange="updateAccountField('${acct.id}','startingBalance',this.value)">
         </div>
+        ${isDiscover ? `<div class="acct-edit-row">
+          <div class="field-label">Credit Line</div>
+          <div class="field-hint">Your total available credit. Used to calculate how much you can spend without eating into the monthly subscription reserve.</div>
+          <input type="number" class="text-input" step="0.01" inputmode="decimal" value="${Number(acct.creditLimit || 0)}" placeholder="e.g. 800" onchange="updateAccountField('${acct.id}','creditLimit',this.value)">
+        </div>` : ''}
         <div class="acct-edit-row">
           <div class="field-label">Color</div>
           <div class="color-dot-row">${ACCOUNT_COLORS.map(c => `<button class="color-dot ${acct.color===c.id?'active':''}" style="background:${c.bg};border-color:${acct.color===c.id?'var(--espresso)':'transparent'}" onclick="updateAccountField('${acct.id}','color','${c.id}')" type="button"></button>`).join('')}</div>
@@ -7271,9 +7863,31 @@ function updateAccountField(id, field, value) {
   const acct = accts.find(a => a.id === id);
   if (!acct) return;
   if (field === 'startingBalance') acct.startingBalance = parseFloat(value) || 0;
+  else if (field === 'creditLimit') acct.creditLimit = Math.max(0, parseFloat(value) || 0);
   else acct[field] = value;
   saveAccounts(accts);
   renderMoney();
+}
+
+function buildDiscoverSafeSpendPanel(info) {
+  if (!info) return '';
+  const { limit, reserve, safeCeiling, current, availableNow, freeAfterReserve, underwater } = info;
+  const status = limit <= 0
+    ? { tone: 'muted', msg: 'Set a credit line below to unlock the safe-spending math.' }
+    : underwater
+      ? { tone: 'danger', msg: `You are $${Math.abs(freeAfterReserve).toFixed(2)} into your subscription reserve — pay some down before spending more.` }
+      : { tone: 'ok', msg: `You have ${formatMoney(freeAfterReserve)} free to spend without touching next month's subs.` };
+  return `<div class="discover-safe-panel ${status.tone}">
+    <div class="discover-safe-title">Discover safe-spend</div>
+    <div class="discover-safe-msg">${esc(status.msg)}</div>
+    <div class="discover-safe-grid">
+      <div><div class="discover-safe-label">Credit line</div><div class="discover-safe-val">${formatMoney(limit)}</div></div>
+      <div><div class="discover-safe-label">Recurring subs / mo</div><div class="discover-safe-val">${formatMoney(reserve)}</div></div>
+      <div><div class="discover-safe-label">Safe ceiling</div><div class="discover-safe-val">${formatMoney(safeCeiling)}</div></div>
+      <div><div class="discover-safe-label">Currently available</div><div class="discover-safe-val">${formatMoney(availableNow)}</div></div>
+      <div class="discover-safe-free ${status.tone}"><div class="discover-safe-label">Free after reserve</div><div class="discover-safe-val">${formatMoney(freeAfterReserve)}</div></div>
+    </div>
+  </div>`;
 }
 
 function setCurrentBalanceFor(id) {
@@ -7505,6 +8119,52 @@ function pickPaycheckForBill(occId) {
   sheet.classList.add('open');
 }
 
+/* Clamp a bill's day-of-month into a real date for the given month. */
+function billDueDateForMonth(bill, monthDate) {
+  const y = monthDate.getFullYear();
+  const m = monthDate.getMonth();
+  const lastDay = new Date(y, m + 1, 0).getDate();
+  const day = Math.min(Math.max(1, Number(bill.day || 1)), lastDay);
+  return new Date(y, m, day);
+}
+
+/* Auto-populate: which paycheck should a bill land on? The paycheck whose
+   window [paydate, nextPaydate) contains the bill's due date. Bills due
+   before the first paycheck fall into the first one; bills after the last
+   paycheck of the month fall into the last one. Explicit user assignments
+   always win. */
+function autoPaycheckForBillOcc(occ, paychecks) {
+  if (!paychecks.length) return null;
+  const dueMonthDate = monthDateFromPlanKey(occ.monthKey) || new Date();
+  const dueDate = billDueDateForMonth(occ.bill, dueMonthDate);
+  const sorted = paychecks.slice().sort((a, b) => a.date - b.date);
+  for (let i = 0; i < sorted.length; i++) {
+    const windowStart = sorted[i].date;
+    const windowEnd = i < sorted.length - 1 ? sorted[i + 1].date : new Date(dueMonthDate.getFullYear(), dueMonthDate.getMonth() + 2, 1);
+    if (dueDate >= windowStart && dueDate < windowEnd) return sorted[i].id;
+  }
+  return sorted[0].id;
+}
+
+/* Compute a paycheck instance's totals: effective income, planned out
+   (bills after per-instance overrides + one-off extras, skipped items
+   excluded), and remaining. */
+function computePaycheckTotals(paycheck, assignedOccs, instance) {
+  const paycheckAmt = instance.amountOverride !== null ? instance.amountOverride : Number(paycheck.amount || 0);
+  let totalOut = 0;
+  assignedOccs.forEach(o => {
+    const ov = instance.billOverrides[o.billKey] || {};
+    if (ov.skip) return;
+    const amt = ov.amount !== undefined ? Number(ov.amount) : Number(o.bill?.amount || 0);
+    totalOut += amt;
+  });
+  instance.extras.forEach(e => {
+    if (e.skip) return;
+    totalOut += Number(e.amount || 0);
+  });
+  return { paycheckAmt, totalOut, remaining: paycheckAmt - totalOut };
+}
+
 function renderMoneyPaychecks() {
   const monthDate = getBillMonthDate();
   const monthName = monthDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
@@ -7514,43 +8174,57 @@ function renderMoneyPaychecks() {
   const nextMonthShort = next.toLocaleDateString('en-US', { month: 'short' });
   const paychecks = incomeOccurrencesForMonth(null, monthDate).slice().sort((a, b) => a.date - b.date);
   const plan = getPaycheckPlan(monthDate);
-  // Only bills paid directly from a paycheck belong here; Variable and
-  // Subscriptions are charged to the Discover card and live on the Bills tab.
   const bills = BILLS.slice().filter(billBelongsOnPaychecksTab);
-  const billsByKey = Object.fromEntries(bills.map(b => [b.key, b]));
   const accounts = getAccounts();
+  const todayK = todayKey();
 
-  // Build the set of occurrences for this view: every bill in this month and
-  // every bill in next month (both lots are candidates for assignment).
+  // Build occurrences: every filtered bill for this month + next month.
   const thisMonthOccs = bills.map(b => ({ occId: `${b.key}@${planMonthKey}`, billKey: b.key, monthKey: planMonthKey, fromNextMonth: false, bill: b }));
   const nextMonthOccs = bills.map(b => ({ occId: `${b.key}@${nextMonthKey}`, billKey: b.key, monthKey: nextMonthKey, fromNextMonth: true, bill: b }));
   const allOccs = thisMonthOccs.concat(nextMonthOccs);
 
-  const assignedTo = {}; // paycheckId -> [occ]
+  const assignedTo = {};
   paychecks.forEach(p => { assignedTo[p.id] = []; });
-  const unassignedThis = [];
-  const unassignedNext = [];
+  const unassigned = [];
 
   allOccs.forEach(o => {
-    // Where is this occurrence assigned, if anywhere?
-    const localPid = plan.assignments[o.occId];
-    if (localPid && assignedTo[localPid] !== undefined) {
-      assignedTo[localPid].push(o);
+    // Respect explicit assignments first — they always win.
+    const explicit = plan.assignments[o.occId];
+    if (explicit && assignedTo[explicit] !== undefined) {
+      assignedTo[explicit].push(o);
       return;
     }
-    // If the occurrence is assigned in a different plan month, it's not
-    // unassigned but doesn't belong on any card here either — hide it.
+    // If this occurrence is explicitly assigned in a different plan month, it belongs there — hide it.
     const elsewhere = findOccurrenceAssignment(o.occId);
     if (elsewhere) return;
-    if (o.fromNextMonth) unassignedNext.push(o);
-    else unassignedThis.push(o);
+    // Auto-populate: which paycheck window contains the bill's due date?
+    // Only auto-place bills from this month; next-month bills stay in the pool until manually pre-covered.
+    if (!o.fromNextMonth) {
+      const auto = autoPaycheckForBillOcc(o, paychecks);
+      if (auto && assignedTo[auto] !== undefined) { assignedTo[auto].push(o); return; }
+    }
+    unassigned.push(o);
   });
 
-  let html = `<div class="bill-month-nav">
+  // Discover reserve callout at the top.
+  const discInfo = discoverSafeSpendInfo();
+  let html = '';
+  if (discInfo && discInfo.limit > 0) {
+    const tone = discInfo.underwater ? 'danger' : 'ok';
+    const body = discInfo.underwater
+      ? `<strong>Warning:</strong> current Discover balance is ${formatMoney(discInfo.current)}, which is ${formatMoney(Math.abs(discInfo.freeAfterReserve))} into your ${formatMoney(discInfo.reserve)}/mo subscription reserve.`
+      : `<strong>${formatMoney(discInfo.freeAfterReserve)} free right now</strong> (after subs) · Keep balance ≤ ${formatMoney(discInfo.safeCeiling)} · ${formatMoney(discInfo.reserve)}/mo reserved for subscriptions.`;
+    html += `<div class="discover-callout ${tone}">
+      <div class="discover-callout-title">Discover reserve</div>
+      <div class="discover-callout-body">${body}</div>
+    </div>`;
+  }
+
+  html += `<div class="bill-month-nav">
     <button class="tiny-nav-btn" onclick="moveBillMonth(-1)" ${billMonthOffset===0?'disabled':''}>&#8249;</button>
     <div>
       <div class="bill-month-label">${esc(monthName)}</div>
-      <div class="bill-month-sub">Assign bills to paychecks — including next-month bills you want to pre-cover</div>
+      <div class="bill-month-sub">Edit each payday independently of your budget sheet.</div>
     </div>
     <button class="tiny-nav-btn" onclick="moveBillMonth(1)" ${billMonthOffset===4?'disabled':''}>&#8250;</button>
   </div>`;
@@ -7565,106 +8239,368 @@ function renderMoneyPaychecks() {
 
   html += `<div class="paycheck-toolbar">
     <div class="paycheck-toolbar-actions" style="margin-left:auto;">
-      <button class="paycheck-action-btn danger-soft" type="button" onclick="if(confirm('Clear every bill assignment for this month?')){clearAllPaycheckAssignments();renderMoney();}" title="Move every bill back to the unassigned list">Clear</button>
+      <button class="paycheck-action-btn danger-soft" type="button" onclick="if(confirm('Clear every bill assignment for this month?')){clearAllPaycheckAssignments();renderMoney();}" title="Reset all manual assignments back to auto">Reset assignments</button>
     </div>
   </div>`;
 
   html += `<div class="paycheck-row">`;
   paychecks.forEach(p => {
+    const instance = getPaycheckInstance(p.id, monthDate);
     const assigned = assignedTo[p.id] || [];
-    const totalAssigned = assigned.reduce((s, o) => s + Number(o.bill?.amount || 0), 0);
-    const paycheckAmt = Number(p.amount || 0);
-    const remaining = paycheckAmt - totalAssigned;
-    const pct = paycheckAmt > 0 ? Math.min(100, (totalAssigned / paycheckAmt) * 100) : 0;
-    const over = totalAssigned > paycheckAmt;
-    const dateLabel = p.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    const { paycheckAmt, totalOut, remaining } = computePaycheckTotals(p, assigned, instance);
     const isOpen = !!paycheckCardOpen[p.id];
-    html += `<div class="paycheck-card ${over?'overdraft':''} ${isOpen?'open':'collapsed'}" ondragover="onPaycheckDragOver(event)" ondragleave="onPaycheckDragLeave(event)" ondrop="onPaycheckDrop(event,'${attr(p.id)}')">
+    const isReceived = p.received;
+    const isPast = p.dateKey < todayK && !isReceived;
+    const overrideBadge = instance.amountOverride !== null
+      ? `<span class="paycheck-edited-badge" title="Amount overridden for this payday only">Edited</span>` : '';
+    const stateClass = isReceived ? 'received' : isPast ? 'past' : 'upcoming';
+    const dateLabel = p.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    const moveOptions = paychecks
+      .filter(x => x.id !== p.id)
+      .map(x => `<option value="${attr(x.id)}">${esc(x.label)} · ${esc(x.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }))}</option>`).join('');
+
+    html += `<div class="paycheck-card state-${stateClass} ${remaining < 0 ? 'overdraft' : ''} ${isOpen?'open':'collapsed'}" data-paycheck-id="${attr(p.id)}"
+      ondragover="onPaycheckDragOver(event)" ondragleave="onPaycheckDragLeave(event)" ondrop="onPaycheckDrop(event,'${attr(p.id)}')">
       <button class="paycheck-card-toggle" type="button" onclick="togglePaycheckCardOpen('${attr(p.id)}')" aria-expanded="${isOpen?'true':'false'}">
         <div class="paycheck-card-head">
           <div>
-            <div class="paycheck-card-label">${esc(p.label)}</div>
-            <div class="paycheck-card-date">${esc(dateLabel)}</div>
+            <div class="paycheck-card-label">${esc(p.label)} ${overrideBadge}</div>
+            <div class="paycheck-card-date">${esc(dateLabel)}${isReceived ? ' · Received' : isPast ? ' · Past' : ''}</div>
           </div>
           <div class="paycheck-card-amount">${formatMoney(paycheckAmt)}</div>
         </div>
-        <div class="paycheck-card-bar"><div class="paycheck-card-bar-fill ${over?'over':''}" style="width:${pct}%"></div></div>
         <div class="paycheck-card-stats">
-          <span>${formatMoney(totalAssigned)} assigned${assigned.length ? ` · ${assigned.length} bill${assigned.length===1?'':'s'}` : ''}</span>
-          <span class="${over?'over':'left'}">${over ? formatMoney(totalAssigned - paycheckAmt) + ' over' : formatMoney(remaining) + ' left'}</span>
+          <span>Out ${formatMoney(totalOut)}${assigned.length + instance.extras.length ? ` · ${assigned.length + instance.extras.length} item${(assigned.length + instance.extras.length)===1?'':'s'}` : ''}</span>
+          <span class="${remaining < 0 ? 'over' : 'left'}">Remaining ${formatMoney(remaining)}</span>
         </div>
         <svg class="paycheck-card-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
       </button>
       <div class="paycheck-card-body">
+        <div class="paycheck-instance-controls">
+          <div class="paycheck-amount-row">
+            <label class="field-label">Paycheck amount for this payday</label>
+            <div class="paycheck-amount-inputs">
+              <input type="number" class="text-input compact" step="0.01" inputmode="decimal"
+                value="${instance.amountOverride !== null ? instance.amountOverride : ''}"
+                placeholder="${Number(p.amount || 0).toFixed(2)}"
+                onchange="setPaycheckAmountOverride('${attr(p.id)}',this.value===''?null:this.value);renderMoney()">
+              ${instance.amountOverride !== null
+                ? `<button type="button" class="paycheck-action-btn" onclick="setPaycheckAmountOverride('${attr(p.id)}',null);renderMoney()">Reset to ${formatMoney(p.amount)}</button>`
+                : ''}
+            </div>
+          </div>
+          <button type="button" class="paycheck-received-btn ${isReceived ? 'on' : ''}"
+            onclick="toggleIncomeReceived('${attr(p.id)}','${attr(p.dateKey)}')">${isReceived ? '✓ Received' : 'Mark received'}</button>
+        </div>
+
         <div class="paycheck-bill-list">`;
-    if (!assigned.length) {
-      html += `<div class="paycheck-bill-empty">Drag bills here</div>`;
+
+    if (!assigned.length && !instance.extras.length) {
+      html += `<div class="paycheck-bill-empty">Long-press an expense to drag it here, or use "+ Add one-off expense" below.</div>`;
     }
-    assigned.forEach(o => {
-      const b = o.bill;
-      if (!b) return;
-      const nextBadge = o.fromNextMonth ? `<span class="paycheck-bill-chip-tag">${esc(nextMonthShort)}</span>` : '';
-      const payTarget = b.category === 'Credit Card Payments' ? billPaysAccountId(b, accounts) : null;
-      const payTargetName = payTarget ? accounts.find(a => a.id === payTarget)?.name : null;
-      const ccBadge = payTargetName ? `<span class="paycheck-bill-chip-tag cc" title="Pays down ${esc(payTargetName)}">→ ${esc(payTargetName)}</span>` : '';
-      html += `<div class="paycheck-bill-chip ${o.fromNextMonth?'next-month':''}" draggable="true" data-occ="${attr(o.occId)}" ondragstart="onBillDragStart(event,'${attr(o.occId)}')" ondragend="onBillDragEnd(event)">
-        <span class="paycheck-bill-chip-name">${esc(b.name)}</span>
-        ${nextBadge}
-        ${ccBadge}
-        <span class="paycheck-bill-chip-amt">${formatMoney(b.amount)}</span>
-        <button class="paycheck-bill-chip-x" type="button" title="Remove" onclick="event.stopPropagation();unassignBillOcc('${attr(o.occId)}');renderMoney()">✕</button>
+
+    // Assigned bills
+    assigned.slice().sort((a, b) => (a.bill?.day || 0) - (b.bill?.day || 0)).forEach(o => {
+      const b = o.bill; if (!b) return;
+      const ov = instance.billOverrides[b.key] || {};
+      const displayAmt = ov.amount !== undefined ? Number(ov.amount) : Number(b.amount || 0);
+      const rowClasses = [
+        'paycheck-row-item',
+        ov.reschedule ? 'reschedule' : '',
+        ov.skip ? 'skip' : '',
+        ov.paid ? 'paid' : '',
+        o.fromNextMonth ? 'next-month' : ''
+      ].filter(Boolean).join(' ');
+      html += `<div class="${rowClasses}" data-row-kind="bill" data-bill-key="${attr(b.key)}" data-paycheck-id="${attr(p.id)}">
+        <div class="paycheck-row-head">
+          <label class="paycheck-row-check" title="Mark paid from this paycheck">
+            <input type="checkbox" ${ov.paid ? 'checked' : ''} onchange="overrideBillOnPaycheck('${attr(p.id)}','${attr(b.key)}',{paid:this.checked});renderMoney()">
+          </label>
+          <div class="paycheck-row-info">
+            <div class="paycheck-row-name">${esc(b.name)}${o.fromNextMonth ? ` <span class="paycheck-bill-chip-tag">${esc(nextMonthShort)}</span>` : ''}${ov.amount !== undefined ? ` <span class="paycheck-edited-badge" title="Amount overridden">Edited</span>` : ''}</div>
+            <div class="paycheck-row-meta">Due ${ordinal(b.day)}${b.category ? ' · ' + esc(b.category) : ''}</div>
+          </div>
+          <input type="number" class="text-input compact paycheck-row-amt" step="0.01" inputmode="decimal"
+            value="${ov.amount !== undefined ? ov.amount : b.amount}"
+            title="Override amount for this paycheck only"
+            onchange="overrideBillOnPaycheck('${attr(p.id)}','${attr(b.key)}',{amount:this.value===''?null:this.value});renderMoney()">
+        </div>
+        <div class="paycheck-row-tools">
+          <input type="text" class="text-input compact paycheck-row-note" placeholder="Note (e.g. cap one, CASH)"
+            value="${attr(ov.note || '')}"
+            onchange="overrideBillOnPaycheck('${attr(p.id)}','${attr(b.key)}',{note:this.value})">
+          <button type="button" class="paycheck-tool-btn ${ov.reschedule?'on':''}" title="Highlight to reschedule"
+            onclick="overrideBillOnPaycheck('${attr(p.id)}','${attr(b.key)}',{reschedule:${!ov.reschedule}});renderMoney()">Reschedule</button>
+          <button type="button" class="paycheck-tool-btn ${ov.skip?'on':''}" title="Skip on this paycheck's math"
+            onclick="overrideBillOnPaycheck('${attr(p.id)}','${attr(b.key)}',{skip:${!ov.skip}});renderMoney()">Skip</button>
+          <select class="mini-select paycheck-move-select" onchange="if(this.value){movePaycheckRow('bill','${attr(p.id)}','${attr(b.key)}',this.value);}">
+            <option value="">Move to…</option>
+            ${moveOptions}
+          </select>
+          ${Object.keys(ov).length ? `<button type="button" class="paycheck-tool-btn" title="Clear all overrides for this bill on this paycheck" onclick="clearBillOverride('${attr(p.id)}','${attr(b.key)}');renderMoney()">Reset</button>` : ''}
+        </div>
       </div>`;
     });
-    html += `</div></div></div>`;
+
+    // Per-paycheck one-off extras
+    instance.extras.forEach(extra => {
+      const rowClasses = [
+        'paycheck-row-item', 'paycheck-row-extra',
+        extra.reschedule ? 'reschedule' : '',
+        extra.skip ? 'skip' : '',
+        extra.paid ? 'paid' : ''
+      ].filter(Boolean).join(' ');
+      html += `<div class="${rowClasses}" data-row-kind="extra" data-extra-id="${attr(extra.id)}" data-paycheck-id="${attr(p.id)}">
+        <div class="paycheck-row-head">
+          <label class="paycheck-row-check" title="Mark paid from this paycheck">
+            <input type="checkbox" ${extra.paid?'checked':''} onchange="updatePaycheckExtra('${attr(p.id)}','${attr(extra.id)}',{paid:this.checked});renderMoney()">
+          </label>
+          <div class="paycheck-row-info">
+            <input type="text" class="text-input compact" value="${attr(extra.name)}" placeholder="One-off expense name"
+              onchange="updatePaycheckExtra('${attr(p.id)}','${attr(extra.id)}',{name:this.value});renderMoney()">
+            <div class="paycheck-row-meta">One-off · this paycheck only</div>
+          </div>
+          <input type="number" class="text-input compact paycheck-row-amt" step="0.01" inputmode="decimal"
+            value="${extra.amount}"
+            onchange="updatePaycheckExtra('${attr(p.id)}','${attr(extra.id)}',{amount:Number(this.value)||0});renderMoney()">
+        </div>
+        <div class="paycheck-row-tools">
+          <input type="text" class="text-input compact paycheck-row-note" placeholder="Note"
+            value="${attr(extra.note || '')}"
+            onchange="updatePaycheckExtra('${attr(p.id)}','${attr(extra.id)}',{note:this.value})">
+          <button type="button" class="paycheck-tool-btn ${extra.reschedule?'on':''}"
+            onclick="updatePaycheckExtra('${attr(p.id)}','${attr(extra.id)}',{reschedule:${!extra.reschedule}});renderMoney()">Reschedule</button>
+          <button type="button" class="paycheck-tool-btn ${extra.skip?'on':''}"
+            onclick="updatePaycheckExtra('${attr(p.id)}','${attr(extra.id)}',{skip:${!extra.skip}});renderMoney()">Skip</button>
+          <select class="mini-select paycheck-move-select" onchange="if(this.value){movePaycheckRow('extra','${attr(p.id)}','${attr(extra.id)}',this.value);}">
+            <option value="">Move to…</option>
+            ${moveOptions}
+          </select>
+          <button type="button" class="paycheck-tool-btn danger-soft" title="Delete"
+            onclick="removePaycheckExtra('${attr(p.id)}','${attr(extra.id)}');renderMoney()">Delete</button>
+        </div>
+      </div>`;
+    });
+
+    html += `</div>`;
+    // + Add one-off expense
+    html += `<div class="paycheck-add-extra">
+      <input type="text" class="text-input compact" id="ext-name-${attr(p.id)}" placeholder="e.g. Peggy birthday gift">
+      <input type="number" class="text-input compact" id="ext-amt-${attr(p.id)}" step="0.01" inputmode="decimal" placeholder="$0">
+      <input type="text" class="text-input compact" id="ext-note-${attr(p.id)}" placeholder="Note (optional)">
+      <button type="button" class="add-btn" style="margin:0;" onclick="submitPaycheckExtra('${attr(p.id)}')">+ Add</button>
+    </div>`;
+
+    // Card totals
+    html += `<div class="paycheck-card-totals">
+      <div><span>Paycheck</span><strong>${formatMoney(paycheckAmt)}</strong></div>
+      <div><span>Total out</span><strong>${formatMoney(totalOut)}</strong></div>
+      <div class="total-remaining ${remaining < 0 ? 'over' : ''}"><span>Remaining</span><strong>${formatMoney(remaining)}</strong></div>
+    </div>`;
+
+    html += `</div></div>`;
   });
   html += `</div>`;
 
-  // Unassigned bills pool — this month
-  const renderPoolRow = (o) => {
-    const b = o.bill;
-    if (!b) return '';
-    const payTarget = b.category === 'Credit Card Payments' ? billPaysAccountId(b, accounts) : null;
-    const payTargetName = payTarget ? accounts.find(a => a.id === payTarget)?.name : null;
-    const ccBadge = payTargetName ? ` · pays ${esc(payTargetName)}` : '';
-    return `<div class="paycheck-pool-row ${o.fromNextMonth?'next-month':''}" draggable="true" data-occ="${attr(o.occId)}" ondragstart="onBillDragStart(event,'${attr(o.occId)}')" ondragend="onBillDragEnd(event)">
-      <span class="paycheck-pool-grip" aria-hidden="true">⋮⋮</span>
-      <div class="paycheck-pool-info">
-        <div class="paycheck-pool-name">${esc(b.name)}${o.fromNextMonth ? ` <span class="paycheck-pool-chip">${esc(nextMonthShort)}</span>` : ''}</div>
-        <div class="paycheck-pool-meta">Due ${ordinal(b.day)}${o.fromNextMonth ? ' · next month' : ''}${b.category ? ' · ' + esc(b.category) : ''}${ccBadge}</div>
-      </div>
-      <div class="paycheck-pool-amt">${formatMoney(b.amount)}</div>
-      <button class="cleaning-assign-btn" type="button" onclick="pickPaycheckForBill('${attr(o.occId)}')">Assign</button>
-    </div>`;
-  };
-
-  const unassignedTotal = unassignedThis.reduce((s, o) => s + Number(o.bill?.amount || 0), 0);
-  html += `<div class="card theme-card paycheck-pool">${themeIcon('bill', 'theme-corner')}
-    <div class="card-title-row"><div class="card-title">Unassigned Bills</div><div class="paycheck-pool-total">${formatMoney(unassignedTotal)}</div></div>
-    <div class="paycheck-pool-hint">Drag a bill onto a paycheck above — or tap "Assign" for a quick picker.</div>
-    <div class="paycheck-pool-list">`;
-  if (!unassignedThis.length) {
-    html += `<div class="paycheck-pool-empty">Every ${esc(monthDate.toLocaleDateString('en-US', { month: 'long' }))} bill is assigned.</div>`;
+  // Unassigned pool (mostly next-month bills the user hasn't chosen to pre-cover yet).
+  if (unassigned.length) {
+    const total = unassigned.reduce((s, o) => s + Number(o.bill?.amount || 0), 0);
+    html += `<div class="card theme-card paycheck-pool">${themeIcon('bill', 'theme-corner')}
+      <div class="card-title-row"><div class="card-title">Unassigned</div><div class="paycheck-pool-total">${formatMoney(total)}</div></div>
+      <div class="paycheck-pool-hint">Long-press to drag onto a paycheck, or use the picker.</div>
+      <div class="paycheck-pool-list">`;
+    unassigned.sort((a, b) => (a.bill?.day || 0) - (b.bill?.day || 0));
+    unassigned.forEach(o => {
+      const b = o.bill;
+      html += `<div class="paycheck-pool-row ${o.fromNextMonth?'next-month':''}" data-occ="${attr(o.occId)}">
+        <span class="paycheck-pool-grip" aria-hidden="true">⋮⋮</span>
+        <div class="paycheck-pool-info">
+          <div class="paycheck-pool-name">${esc(b.name)}${o.fromNextMonth ? ` <span class="paycheck-pool-chip">${esc(nextMonthShort)}</span>` : ''}</div>
+          <div class="paycheck-pool-meta">Due ${ordinal(b.day)}${o.fromNextMonth ? ' · next month' : ''}${b.category ? ' · ' + esc(b.category) : ''}</div>
+        </div>
+        <div class="paycheck-pool-amt">${formatMoney(b.amount)}</div>
+        <button class="cleaning-assign-btn" type="button" onclick="pickPaycheckForBill('${attr(o.occId)}')">Assign</button>
+      </div>`;
+    });
+    html += `</div></div>`;
   }
-  unassignedThis.sort((a, b) => (a.bill?.day || 0) - (b.bill?.day || 0));
-  unassignedThis.forEach(o => { html += renderPoolRow(o); });
-  html += `</div></div>`;
-
-  // Next-month bills pool — let the user pre-cover next month's bills with
-  // this month's paychecks (e.g. assign June bills to the last Crimson Cup
-  // paycheck of May).
-  const nextUnassignedTotal = unassignedNext.reduce((s, o) => s + Number(o.bill?.amount || 0), 0);
-  html += `<div class="card theme-card paycheck-pool paycheck-pool-next">${themeIcon('bill', 'theme-corner')}
-    <div class="card-title-row"><div class="card-title">${esc(nextMonthShort)} Bills (next month)</div><div class="paycheck-pool-total">${formatMoney(nextUnassignedTotal)}</div></div>
-    <div class="paycheck-pool-hint">Drag a next-month bill onto a ${esc(monthDate.toLocaleDateString('en-US', { month: 'long' }))} paycheck to pre-cover it.</div>
-    <div class="paycheck-pool-list">`;
-  if (!unassignedNext.length) {
-    html += `<div class="paycheck-pool-empty">Every next-month bill is already accounted for elsewhere.</div>`;
-  }
-  unassignedNext.sort((a, b) => (a.bill?.day || 0) - (b.bill?.day || 0));
-  unassignedNext.forEach(o => { html += renderPoolRow(o); });
-  html += `</div></div>`;
 
   return html;
+}
+
+/* Add a one-off expense to a paycheck from the inline form. */
+function submitPaycheckExtra(paycheckId) {
+  const nameEl = document.getElementById(`ext-name-${paycheckId}`);
+  const amtEl = document.getElementById(`ext-amt-${paycheckId}`);
+  const noteEl = document.getElementById(`ext-note-${paycheckId}`);
+  const name = (nameEl?.value || '').trim();
+  const amount = Number(amtEl?.value || 0);
+  const note = (noteEl?.value || '').trim();
+  if (!name && !amount) return;
+  addPaycheckExtra(paycheckId, { name: name || 'Extra', amount, note });
+  paycheckCardOpen[paycheckId] = true;
+  renderMoney();
+}
+
+/* ─── Long-press drag for paycheck rows ──────────────────────────────────
+   Small movements before the ~300ms timer fires cancel the drag so normal
+   scrolling still works. A floating pill follows the finger/mouse. Hovered
+   paycheck cards highlight; releasing over one performs the move. Works for
+   bills already assigned to a paycheck, one-off extras, and pool rows. */
+const PAYCHECK_DRAG = { timer: null, startX: 0, startY: 0, source: null, active: false, ghost: null, hovered: null };
+const PAYCHECK_DRAG_LONG_PRESS_MS = 300;
+const PAYCHECK_DRAG_CANCEL_PX = 8;
+
+function paycheckDragFindSource(target) {
+  if (!target) return null;
+  // Ignore clicks on inputs/buttons/selects so their normal interactions work.
+  if (target.closest('input, button, select, textarea, label')) return null;
+  const row = target.closest('.paycheck-row-item, .paycheck-pool-row');
+  if (!row) return null;
+  if (row.classList.contains('paycheck-pool-row')) {
+    const occ = row.getAttribute('data-occ');
+    if (!occ) return null;
+    return { kind: 'pool', occId: occ, label: row.querySelector('.paycheck-pool-name')?.textContent?.trim() || 'Bill', el: row };
+  }
+  const rowKind = row.getAttribute('data-row-kind');
+  const fromPaycheckId = row.getAttribute('data-paycheck-id');
+  if (!fromPaycheckId) return null;
+  if (rowKind === 'bill') {
+    const billKey = row.getAttribute('data-bill-key');
+    if (!billKey) return null;
+    return { kind: 'bill', fromPaycheckId, billKey, label: row.querySelector('.paycheck-row-name')?.textContent?.trim() || 'Bill', el: row };
+  }
+  if (rowKind === 'extra') {
+    const extraId = row.getAttribute('data-extra-id');
+    if (!extraId) return null;
+    return { kind: 'extra', fromPaycheckId, extraId, label: row.querySelector('input[type="text"]')?.value?.trim() || 'Extra', el: row };
+  }
+  return null;
+}
+
+function paycheckDragStartGhost(x, y, label) {
+  const g = document.createElement('div');
+  g.className = 'paycheck-drag-ghost';
+  g.textContent = label;
+  g.style.transform = `translate(${x + 12}px, ${y + 12}px)`;
+  document.body.appendChild(g);
+  document.body.classList.add('paycheck-dragging');
+  PAYCHECK_DRAG.ghost = g;
+}
+function paycheckDragMoveGhost(x, y) {
+  if (PAYCHECK_DRAG.ghost) PAYCHECK_DRAG.ghost.style.transform = `translate(${x + 12}px, ${y + 12}px)`;
+}
+function paycheckDragHighlight(x, y) {
+  const under = document.elementFromPoint(x, y);
+  const card = under ? under.closest('.paycheck-card[data-paycheck-id]') : null;
+  if (PAYCHECK_DRAG.hovered && PAYCHECK_DRAG.hovered !== card) {
+    PAYCHECK_DRAG.hovered.classList.remove('drop-target');
+  }
+  if (card && PAYCHECK_DRAG.hovered !== card) {
+    card.classList.add('drop-target');
+  }
+  PAYCHECK_DRAG.hovered = card;
+}
+function paycheckDragCleanup() {
+  if (PAYCHECK_DRAG.timer) { clearTimeout(PAYCHECK_DRAG.timer); PAYCHECK_DRAG.timer = null; }
+  if (PAYCHECK_DRAG.ghost && PAYCHECK_DRAG.ghost.parentNode) PAYCHECK_DRAG.ghost.parentNode.removeChild(PAYCHECK_DRAG.ghost);
+  if (PAYCHECK_DRAG.hovered) PAYCHECK_DRAG.hovered.classList.remove('drop-target');
+  if (PAYCHECK_DRAG.source?.el) PAYCHECK_DRAG.source.el.classList.remove('is-dragging');
+  document.body.classList.remove('paycheck-dragging');
+  PAYCHECK_DRAG.ghost = null; PAYCHECK_DRAG.hovered = null;
+  PAYCHECK_DRAG.active = false; PAYCHECK_DRAG.source = null;
+}
+
+function onPaycheckPointerDown(ev) {
+  // Only left button / primary touch. Ignore text-select on inputs.
+  if (ev.button && ev.button !== 0) return;
+  const source = paycheckDragFindSource(ev.target);
+  if (!source) return;
+  PAYCHECK_DRAG.source = source;
+  PAYCHECK_DRAG.startX = ev.clientX;
+  PAYCHECK_DRAG.startY = ev.clientY;
+  PAYCHECK_DRAG.active = false;
+  if (PAYCHECK_DRAG.timer) clearTimeout(PAYCHECK_DRAG.timer);
+  PAYCHECK_DRAG.timer = setTimeout(() => {
+    if (!PAYCHECK_DRAG.source) return;
+    PAYCHECK_DRAG.active = true;
+    PAYCHECK_DRAG.source.el.classList.add('is-dragging');
+    paycheckDragStartGhost(PAYCHECK_DRAG.startX, PAYCHECK_DRAG.startY, PAYCHECK_DRAG.source.label);
+    // Prevent iOS text callouts + scroll while a drag is in progress.
+    if (ev.target.setPointerCapture && ev.pointerId !== undefined) {
+      try { ev.target.setPointerCapture(ev.pointerId); } catch {}
+    }
+  }, PAYCHECK_DRAG_LONG_PRESS_MS);
+}
+
+function onPaycheckPointerMove(ev) {
+  if (!PAYCHECK_DRAG.source) return;
+  if (!PAYCHECK_DRAG.active) {
+    // Cancel long-press if the user moved too much — treat as a scroll.
+    const dx = ev.clientX - PAYCHECK_DRAG.startX;
+    const dy = ev.clientY - PAYCHECK_DRAG.startY;
+    if (Math.hypot(dx, dy) > PAYCHECK_DRAG_CANCEL_PX) {
+      if (PAYCHECK_DRAG.timer) { clearTimeout(PAYCHECK_DRAG.timer); PAYCHECK_DRAG.timer = null; }
+      PAYCHECK_DRAG.source = null;
+    }
+    return;
+  }
+  ev.preventDefault();
+  paycheckDragMoveGhost(ev.clientX, ev.clientY);
+  paycheckDragHighlight(ev.clientX, ev.clientY);
+}
+
+function onPaycheckPointerUp(ev) {
+  if (!PAYCHECK_DRAG.source) { paycheckDragCleanup(); return; }
+  if (!PAYCHECK_DRAG.active) { paycheckDragCleanup(); return; }
+  const target = PAYCHECK_DRAG.hovered;
+  const source = PAYCHECK_DRAG.source;
+  paycheckDragCleanup();
+  if (!target) return;
+  const toPaycheckId = target.getAttribute('data-paycheck-id');
+  if (!toPaycheckId) return;
+  if (source.kind === 'pool') {
+    assignBillOccToPaycheck(source.occId, toPaycheckId, getBillMonthDate());
+    paycheckCardOpen[toPaycheckId] = true;
+    renderMoney();
+    return;
+  }
+  if (source.fromPaycheckId === toPaycheckId) return;
+  movePaycheckRow(source.kind, source.fromPaycheckId, source.kind === 'bill' ? source.billKey : source.extraId, toPaycheckId);
+}
+
+// Install the listeners once, at load time. Use pointer events so touch and
+// mouse both flow through the same code path.
+(function installPaycheckLongPress() {
+  const install = () => {
+    document.addEventListener('pointerdown', onPaycheckPointerDown, { passive: true });
+    document.addEventListener('pointermove', onPaycheckPointerMove, { passive: false });
+    document.addEventListener('pointerup', onPaycheckPointerUp);
+    document.addEventListener('pointercancel', paycheckDragCleanup);
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install);
+  else install();
+})();
+
+/* Move a bill override or extra to another paycheck in the same month. */
+function movePaycheckRow(kind, fromPaycheckId, rowId, toPaycheckId) {
+  if (!toPaycheckId || fromPaycheckId === toPaycheckId) return;
+  const monthDate = getBillMonthDate();
+  if (kind === 'bill') {
+    // Explicit reassignment via the plan; overrides carry over as-is.
+    const monthKey = paycheckPlanKey(monthDate);
+    assignBillOccToPaycheck(`${rowId}@${monthKey}`, toPaycheckId, monthDate);
+    const from = getPaycheckInstance(fromPaycheckId, monthDate);
+    const ov = from.billOverrides[rowId];
+    if (ov) {
+      overrideBillOnPaycheck(toPaycheckId, rowId, ov, monthDate);
+      clearBillOverride(fromPaycheckId, rowId, monthDate);
+    }
+  } else if (kind === 'extra') {
+    moveExtraToPaycheck(fromPaycheckId, rowId, toPaycheckId, monthDate);
+  }
+  paycheckCardOpen[toPaycheckId] = true;
+  renderMoney();
 }
 
 function renderMoneyIncome() {
@@ -8137,18 +9073,26 @@ function buildWaterBottle(h) {
 
 function buildSmokingTracker() {
   const smoking = getSmokingWeek();
+  const isSunday = new Date().getDay() === 0;
+  const todayLabel = isSunday ? 'Sunday total' : 'Today';
+  const weekLabelCls = isSunday ? 'smoking-total-value' : 'smoking-total-value smoking-week-sub';
+  const weekBlockCls = isSunday ? 'smoking-total smoking-total-emph' : 'smoking-total';
   return `<div class="card smoking-card theme-card">
-    <div class="card-title-row"><div class="card-title">Smoking This Week</div></div>
+    <div class="card-title-row"><div class="card-title">Smoking</div></div>
     <div class="page-date">${weeklyRangeLabel()}</div>
     <div class="smoking-total">
-      <div class="smoking-total-label">Weekly total</div>
-      <div class="smoking-total-value">${formatHalfUnits(smoking.halfUnits)}</div>
+      <div class="smoking-total-label">${esc(todayLabel)}</div>
+      <div class="smoking-total-value">${formatHalfUnits(smoking.todayHalfUnits)}</div>
     </div>
-    <div class="smoking-actions" aria-label="Adjust smoking weekly total">
+    <div class="${weekBlockCls}">
+      <div class="smoking-total-label">Week so far</div>
+      <div class="${weekLabelCls}">${formatHalfUnits(smoking.weekTotal)}</div>
+    </div>
+    <div class="smoking-actions" aria-label="Log smoking for today">
       ${smokingRow('full', 'Whole joint', 2, 'Add one', 'Subtract one')}
       ${smokingRow('half', 'Half joint', 1, 'Add one half', 'Subtract one half')}
     </div>
-    <div class="smoking-note">Half marks keep shared/social logs accurate.</div>
+    <div class="smoking-note">Today's count resets each morning. Full week total resets Monday.</div>
   </div>`;
 }
 
@@ -8513,7 +9457,9 @@ function saveEvent() {
   } else {
     events.push(ev);
   }
-  const balance = evType === 'work' ? applyAcademicWorkPrecedence(events, 'Work shifts updated') : null;
+  const balance = (evType === 'work' || evType === 'academic')
+    ? applyAcademicWorkPrecedence(events, evType === 'work' ? 'Work shifts updated' : 'Academic block added')
+    : null;
   saveEvents(balance ? balance.events : events);
   closeEventModalAndRender();
 }
