@@ -24,6 +24,15 @@
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* ── Bagel Fat One (display face, licensed under OFL — see Fonts/Bagel_Fat_One/OFL.txt) ── */
+@font-face {
+  font-family: 'Bagel Fat One';
+  src: url('Fonts/Bagel_Fat_One/BagelFatOne-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --bg: #F7F2EB;
   --bg-card: #FFFFFF;
@@ -57,8 +66,8 @@
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --page-pad: 20px;
-  --font-display: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-display: 'Bagel Fat One', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-body: 'Bagel Fat One', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --icon-pink: #A2BFFE;
   --icon-pink-strong: #7A9FEE;
   --icon-pink-light: #E0EAFF;
@@ -1138,6 +1147,10 @@ body.bill-dragging .paycheck-card { transition: transform 0.15s ease, box-shadow
 .paycheck-row-name { font-size: 13px; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; }
 .paycheck-row-meta { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
 .paycheck-row-amt { text-align: right; font-weight: 700; }
+.paycheck-row-amt-display {
+  text-align: right; font-size: 14px; font-weight: 800; color: var(--espresso);
+  white-space: nowrap; padding: 4px 2px; min-width: 72px;
+}
 .paycheck-row-tools {
   display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
 }
@@ -1149,7 +1162,6 @@ body.bill-dragging .paycheck-card { transition: transform 0.15s ease, box-shadow
 }
 .paycheck-tool-btn.on { background: var(--espresso); color: #fff; border-color: transparent; }
 .paycheck-tool-btn.danger-soft { color: var(--danger); border-color: rgba(192,40,40,0.35); }
-.paycheck-move-select { font-size: 11px; padding: 4px 6px; }
 
 .paycheck-add-extra {
   display: grid; grid-template-columns: 1.5fr 90px 1.3fr auto; gap: 6px;
@@ -1904,6 +1916,13 @@ body.paycheck-dragging .paycheck-pool-row {
 .bill-edit-row:last-child { border-bottom: none; }
 .bill-edit-info { flex: 1; min-width: 0; }
 .bill-edit-name { font-size: 14px; color: var(--text); font-weight: 500; }
+.bill-freq-tag {
+  display: inline-block; margin-left: 6px; padding: 1px 6px;
+  font-size: 9px; font-weight: 800; letter-spacing: 0.4px; text-transform: uppercase;
+  color: var(--espresso); background: rgba(217,180,138,0.35);
+  border-radius: 999px; vertical-align: middle;
+}
+[data-theme="dark"] .bill-freq-tag { color: #f2d9b8; background: rgba(217,180,138,0.22); }
 .bill-edit-detail { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 .bill-edit-right { display: flex; align-items: center; gap: 8px; }
 .bill-edit-amt { font-size: 14px; font-weight: 700; color: var(--espresso); white-space: nowrap; }
@@ -2633,9 +2652,21 @@ body.paycheck-dragging .paycheck-pool-row {
       <div class="field-label" id="bill-edit-amount-label">Amount</div>
       <input type="number" class="modal-input" id="bill-edit-amount" placeholder="0.00" step="0.01" inputmode="decimal">
     </div>
+    <div class="modal-field" id="bill-edit-frequency-field">
+      <div class="field-label">Frequency</div>
+      <select class="modal-input" id="bill-edit-frequency" onchange="updateBillEditCategoryFields()">
+        <option value="monthly">Monthly</option>
+        <option value="biweekly">Biweekly (every 14 days)</option>
+      </select>
+    </div>
     <div class="modal-field" id="bill-edit-day-field">
       <div class="field-label">Due Day of Month</div>
       <input type="number" class="modal-input" id="bill-edit-day" placeholder="1" min="1" max="31">
+    </div>
+    <div class="modal-field" id="bill-edit-firstdue-field" style="display:none;">
+      <div class="field-label">First Due Date</div>
+      <div class="field-hint">Pick any past or upcoming due date. The app steps every 14 days from there.</div>
+      <input type="date" class="modal-input" id="bill-edit-firstdue">
     </div>
     <div class="modal-field">
       <div class="field-label">Category</div>
@@ -3227,6 +3258,10 @@ function normalizeBillCategory(bill) {
 }
 
 function normalizeBillRecord(bill) {
+  const frequency = bill.frequency === 'biweekly' ? 'biweekly' : 'monthly';
+  const firstDue = frequency === 'biweekly'
+    ? (typeof bill.firstDue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(bill.firstDue) ? bill.firstDue : '')
+    : '';
   return {
     ...bill,
     key: bill.key || 'bill-' + Date.now(),
@@ -3237,6 +3272,8 @@ function normalizeBillRecord(bill) {
     source: bill.source || '',
     note: bill.note || '',
     paysAccountId: bill.paysAccountId || '',
+    frequency,
+    firstDue,
   };
 }
 
@@ -3261,6 +3298,38 @@ function getBillsList() {
 }
 function saveBillsList(b) { lsSave('gnd-bills-list', b); }
 let BILLS = getBillsList();
+
+/* ── Bill frequency helpers ─────────────────────────────────────────────
+   Monthly bills fire on `bill.day` each month. Biweekly bills fire every
+   14 days from `bill.firstDue` (YYYY-MM-DD). All rendering that wants to
+   know when a bill occurs in a month goes through these helpers so the
+   two frequencies stay in sync. */
+function isSameLocalDay(a, b) {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+}
+function billOccurrenceDatesInMonth(bill, monthDate) {
+  const y = monthDate.getFullYear();
+  const m = monthDate.getMonth();
+  const monthStart = new Date(y, m, 1);
+  const monthEnd = new Date(y, m + 1, 0);
+  if (bill.frequency === 'biweekly' && bill.firstDue) {
+    let d = dateFromKey(bill.firstDue);
+    while (d > monthStart) d = addDays(d, -14);
+    while (d < monthStart) d = addDays(d, 14);
+    const out = [];
+    while (d <= monthEnd) { out.push(new Date(d)); d = addDays(d, 14); }
+    return out;
+  }
+  const day = Math.min(Math.max(1, Number(bill.day) || 1), monthEnd.getDate());
+  return [new Date(y, m, day)];
+}
+function billOccursOnDate(bill, date) {
+  return billOccurrenceDatesInMonth(bill, new Date(date.getFullYear(), date.getMonth(), 1))
+    .some(d => isSameLocalDay(d, date));
+}
+function billFrequencyLabel(bill) {
+  return bill.frequency === 'biweekly' ? 'Biweekly' : 'Monthly';
+}
 
 const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const DAY_SHORT = ['S','M','T','W','T','F','S'];
@@ -4599,14 +4668,18 @@ function monthDateFromPlanKey(planKey) {
   if (!m) return null;
   return new Date(Number(m[1]), Number(m[2]) - 1, 1);
 }
-function billOccId(billKey, monthDate) {
-  return `${billKey}@${paycheckPlanKey(monthDate)}`;
+function billOccId(billKey, monthDate, index = 0) {
+  const base = `${billKey}@${paycheckPlanKey(monthDate)}`;
+  return index > 0 ? `${base}#${index}` : base;
 }
 function parseBillOccId(occId, fallbackPlanKey = null) {
   const s = String(occId || '');
-  const idx = s.lastIndexOf('@');
-  if (idx === -1) return { billKey: s, monthKey: fallbackPlanKey };
-  return { billKey: s.slice(0, idx), monthKey: s.slice(idx + 1) };
+  const hashIdx = s.lastIndexOf('#');
+  const index = hashIdx > -1 ? Math.max(0, parseInt(s.slice(hashIdx + 1), 10) || 0) : 0;
+  const rest = hashIdx > -1 ? s.slice(0, hashIdx) : s;
+  const atIdx = rest.lastIndexOf('@');
+  if (atIdx === -1) return { billKey: rest, monthKey: fallbackPlanKey, index };
+  return { billKey: rest.slice(0, atIdx), monthKey: rest.slice(atIdx + 1), index };
 }
 function nextMonthDate(monthDate = getBillMonthDate()) {
   return new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 1);
@@ -5086,7 +5159,7 @@ function monthTopRightIconsForDate(date) {
   if (typeof incomeOccurrencesForDate === 'function' && incomeOccurrencesForDate(date).length) {
     out.push({ icon: 'money', cls: 'corner-money' });
   }
-  if (typeof BILLS !== 'undefined' && BILLS.some(b => b.day === date.getDate())) {
+  if (typeof BILLS !== 'undefined' && BILLS.some(b => billOccursOnDate(b, date))) {
     out.push({ icon: 'bill', cls: 'corner-bill' });
   }
   return out;
@@ -5102,7 +5175,7 @@ function monthCornerStickersForDate(date) {
   if (incomeOccurrencesForDate(date).length) {
     stickers.push({ icon: 'money', cls: 'corner-money' });
   }
-  if (BILLS.some(b => b.day === date.getDate())) {
+  if (BILLS.some(b => billOccursOnDate(b, date))) {
     stickers.push({ icon: 'bill', cls: 'corner-bill' });
   }
   return stickers;
@@ -5804,11 +5877,11 @@ function getDayMoneyItems(dateKey) {
       kind: 'pos'
     });
   });
-  BILLS.filter(b => b.day === date.getDate()).forEach(b => {
+  BILLS.filter(b => billOccursOnDate(b, date)).forEach(b => {
     const paid = !!getBillsPaid(date)[b.key];
     items.push({
       title: b.name,
-      meta: `${paid ? 'Paid' : 'Bill due'}${b.note ? ' · ' + b.note : ''}`,
+      meta: `${paid ? 'Paid' : 'Bill due'}${b.frequency === 'biweekly' ? ' · biweekly' : ''}${b.note ? ' · ' + b.note : ''}`,
       amount: -Number(b.amount || 0),
       kind: 'neg'
     });
@@ -7146,7 +7219,7 @@ function billOccurrencesForMonth() {
   const out = [];
   for (let day = 1; day <= daysInMonth; day++) {
     const date = new Date(y, m, day);
-    BILLS.filter(b => b.day === date.getDate()).forEach(b => {
+    BILLS.filter(b => billOccursOnDate(b, date)).forEach(b => {
       out.push({ bill: b, date, dateKey: localDateKey(date), folderKey: billFolderKey(b, accounts, map) });
     });
   }
@@ -7690,16 +7763,17 @@ function renderMoney() {
 
   let html = themePageHeader('Money', 'Know where it goes.', ['money']);
 
+  // Land users who saved the retired "Log" tab back on Accounts.
+  if (moneySubTab === 'transactions') moneySubTab = 'accounts';
+
   html += `<div class="money-tabs">
     <button class="money-tab ${moneySubTab==='accounts'?'active':''}" onclick="moneySubTab='accounts';renderMoney()">Accounts</button>
-    <button class="money-tab ${moneySubTab==='transactions'?'active':''}" onclick="moneySubTab='transactions';renderMoney()">Log</button>
     <button class="money-tab ${moneySubTab==='bills'?'active':''}" onclick="moneySubTab='bills';renderMoney()">Bills</button>
     <button class="money-tab ${moneySubTab==='paychecks'?'active':''}" onclick="moneySubTab='paychecks';renderMoney()">Paychecks</button>
     <button class="money-tab ${moneySubTab==='income'?'active':''}" onclick="moneySubTab='income';renderMoney()">Income</button>
   </div>`;
 
   if (moneySubTab === 'accounts') html += renderMoneyAccounts();
-  else if (moneySubTab === 'transactions') html += renderMoneyTransactions();
   else if (moneySubTab === 'bills') html += renderMoneyBills();
   else if (moneySubTab === 'paychecks') html += renderMoneyPaychecks();
   else if (moneySubTab === 'income') html += renderMoneyIncome();
@@ -8034,12 +8108,21 @@ function renderMoneyBills() {
         </div>`;
       } else {
         const isPaid = !!paid[b.key];
-        const dateKey = localDateKey(new Date(billMonth.getFullYear(), billMonth.getMonth(), Math.min(b.day, 28)));
+        const isBiweekly = b.frequency === 'biweekly';
+        const occDates = billOccurrenceDatesInMonth(b, billMonth);
+        const anchorDate = occDates[0] || new Date(billMonth.getFullYear(), billMonth.getMonth(), Math.min(b.day, 28));
+        const dateKey = localDateKey(anchorDate);
+        const freqTag = isBiweekly ? `<span class="bill-freq-tag">Biweekly</span>` : '';
+        const dueLine = isBiweekly
+          ? (occDates.length
+              ? `Biweekly · ${occDates.map(d => formatShortDate(d)).join(', ')}`
+              : `Biweekly · set a first-due date`)
+          : `Due ${ordinal(b.day)}`;
         html += `<div class="bill-row ${isPaid ? 'paid' : ''}" style="padding:10px 0;">
           <button class="bill-check" onclick="toggleBill('${b.key}','${dateKey}')"><svg viewBox="0 0 12 12"><polyline points="2.5 6 5 8.5 9.5 3.5"/></svg></button>
           <div class="bill-edit-info" style="flex:1;min-width:0;${isPaid ? 'opacity:0.5;' : ''}">
-            <div class="bill-edit-name" style="${isPaid ? 'text-decoration:line-through;' : ''}">${esc(b.name)}</div>
-            <div class="bill-edit-detail">Due ${ordinal(b.day)}${b.note ? ' · ' + esc(b.note) : ''}${b.source ? ' · ' + esc(b.source) : ''}</div>
+            <div class="bill-edit-name" style="${isPaid ? 'text-decoration:line-through;' : ''}">${esc(b.name)} ${freqTag}</div>
+            <div class="bill-edit-detail">${dueLine}${b.note ? ' · ' + esc(b.note) : ''}${b.source ? ' · ' + esc(b.source) : ''}</div>
           </div>
           <div class="bill-edit-right">
             <div class="bill-edit-amt" style="${isPaid ? 'opacity:0.5;' : ''}">${formatMoney(b.amount)}</div>
@@ -8119,36 +8202,10 @@ function pickPaycheckForBill(occId) {
   sheet.classList.add('open');
 }
 
-/* Clamp a bill's day-of-month into a real date for the given month. */
-function billDueDateForMonth(bill, monthDate) {
-  const y = monthDate.getFullYear();
-  const m = monthDate.getMonth();
-  const lastDay = new Date(y, m + 1, 0).getDate();
-  const day = Math.min(Math.max(1, Number(bill.day || 1)), lastDay);
-  return new Date(y, m, day);
-}
-
-/* Auto-populate: which paycheck should a bill land on? The paycheck whose
-   window [paydate, nextPaydate) contains the bill's due date. Bills due
-   before the first paycheck fall into the first one; bills after the last
-   paycheck of the month fall into the last one. Explicit user assignments
-   always win. */
-function autoPaycheckForBillOcc(occ, paychecks) {
-  if (!paychecks.length) return null;
-  const dueMonthDate = monthDateFromPlanKey(occ.monthKey) || new Date();
-  const dueDate = billDueDateForMonth(occ.bill, dueMonthDate);
-  const sorted = paychecks.slice().sort((a, b) => a.date - b.date);
-  for (let i = 0; i < sorted.length; i++) {
-    const windowStart = sorted[i].date;
-    const windowEnd = i < sorted.length - 1 ? sorted[i + 1].date : new Date(dueMonthDate.getFullYear(), dueMonthDate.getMonth() + 2, 1);
-    if (dueDate >= windowStart && dueDate < windowEnd) return sorted[i].id;
-  }
-  return sorted[0].id;
-}
-
 /* Compute a paycheck instance's totals: effective income, planned out
    (bills after per-instance overrides + one-off extras, skipped items
-   excluded), and remaining. */
+   excluded), and remaining. Legacy per-paycheck amount and bill amount
+   overrides still apply if they were set before the UI removed them. */
 function computePaycheckTotals(paycheck, assignedOccs, instance) {
   const paycheckAmt = instance.amountOverride !== null ? instance.amountOverride : Number(paycheck.amount || 0);
   let totalOut = 0;
@@ -8165,30 +8222,49 @@ function computePaycheckTotals(paycheck, assignedOccs, instance) {
   return { paycheckAmt, totalOut, remaining: paycheckAmt - totalOut };
 }
 
+/* Build the flat list of bill occurrences for a plan month. Monthly bills
+   contribute one occurrence; biweekly bills contribute one per fire date
+   inside the month. Each occurrence carries a unique occId so drag-and-drop
+   assignments stay independent between the two paydays of the same bill. */
+function paycheckOccurrencesForMonth(bills, monthDate, fromNextMonth = false) {
+  const monthKey = paycheckPlanKey(monthDate);
+  const out = [];
+  bills.forEach(b => {
+    const dates = billOccurrenceDatesInMonth(b, monthDate);
+    dates.forEach((d, index) => {
+      out.push({
+        occId: billOccId(b.key, monthDate, index),
+        billKey: b.key,
+        monthKey,
+        fromNextMonth,
+        bill: b,
+        date: d,
+        index,
+      });
+    });
+  });
+  return out;
+}
+
 function renderMoneyPaychecks() {
   const monthDate = getBillMonthDate();
   const monthName = monthDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-  const planMonthKey = paycheckPlanKey(monthDate);
   const next = nextMonthDate(monthDate);
-  const nextMonthKey = paycheckPlanKey(next);
   const nextMonthShort = next.toLocaleDateString('en-US', { month: 'short' });
   const paychecks = incomeOccurrencesForMonth(null, monthDate).slice().sort((a, b) => a.date - b.date);
   const plan = getPaycheckPlan(monthDate);
   const bills = BILLS.slice().filter(billBelongsOnPaychecksTab);
-  const accounts = getAccounts();
   const todayK = todayKey();
 
-  // Build occurrences: every filtered bill for this month + next month.
-  const thisMonthOccs = bills.map(b => ({ occId: `${b.key}@${planMonthKey}`, billKey: b.key, monthKey: planMonthKey, fromNextMonth: false, bill: b }));
-  const nextMonthOccs = bills.map(b => ({ occId: `${b.key}@${nextMonthKey}`, billKey: b.key, monthKey: nextMonthKey, fromNextMonth: true, bill: b }));
-  const allOccs = thisMonthOccs.concat(nextMonthOccs);
+  const allOccs = paycheckOccurrencesForMonth(bills, monthDate, false)
+    .concat(paycheckOccurrencesForMonth(bills, next, true));
 
   const assignedTo = {};
   paychecks.forEach(p => { assignedTo[p.id] = []; });
   const unassigned = [];
 
   allOccs.forEach(o => {
-    // Respect explicit assignments first — they always win.
+    // Only explicit drag-and-drop assignments count — nothing is auto-placed.
     const explicit = plan.assignments[o.occId];
     if (explicit && assignedTo[explicit] !== undefined) {
       assignedTo[explicit].push(o);
@@ -8197,12 +8273,6 @@ function renderMoneyPaychecks() {
     // If this occurrence is explicitly assigned in a different plan month, it belongs there — hide it.
     const elsewhere = findOccurrenceAssignment(o.occId);
     if (elsewhere) return;
-    // Auto-populate: which paycheck window contains the bill's due date?
-    // Only auto-place bills from this month; next-month bills stay in the pool until manually pre-covered.
-    if (!o.fromNextMonth) {
-      const auto = autoPaycheckForBillOcc(o, paychecks);
-      if (auto && assignedTo[auto] !== undefined) { assignedTo[auto].push(o); return; }
-    }
     unassigned.push(o);
   });
 
@@ -8237,11 +8307,10 @@ function renderMoneyPaychecks() {
     return html;
   }
 
-  html += `<div class="paycheck-toolbar">
-    <div class="paycheck-toolbar-actions" style="margin-left:auto;">
-      <button class="paycheck-action-btn danger-soft" type="button" onclick="if(confirm('Clear every bill assignment for this month?')){clearAllPaycheckAssignments();renderMoney();}" title="Reset all manual assignments back to auto">Reset assignments</button>
-    </div>
-  </div>`;
+  const formatOccDate = (o) => {
+    if (!o?.date) return '';
+    return o.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
 
   html += `<div class="paycheck-row">`;
   paychecks.forEach(p => {
@@ -8251,20 +8320,15 @@ function renderMoneyPaychecks() {
     const isOpen = !!paycheckCardOpen[p.id];
     const isReceived = p.received;
     const isPast = p.dateKey < todayK && !isReceived;
-    const overrideBadge = instance.amountOverride !== null
-      ? `<span class="paycheck-edited-badge" title="Amount overridden for this payday only">Edited</span>` : '';
     const stateClass = isReceived ? 'received' : isPast ? 'past' : 'upcoming';
     const dateLabel = p.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-    const moveOptions = paychecks
-      .filter(x => x.id !== p.id)
-      .map(x => `<option value="${attr(x.id)}">${esc(x.label)} · ${esc(x.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }))}</option>`).join('');
 
     html += `<div class="paycheck-card state-${stateClass} ${remaining < 0 ? 'overdraft' : ''} ${isOpen?'open':'collapsed'}" data-paycheck-id="${attr(p.id)}"
       ondragover="onPaycheckDragOver(event)" ondragleave="onPaycheckDragLeave(event)" ondrop="onPaycheckDrop(event,'${attr(p.id)}')">
       <button class="paycheck-card-toggle" type="button" onclick="togglePaycheckCardOpen('${attr(p.id)}')" aria-expanded="${isOpen?'true':'false'}">
         <div class="paycheck-card-head">
           <div>
-            <div class="paycheck-card-label">${esc(p.label)} ${overrideBadge}</div>
+            <div class="paycheck-card-label">${esc(p.label)}</div>
             <div class="paycheck-card-date">${esc(dateLabel)}${isReceived ? ' · Received' : isPast ? ' · Past' : ''}</div>
           </div>
           <div class="paycheck-card-amount">${formatMoney(paycheckAmt)}</div>
@@ -8277,18 +8341,6 @@ function renderMoneyPaychecks() {
       </button>
       <div class="paycheck-card-body">
         <div class="paycheck-instance-controls">
-          <div class="paycheck-amount-row">
-            <label class="field-label">Paycheck amount for this payday</label>
-            <div class="paycheck-amount-inputs">
-              <input type="number" class="text-input compact" step="0.01" inputmode="decimal"
-                value="${instance.amountOverride !== null ? instance.amountOverride : ''}"
-                placeholder="${Number(p.amount || 0).toFixed(2)}"
-                onchange="setPaycheckAmountOverride('${attr(p.id)}',this.value===''?null:this.value);renderMoney()">
-              ${instance.amountOverride !== null
-                ? `<button type="button" class="paycheck-action-btn" onclick="setPaycheckAmountOverride('${attr(p.id)}',null);renderMoney()">Reset to ${formatMoney(p.amount)}</button>`
-                : ''}
-            </div>
-          </div>
           <button type="button" class="paycheck-received-btn ${isReceived ? 'on' : ''}"
             onclick="toggleIncomeReceived('${attr(p.id)}','${attr(p.dateKey)}')">${isReceived ? '✓ Received' : 'Mark received'}</button>
         </div>
@@ -8296,11 +8348,11 @@ function renderMoneyPaychecks() {
         <div class="paycheck-bill-list">`;
 
     if (!assigned.length && !instance.extras.length) {
-      html += `<div class="paycheck-bill-empty">Long-press an expense to drag it here, or use "+ Add one-off expense" below.</div>`;
+      html += `<div class="paycheck-bill-empty">Long-press an expense from the Unassigned list to drag it here, or use "+ Add other expense" below.</div>`;
     }
 
     // Assigned bills
-    assigned.slice().sort((a, b) => (a.bill?.day || 0) - (b.bill?.day || 0)).forEach(o => {
+    assigned.slice().sort((a, b) => a.date - b.date).forEach(o => {
       const b = o.bill; if (!b) return;
       const ov = instance.billOverrides[b.key] || {};
       const displayAmt = ov.amount !== undefined ? Number(ov.amount) : Number(b.amount || 0);
@@ -8311,38 +8363,30 @@ function renderMoneyPaychecks() {
         ov.paid ? 'paid' : '',
         o.fromNextMonth ? 'next-month' : ''
       ].filter(Boolean).join(' ');
-      html += `<div class="${rowClasses}" data-row-kind="bill" data-bill-key="${attr(b.key)}" data-paycheck-id="${attr(p.id)}">
+      const freqSuffix = b.frequency === 'biweekly' ? ' · biweekly' : '';
+      html += `<div class="${rowClasses}" data-row-kind="bill" data-bill-key="${attr(b.key)}" data-occ-id="${attr(o.occId)}" data-paycheck-id="${attr(p.id)}">
         <div class="paycheck-row-head">
           <label class="paycheck-row-check" title="Mark paid from this paycheck">
             <input type="checkbox" ${ov.paid ? 'checked' : ''} onchange="overrideBillOnPaycheck('${attr(p.id)}','${attr(b.key)}',{paid:this.checked});renderMoney()">
           </label>
           <div class="paycheck-row-info">
-            <div class="paycheck-row-name">${esc(b.name)}${o.fromNextMonth ? ` <span class="paycheck-bill-chip-tag">${esc(nextMonthShort)}</span>` : ''}${ov.amount !== undefined ? ` <span class="paycheck-edited-badge" title="Amount overridden">Edited</span>` : ''}</div>
-            <div class="paycheck-row-meta">Due ${ordinal(b.day)}${b.category ? ' · ' + esc(b.category) : ''}</div>
+            <div class="paycheck-row-name">${esc(b.name)}${o.fromNextMonth ? ` <span class="paycheck-bill-chip-tag">${esc(nextMonthShort)}</span>` : ''}</div>
+            <div class="paycheck-row-meta">Due ${esc(formatOccDate(o))}${freqSuffix}${b.category ? ' · ' + esc(b.category) : ''}</div>
           </div>
-          <input type="number" class="text-input compact paycheck-row-amt" step="0.01" inputmode="decimal"
-            value="${ov.amount !== undefined ? ov.amount : b.amount}"
-            title="Override amount for this paycheck only"
-            onchange="overrideBillOnPaycheck('${attr(p.id)}','${attr(b.key)}',{amount:this.value===''?null:this.value});renderMoney()">
+          <div class="paycheck-row-amt-display">${formatMoney(displayAmt)}</div>
         </div>
         <div class="paycheck-row-tools">
-          <input type="text" class="text-input compact paycheck-row-note" placeholder="Note (e.g. cap one, CASH)"
-            value="${attr(ov.note || '')}"
-            onchange="overrideBillOnPaycheck('${attr(p.id)}','${attr(b.key)}',{note:this.value})">
           <button type="button" class="paycheck-tool-btn ${ov.reschedule?'on':''}" title="Highlight to reschedule"
             onclick="overrideBillOnPaycheck('${attr(p.id)}','${attr(b.key)}',{reschedule:${!ov.reschedule}});renderMoney()">Reschedule</button>
           <button type="button" class="paycheck-tool-btn ${ov.skip?'on':''}" title="Skip on this paycheck's math"
             onclick="overrideBillOnPaycheck('${attr(p.id)}','${attr(b.key)}',{skip:${!ov.skip}});renderMoney()">Skip</button>
-          <select class="mini-select paycheck-move-select" onchange="if(this.value){movePaycheckRow('bill','${attr(p.id)}','${attr(b.key)}',this.value);}">
-            <option value="">Move to…</option>
-            ${moveOptions}
-          </select>
-          ${Object.keys(ov).length ? `<button type="button" class="paycheck-tool-btn" title="Clear all overrides for this bill on this paycheck" onclick="clearBillOverride('${attr(p.id)}','${attr(b.key)}');renderMoney()">Reset</button>` : ''}
+          <button type="button" class="paycheck-tool-btn danger-soft" title="Send back to Unassigned"
+            onclick="unassignBillOcc('${attr(o.occId)}');renderMoney()">Unassign</button>
         </div>
       </div>`;
     });
 
-    // Per-paycheck one-off extras
+    // Per-paycheck one-off "Other" expenses
     instance.extras.forEach(extra => {
       const rowClasses = [
         'paycheck-row-item', 'paycheck-row-extra',
@@ -8356,26 +8400,16 @@ function renderMoneyPaychecks() {
             <input type="checkbox" ${extra.paid?'checked':''} onchange="updatePaycheckExtra('${attr(p.id)}','${attr(extra.id)}',{paid:this.checked});renderMoney()">
           </label>
           <div class="paycheck-row-info">
-            <input type="text" class="text-input compact" value="${attr(extra.name)}" placeholder="One-off expense name"
-              onchange="updatePaycheckExtra('${attr(p.id)}','${attr(extra.id)}',{name:this.value});renderMoney()">
-            <div class="paycheck-row-meta">One-off · this paycheck only</div>
+            <div class="paycheck-row-name">${esc(extra.name || 'Other')}</div>
+            <div class="paycheck-row-meta">Other · this paycheck only${extra.note ? ' · ' + esc(extra.note) : ''}</div>
           </div>
-          <input type="number" class="text-input compact paycheck-row-amt" step="0.01" inputmode="decimal"
-            value="${extra.amount}"
-            onchange="updatePaycheckExtra('${attr(p.id)}','${attr(extra.id)}',{amount:Number(this.value)||0});renderMoney()">
+          <div class="paycheck-row-amt-display">${formatMoney(Number(extra.amount || 0))}</div>
         </div>
         <div class="paycheck-row-tools">
-          <input type="text" class="text-input compact paycheck-row-note" placeholder="Note"
-            value="${attr(extra.note || '')}"
-            onchange="updatePaycheckExtra('${attr(p.id)}','${attr(extra.id)}',{note:this.value})">
           <button type="button" class="paycheck-tool-btn ${extra.reschedule?'on':''}"
             onclick="updatePaycheckExtra('${attr(p.id)}','${attr(extra.id)}',{reschedule:${!extra.reschedule}});renderMoney()">Reschedule</button>
           <button type="button" class="paycheck-tool-btn ${extra.skip?'on':''}"
             onclick="updatePaycheckExtra('${attr(p.id)}','${attr(extra.id)}',{skip:${!extra.skip}});renderMoney()">Skip</button>
-          <select class="mini-select paycheck-move-select" onchange="if(this.value){movePaycheckRow('extra','${attr(p.id)}','${attr(extra.id)}',this.value);}">
-            <option value="">Move to…</option>
-            ${moveOptions}
-          </select>
           <button type="button" class="paycheck-tool-btn danger-soft" title="Delete"
             onclick="removePaycheckExtra('${attr(p.id)}','${attr(extra.id)}');renderMoney()">Delete</button>
         </div>
@@ -8383,12 +8417,12 @@ function renderMoneyPaychecks() {
     });
 
     html += `</div>`;
-    // + Add one-off expense
+    // + Add "Other" one-off expense
     html += `<div class="paycheck-add-extra">
       <input type="text" class="text-input compact" id="ext-name-${attr(p.id)}" placeholder="e.g. Peggy birthday gift">
       <input type="number" class="text-input compact" id="ext-amt-${attr(p.id)}" step="0.01" inputmode="decimal" placeholder="$0">
       <input type="text" class="text-input compact" id="ext-note-${attr(p.id)}" placeholder="Note (optional)">
-      <button type="button" class="add-btn" style="margin:0;" onclick="submitPaycheckExtra('${attr(p.id)}')">+ Add</button>
+      <button type="button" class="add-btn" style="margin:0;" onclick="submitPaycheckExtra('${attr(p.id)}')">+ Add other</button>
     </div>`;
 
     // Card totals
@@ -8402,21 +8436,22 @@ function renderMoneyPaychecks() {
   });
   html += `</div>`;
 
-  // Unassigned pool (mostly next-month bills the user hasn't chosen to pre-cover yet).
+  // Unassigned pool — everything starts here and stays here until dragged.
   if (unassigned.length) {
     const total = unassigned.reduce((s, o) => s + Number(o.bill?.amount || 0), 0);
     html += `<div class="card theme-card paycheck-pool">${themeIcon('bill', 'theme-corner')}
       <div class="card-title-row"><div class="card-title">Unassigned</div><div class="paycheck-pool-total">${formatMoney(total)}</div></div>
-      <div class="paycheck-pool-hint">Long-press to drag onto a paycheck, or use the picker.</div>
+      <div class="paycheck-pool-hint">Long-press to drag onto a paycheck. Assignments stay put until you move them again.</div>
       <div class="paycheck-pool-list">`;
-    unassigned.sort((a, b) => (a.bill?.day || 0) - (b.bill?.day || 0));
+    unassigned.sort((a, b) => a.date - b.date);
     unassigned.forEach(o => {
       const b = o.bill;
+      const freqSuffix = b.frequency === 'biweekly' ? ' · biweekly' : '';
       html += `<div class="paycheck-pool-row ${o.fromNextMonth?'next-month':''}" data-occ="${attr(o.occId)}">
         <span class="paycheck-pool-grip" aria-hidden="true">⋮⋮</span>
         <div class="paycheck-pool-info">
           <div class="paycheck-pool-name">${esc(b.name)}${o.fromNextMonth ? ` <span class="paycheck-pool-chip">${esc(nextMonthShort)}</span>` : ''}</div>
-          <div class="paycheck-pool-meta">Due ${ordinal(b.day)}${o.fromNextMonth ? ' · next month' : ''}${b.category ? ' · ' + esc(b.category) : ''}</div>
+          <div class="paycheck-pool-meta">Due ${esc(formatOccDate(o))}${o.fromNextMonth ? ' · next month' : ''}${freqSuffix}${b.category ? ' · ' + esc(b.category) : ''}</div>
         </div>
         <div class="paycheck-pool-amt">${formatMoney(b.amount)}</div>
         <button class="cleaning-assign-btn" type="button" onclick="pickPaycheckForBill('${attr(o.occId)}')">Assign</button>
@@ -8467,8 +8502,9 @@ function paycheckDragFindSource(target) {
   if (!fromPaycheckId) return null;
   if (rowKind === 'bill') {
     const billKey = row.getAttribute('data-bill-key');
+    const occId = row.getAttribute('data-occ-id') || null;
     if (!billKey) return null;
-    return { kind: 'bill', fromPaycheckId, billKey, label: row.querySelector('.paycheck-row-name')?.textContent?.trim() || 'Bill', el: row };
+    return { kind: 'bill', fromPaycheckId, billKey, occId, label: row.querySelector('.paycheck-row-name')?.textContent?.trim() || 'Bill', el: row };
   }
   if (rowKind === 'extra') {
     const extraId = row.getAttribute('data-extra-id');
@@ -8566,7 +8602,8 @@ function onPaycheckPointerUp(ev) {
     return;
   }
   if (source.fromPaycheckId === toPaycheckId) return;
-  movePaycheckRow(source.kind, source.fromPaycheckId, source.kind === 'bill' ? source.billKey : source.extraId, toPaycheckId);
+  const rowId = source.kind === 'bill' ? (source.occId || source.billKey) : source.extraId;
+  movePaycheckRow(source.kind, source.fromPaycheckId, rowId, toPaycheckId);
 }
 
 // Install the listeners once, at load time. Use pointer events so touch and
@@ -8582,19 +8619,20 @@ function onPaycheckPointerUp(ev) {
   else install();
 })();
 
-/* Move a bill override or extra to another paycheck in the same month. */
+/* Move a bill or one-off extra to another paycheck in the same month.
+   For bills, rowId can be either a plain billKey (legacy) or a full occId. */
 function movePaycheckRow(kind, fromPaycheckId, rowId, toPaycheckId) {
   if (!toPaycheckId || fromPaycheckId === toPaycheckId) return;
   const monthDate = getBillMonthDate();
   if (kind === 'bill') {
-    // Explicit reassignment via the plan; overrides carry over as-is.
-    const monthKey = paycheckPlanKey(monthDate);
-    assignBillOccToPaycheck(`${rowId}@${monthKey}`, toPaycheckId, monthDate);
+    const occId = String(rowId || '').includes('@') ? rowId : `${rowId}@${paycheckPlanKey(monthDate)}`;
+    const { billKey } = parseBillOccId(occId);
+    assignBillOccToPaycheck(occId, toPaycheckId, monthDate);
     const from = getPaycheckInstance(fromPaycheckId, monthDate);
-    const ov = from.billOverrides[rowId];
+    const ov = from.billOverrides[billKey];
     if (ov) {
-      overrideBillOnPaycheck(toPaycheckId, rowId, ov, monthDate);
-      clearBillOverride(fromPaycheckId, rowId, monthDate);
+      overrideBillOnPaycheck(toPaycheckId, billKey, ov, monthDate);
+      clearBillOverride(fromPaycheckId, billKey, monthDate);
     }
   } else if (kind === 'extra') {
     moveExtraToPaycheck(fromPaycheckId, rowId, toPaycheckId, monthDate);
@@ -8756,6 +8794,8 @@ function openBillEditModal(billKey = null, defaultCategory = 'Necessities') {
   document.getElementById('bill-edit-name').value = bill?.name || '';
   document.getElementById('bill-edit-amount').value = bill?.amount ?? '';
   document.getElementById('bill-edit-day').value = bill?.day ?? '';
+  document.getElementById('bill-edit-frequency').value = bill?.frequency === 'biweekly' ? 'biweekly' : 'monthly';
+  document.getElementById('bill-edit-firstdue').value = bill?.firstDue || '';
   document.getElementById('bill-edit-category').value = bill?.category || defaultCategory;
   document.getElementById('bill-edit-note').value = bill?.note || '';
   const accts = getAccounts();
@@ -8772,9 +8812,13 @@ function openBillEditModal(billKey = null, defaultCategory = 'Necessities') {
 
 function updateBillEditCategoryFields() {
   const cat = document.getElementById('bill-edit-category').value;
+  const freq = document.getElementById('bill-edit-frequency').value;
   const isVariable = cat === 'Variable';
   const isCC = cat === 'Credit Card Payments';
-  document.getElementById('bill-edit-day-field').style.display = isVariable ? 'none' : '';
+  const isBiweekly = freq === 'biweekly';
+  document.getElementById('bill-edit-frequency-field').style.display = isVariable ? 'none' : '';
+  document.getElementById('bill-edit-day-field').style.display = (isVariable || isBiweekly) ? 'none' : '';
+  document.getElementById('bill-edit-firstdue-field').style.display = (!isVariable && isBiweekly) ? '' : 'none';
   document.getElementById('bill-edit-amount-label').textContent = isVariable ? 'Monthly Budget Limit' : 'Amount';
   const paysField = document.getElementById('bill-edit-pays-field');
   if (paysField) paysField.style.display = isCC ? '' : 'none';
@@ -8787,6 +8831,10 @@ function saveBillEdit() {
   const category = document.getElementById('bill-edit-category').value;
   const source = document.getElementById('bill-edit-account').value;
   const note = document.getElementById('bill-edit-note').value.trim();
+  const rawFrequency = document.getElementById('bill-edit-frequency').value;
+  const frequency = category === 'Variable' || rawFrequency !== 'biweekly' ? 'monthly' : 'biweekly';
+  const firstDueRaw = document.getElementById('bill-edit-firstdue').value;
+  const firstDue = frequency === 'biweekly' && /^\d{4}-\d{2}-\d{2}$/.test(firstDueRaw) ? firstDueRaw : '';
   const paysAccountId = category === 'Credit Card Payments'
     ? (document.getElementById('bill-edit-pays')?.value || '')
     : '';
@@ -8795,9 +8843,9 @@ function saveBillEdit() {
   const bills = getBillsList();
   if (editingBillKey) {
     const idx = bills.findIndex(b => b.key === editingBillKey);
-    if (idx > -1) bills[idx] = { ...bills[idx], name, amount, day, category, source, note, paysAccountId };
+    if (idx > -1) bills[idx] = { ...bills[idx], name, amount, day, category, source, note, paysAccountId, frequency, firstDue };
   } else {
-    bills.push({ key: 'bill-' + Date.now(), name, amount, day, category, source, note, paysAccountId });
+    bills.push({ key: 'bill-' + Date.now(), name, amount, day, category, source, note, paysAccountId, frequency, firstDue });
   }
   saveBillsList(bills);
   BILLS = bills;
