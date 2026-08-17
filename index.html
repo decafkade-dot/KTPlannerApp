@@ -156,8 +156,8 @@ select:focus-visible {
 }
 .splash.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
 .splash-art {
-  width: min(70vw, 320px); height: min(70vw, 320px);
-  filter: saturate(0.6) brightness(1.05) opacity(0.9);
+  width: min(92vw, 520px); height: min(92vw, 520px);
+  filter: saturate(0.95) brightness(1.02);
   position: relative; z-index: 2;
   display: block;
 }
@@ -1007,9 +1007,12 @@ body.cleaning-dragging .week-day-btn { transition: transform 0.15s ease, box-sha
   transition: max-height 0.28s ease, padding 0.2s ease;
 }
 .paycheck-card.open .paycheck-card-body {
-  max-height: 800px;
+  max-height: min(60vh, 560px);
   padding: 4px 14px 14px;
   border-top: 1px dashed var(--border-soft);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 .paycheck-bill-list { display: flex; flex-direction: column; gap: 6px; }
 .paycheck-bill-empty {
@@ -1151,6 +1154,39 @@ body.bill-dragging .paycheck-card { transition: transform 0.15s ease, box-shadow
   text-align: right; font-size: 14px; font-weight: 800; color: var(--espresso);
   white-space: nowrap; padding: 4px 2px; min-width: 72px;
 }
+/* Editable amount (Credit Card Payments only) — inline $ prefix + right-aligned number. */
+.paycheck-row-amt-edit {
+  display: inline-flex; align-items: center; justify-content: flex-end; gap: 2px;
+  min-width: 92px; padding: 3px 6px;
+  border: 1px solid var(--border-soft); border-radius: 8px;
+  background: var(--bg-card); cursor: text;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+.paycheck-row-amt-edit:hover,
+.paycheck-row-amt-edit:focus-within {
+  border-color: var(--espresso); background: var(--bg-card);
+  box-shadow: 0 0 0 3px rgba(92,61,46,0.08);
+}
+.paycheck-row-amt-edit.is-override {
+  border-color: var(--caramel, #d9b48a);
+  background: var(--caramel-light, #fbf3ea);
+}
+[data-theme="dark"] .paycheck-row-amt-edit.is-override {
+  background: rgba(212,165,116,0.12);
+}
+.paycheck-row-amt-currency {
+  font-size: 12px; font-weight: 800; color: var(--text-muted); line-height: 1;
+}
+.paycheck-row-amt-edit:focus-within .paycheck-row-amt-currency { color: var(--espresso); }
+.paycheck-row-amt-input {
+  width: 68px; text-align: right;
+  font-size: 14px; font-weight: 800; color: var(--espresso);
+  background: transparent; border: 0; outline: none;
+  padding: 2px 0; font-family: inherit;
+  -moz-appearance: textfield;
+}
+.paycheck-row-amt-input::-webkit-outer-spin-button,
+.paycheck-row-amt-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .paycheck-row-tools {
   display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
 }
@@ -1164,17 +1200,38 @@ body.bill-dragging .paycheck-card { transition: transform 0.15s ease, box-shadow
 .paycheck-tool-btn.danger-soft { color: var(--danger); border-color: rgba(192,40,40,0.35); }
 
 .paycheck-add-extra {
-  display: grid; grid-template-columns: 1.5fr 90px 1.3fr auto; gap: 6px;
+  display: flex; flex-wrap: wrap; gap: 6px;
   padding: 10px; margin-top: 4px;
   border: 1px dashed var(--border-soft); border-radius: 10px;
   background: rgba(0,0,0,0.02);
 }
 [data-theme="dark"] .paycheck-add-extra { background: rgba(255,255,255,0.03); }
-.paycheck-add-extra .text-input { font-size: 12px; }
+/* Name gets the room; amount is a small fixed cell; button fills the rest. */
+.paycheck-add-extra > :nth-child(1) { flex: 1 1 100%; min-width: 0; }
+.paycheck-add-extra > :nth-child(2) { flex: 0 0 82px; min-width: 0; }
+.paycheck-add-extra > :nth-child(3) { flex: 1 1 auto; }
+@media (min-width: 481px) {
+  /* Wider screens: everything on one row, name flex-grows. */
+  .paycheck-add-extra > :nth-child(1) { flex: 1 1 220px; }
+}
+/* Bagel Fat One is chunky — resting size is roomy so entered values stay
+   readable, focus size shrinks so a longer name fits in the field while
+   you're typing. Transition keeps the jump from feeling abrupt. */
+.paycheck-add-extra .text-input {
+  font-size: 15px;
+  transition: font-size 0.15s ease;
+}
+.paycheck-add-extra .text-input:focus { font-size: 11px; }
+.paycheck-add-extra input[type="number"] { -moz-appearance: textfield; }
+.paycheck-add-extra input[type="number"]::-webkit-outer-spin-button,
+.paycheck-add-extra input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none; margin: 0;
+}
 @media (max-width: 480px) {
-  .paycheck-add-extra { grid-template-columns: 1fr 1fr; }
-  .paycheck-add-extra .add-btn { grid-column: 1 / -1; }
   .paycheck-row-head { grid-template-columns: 24px 1fr 90px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .paycheck-add-extra .text-input { transition: none; }
 }
 
 .paycheck-card-totals {
@@ -1909,6 +1966,48 @@ body.paycheck-dragging .paycheck-pool-row {
   border-radius: 0 0 var(--radius) var(--radius); box-shadow: var(--shadow-sm);
 }
 .bill-cat-section.open .bill-cat-body { display: block; }
+
+/* ── Card sections (Discover / Capital One) — drop targets for bill rows. ── */
+.bill-card-section .bill-cat-header {
+  border-style: dashed; border-color: var(--border);
+}
+.bill-card-section.open .bill-cat-header,
+.bill-card-section.open .bill-cat-body {
+  border-color: var(--border);
+}
+.bill-card-section[data-card="Discover"] .bill-cat-name    { color: var(--pal-blue-strong, #7A9FEE); }
+.bill-card-section[data-card="Capital One"] .bill-cat-name { color: var(--pal-purple-strong, #C48BDF); }
+.bill-card-section.drop-target .bill-cat-header,
+.bill-card-section.drop-target .bill-cat-body {
+  border-color: var(--espresso);
+  background: var(--caramel-light, #fbf3ea);
+  box-shadow: 0 10px 22px -14px rgba(92,61,46,0.35);
+}
+.bill-row-draggable { cursor: grab; }
+.bill-row-draggable:active { cursor: grabbing; }
+body.bill-card-dragging .bill-card-section .bill-cat-body {
+  min-height: 60px;
+}
+.bill-card-empty {
+  text-align: center; font-size: 12px; color: var(--text-muted);
+  padding: 18px 8px; border: 1.5px dashed var(--border-soft); border-radius: 12px;
+}
+.bill-card-cat-tag {
+  display: inline-block; margin-left: 6px; padding: 1px 6px;
+  font-size: 9px; font-weight: 800; letter-spacing: 0.4px; text-transform: uppercase;
+  color: var(--text-muted); background: var(--bg-input);
+  border-radius: 999px; vertical-align: middle;
+}
+.bill-card-remove {
+  width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--border-soft);
+  background: var(--bg-card); color: var(--text-muted); cursor: pointer;
+  font-size: 16px; line-height: 1; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.bill-card-remove:hover {
+  color: var(--danger); border-color: var(--danger); background: var(--danger-light);
+}
 .bill-edit-row {
   display: flex; align-items: center; gap: 10px; padding: 10px 0;
   border-bottom: 1px solid var(--border-soft);
@@ -4304,6 +4403,31 @@ function saveAccounts(a) {
   if (a.length) localStorage.removeItem('gnd-accounts-user-cleared');
   lsSave('gnd-accounts', a);
 }
+
+/* Ensure a credit-card account exists with the given credit limit. If the
+   account already exists but has no limit set, apply the default. A limit
+   the user has already customized (including a deliberate 0) is respected. */
+function ensureCreditCardAccount(name, defaultLimit) {
+  const accounts = getAccounts();
+  const key = name.trim().toLowerCase();
+  let acct = accounts.find(a => (a.name || '').trim().toLowerCase() === key);
+  let changed = false;
+  if (!acct) {
+    acct = {
+      id: 'a-source-' + name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+      name,
+      startingBalance: 0,
+      color: ACCOUNT_COLORS[accounts.length % ACCOUNT_COLORS.length].id,
+      creditLimit: defaultLimit,
+    };
+    accounts.push(acct);
+    changed = true;
+  } else if (acct.creditLimit === undefined || acct.creditLimit === null) {
+    acct.creditLimit = defaultLimit;
+    changed = true;
+  }
+  if (changed) saveAccounts(accounts);
+}
 function getBillAccounts() { return ls('gnd-bill-accounts', {}); }
 function saveBillAccounts(a) { lsSave('gnd-bill-accounts', a); }
 function getTransactions() { return ls('gnd-transactions', []); }
@@ -4904,6 +5028,21 @@ function clearBillOverride(paycheckId, billKey, monthDate = getBillMonthDate()) 
     delete inst.billOverrides[billKey];
     savePaycheckInstance(paycheckId, inst, monthDate);
   }
+}
+
+/* Commit an inline amount edit for a bill on a specific paycheck. Empty
+   string clears the override so the row falls back to the bill's default
+   amount. Only wired up for credit-card bills in the paycheck view. */
+function submitPaycheckBillAmt(paycheckId, billKey, rawValue) {
+  const trimmed = String(rawValue == null ? '' : rawValue).trim();
+  if (trimmed === '') {
+    overrideBillOnPaycheck(paycheckId, billKey, { amount: undefined });
+  } else {
+    const n = Number(trimmed);
+    if (Number.isNaN(n) || n < 0) return;
+    overrideBillOnPaycheck(paycheckId, billKey, { amount: n });
+  }
+  renderMoney();
 }
 function addPaycheckExtra(paycheckId, extra, monthDate = getBillMonthDate()) {
   const inst = getPaycheckInstance(paycheckId, monthDate);
@@ -8077,6 +8216,13 @@ function renderMoneyBills() {
     }
 
     catBills.forEach(b => {
+      // Subscriptions and Variable bills can be dragged onto a card (Discover / Capital One)
+      // section further down. Other categories are informational only from here.
+      const draggableToCard = cat === 'Subscriptions' || cat === 'Variable';
+      const dragAttrs = draggableToCard
+        ? ` draggable="true" ondragstart="onBillToCardDragStart(event,'${attr(b.key)}')" ondragend="onBillToCardDragEnd(event)"`
+        : '';
+      const dragClass = draggableToCard ? ' bill-row-draggable' : '';
       if (cat === 'Variable') {
         const spent = getSpentAgainstVariableBill(b.key, billMonth);
         const limit = Number(b.amount || 0);
@@ -8092,7 +8238,7 @@ function renderMoneyBills() {
         } else {
           lastLine = 'No purchases logged yet';
         }
-        html += `<div class="bill-row" style="padding:10px 0;flex-wrap:wrap;">
+        html += `<div class="bill-row${dragClass}" data-bill-key="${attr(b.key)}" style="padding:10px 0;flex-wrap:wrap;"${dragAttrs}>
           <div class="bill-edit-info" style="flex:1;min-width:0;">
             <div class="bill-edit-name">${esc(b.name)}</div>
             <div class="bill-edit-detail">${formatMoney(spent)} spent of ${formatMoney(limit)} budget${b.source ? ' · ' + esc(b.source) : ''}</div>
@@ -8118,7 +8264,7 @@ function renderMoneyBills() {
               ? `Biweekly · ${occDates.map(d => formatShortDate(d)).join(', ')}`
               : `Biweekly · set a first-due date`)
           : `Due ${ordinal(b.day)}`;
-        html += `<div class="bill-row ${isPaid ? 'paid' : ''}" style="padding:10px 0;">
+        html += `<div class="bill-row ${isPaid ? 'paid' : ''}${dragClass}" data-bill-key="${attr(b.key)}" style="padding:10px 0;"${dragAttrs}>
           <button class="bill-check" onclick="toggleBill('${b.key}','${dateKey}')"><svg viewBox="0 0 12 12"><polyline points="2.5 6 5 8.5 9.5 3.5"/></svg></button>
           <div class="bill-edit-info" style="flex:1;min-width:0;${isPaid ? 'opacity:0.5;' : ''}">
             <div class="bill-edit-name" style="${isPaid ? 'text-decoration:line-through;' : ''}">${esc(b.name)} ${freqTag}</div>
@@ -8137,7 +8283,93 @@ function renderMoneyBills() {
     </div>`;
   });
 
+  // ── Card sections: mirror any bill whose source matches Discover / Capital One.
+  //    Bills stay in their own category above; these sections give you a "by card"
+  //    view and are the drop targets for reassignment.
+  const CARD_SECTIONS = [
+    { key: 'Discover',    label: 'Discover' },
+    { key: 'Capital One', label: 'Capital One' },
+  ];
+  CARD_SECTIONS.forEach(card => {
+    const openKey = '@card:' + card.key;
+    const isOpen = billCatOpen[openKey] !== false;
+    const cardBills = bills.filter(b => String(b.source || '').trim().toLowerCase() === card.key.toLowerCase())
+                           .sort((a, b) => a.day - b.day);
+    const cardTotal = cardBills.reduce((s, b) => s + Number(b.amount || 0), 0);
+    html += `<div class="bill-cat-section bill-card-section ${isOpen ? 'open' : ''}" data-card="${attr(card.key)}"
+        ondragover="onBillToCardDragOver(event)"
+        ondragleave="onBillToCardDragLeave(event)"
+        ondrop="onBillToCardDrop(event,'${attr(card.key)}')">
+      <div class="bill-cat-header theme-row-card" onclick="billCatOpen['${openKey}']=!billCatOpen['${openKey}'];renderMoney()">
+        <div class="bill-cat-left">
+          <div class="bill-cat-name">${esc(card.label)}</div>
+          <div class="bill-cat-sub">${formatMoney(cardTotal)} · ${cardBills.length} bill${cardBills.length===1?'':'s'} on this card</div>
+        </div>
+        ${chevron}
+      </div>
+      <div class="bill-cat-body">`;
+    if (!cardBills.length) {
+      html += `<div class="bill-card-empty">Drag a subscription or variable expense here to assign it to ${esc(card.label)}.</div>`;
+    }
+    cardBills.forEach(b => {
+      const freqTag = b.frequency === 'biweekly' ? `<span class="bill-freq-tag">Biweekly</span>` : '';
+      const catTag = b.category ? `<span class="bill-card-cat-tag">${esc(b.category)}</span>` : '';
+      html += `<div class="bill-row bill-card-row" data-bill-key="${attr(b.key)}" style="padding:10px 0;">
+        <div class="bill-edit-info" style="flex:1;min-width:0;">
+          <div class="bill-edit-name">${esc(b.name)} ${freqTag}${catTag}</div>
+          <div class="bill-edit-detail">${esc(card.label)}${b.note ? ' · ' + esc(b.note) : ''}</div>
+        </div>
+        <div class="bill-edit-right">
+          <div class="bill-edit-amt">${formatMoney(b.amount)}</div>
+          <button class="bill-card-remove" onclick="setBillCard('${attr(b.key)}','')" title="Remove from ${esc(card.label)}">&times;</button>
+        </div>
+      </div>`;
+    });
+    html += `</div></div>`;
+  });
+
   return html;
+}
+
+/* ── Drag a bill row from Subscriptions/Variable onto a card section. ── */
+function onBillToCardDragStart(ev, billKey) {
+  try {
+    ev.dataTransfer.effectAllowed = 'move';
+    ev.dataTransfer.setData('text/plain', 'billkey:' + billKey);
+  } catch {}
+  document.body.classList.add('bill-card-dragging');
+}
+function onBillToCardDragEnd() {
+  document.body.classList.remove('bill-card-dragging');
+  document.querySelectorAll('.bill-card-section.drop-target').forEach(el => el.classList.remove('drop-target'));
+}
+function onBillToCardDragOver(ev) {
+  ev.preventDefault();
+  try { ev.dataTransfer.dropEffect = 'move'; } catch {}
+  ev.currentTarget?.classList?.add('drop-target');
+}
+function onBillToCardDragLeave(ev) {
+  ev.currentTarget?.classList?.remove('drop-target');
+}
+function onBillToCardDrop(ev, cardName) {
+  ev.preventDefault();
+  ev.currentTarget?.classList?.remove('drop-target');
+  let billKey = '';
+  try {
+    const raw = ev.dataTransfer.getData('text/plain') || '';
+    if (raw.startsWith('billkey:')) billKey = raw.slice('billkey:'.length);
+  } catch {}
+  if (!billKey) return;
+  setBillCard(billKey, cardName);
+}
+
+/* Update a bill's `source` field (Discover / Capital One / '' to clear). */
+function setBillCard(billKey, source) {
+  const bill = BILLS.find(b => b.key === billKey);
+  if (!bill) return;
+  bill.source = source || '';
+  saveBillsList(BILLS);
+  renderMoney();
 }
 
 let _billDragOccId = null;
@@ -8176,7 +8408,6 @@ function onPaycheckDrop(ev, paycheckId) {
   }
   if (!occId || !paycheckId) return;
   assignBillOccToPaycheck(occId, paycheckId, getBillMonthDate());
-  paycheckCardOpen[paycheckId] = true; // auto-expand on drop so the user sees what they just added
   _billDragOccId = null;
   document.body.classList.remove('bill-dragging');
   renderMoney();
@@ -8190,7 +8421,7 @@ function pickPaycheckForBill(occId) {
   let html = `<div class="cleaning-picker-title">Assign to which paycheck?</div><div class="paycheck-picker-grid">`;
   paychecks.forEach(p => {
     const dateLabel = p.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-    html += `<button class="cleaning-picker-btn paycheck-picker-btn" type="button" onclick="closeCleaningPicker();assignBillOccToPaycheck('${attr(occId)}','${attr(p.id)}',getBillMonthDate());paycheckCardOpen['${attr(p.id)}']=true;renderMoney()">
+    html += `<button class="cleaning-picker-btn paycheck-picker-btn" type="button" onclick="closeCleaningPicker();assignBillOccToPaycheck('${attr(occId)}','${attr(p.id)}',getBillMonthDate());renderMoney()">
       <span class="cleaning-picker-day">${esc(p.label)}</span>
       <span class="cleaning-picker-date">${esc(dateLabel)}</span>
       <span class="paycheck-picker-amt">${formatMoney(p.amount || 0)}</span>
@@ -8364,6 +8595,20 @@ function renderMoneyPaychecks() {
         o.fromNextMonth ? 'next-month' : ''
       ].filter(Boolean).join(' ');
       const freqSuffix = b.frequency === 'biweekly' ? ' · biweekly' : '';
+      const isCC = b.category === 'Credit Card Payments';
+      const hasAmtOverride = ov.amount !== undefined;
+      const amtCell = isCC
+        ? `<label class="paycheck-row-amt-edit${hasAmtOverride ? ' is-override' : ''}" title="Edit amount for this paycheck only (clear to reset)">
+             <span class="paycheck-row-amt-currency">$</span>
+             <input type="number" step="0.01" min="0" inputmode="decimal"
+               class="paycheck-row-amt-input"
+               value="${Number(displayAmt).toFixed(2)}"
+               onclick="event.stopPropagation();this.select()"
+               onfocus="this.select()"
+               onblur="submitPaycheckBillAmt('${attr(p.id)}','${attr(b.key)}',this.value)"
+               onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}">
+           </label>`
+        : `<div class="paycheck-row-amt-display">${formatMoney(displayAmt)}</div>`;
       html += `<div class="${rowClasses}" data-row-kind="bill" data-bill-key="${attr(b.key)}" data-occ-id="${attr(o.occId)}" data-paycheck-id="${attr(p.id)}">
         <div class="paycheck-row-head">
           <label class="paycheck-row-check" title="Mark paid from this paycheck">
@@ -8373,7 +8618,7 @@ function renderMoneyPaychecks() {
             <div class="paycheck-row-name">${esc(b.name)}${o.fromNextMonth ? ` <span class="paycheck-bill-chip-tag">${esc(nextMonthShort)}</span>` : ''}</div>
             <div class="paycheck-row-meta">Due ${esc(formatOccDate(o))}${freqSuffix}${b.category ? ' · ' + esc(b.category) : ''}</div>
           </div>
-          <div class="paycheck-row-amt-display">${formatMoney(displayAmt)}</div>
+          ${amtCell}
         </div>
         <div class="paycheck-row-tools">
           <button type="button" class="paycheck-tool-btn ${ov.reschedule?'on':''}" title="Highlight to reschedule"
@@ -8421,7 +8666,6 @@ function renderMoneyPaychecks() {
     html += `<div class="paycheck-add-extra">
       <input type="text" class="text-input compact" id="ext-name-${attr(p.id)}" placeholder="e.g. Peggy birthday gift">
       <input type="number" class="text-input compact" id="ext-amt-${attr(p.id)}" step="0.01" inputmode="decimal" placeholder="$0">
-      <input type="text" class="text-input compact" id="ext-note-${attr(p.id)}" placeholder="Note (optional)">
       <button type="button" class="add-btn" style="margin:0;" onclick="submitPaycheckExtra('${attr(p.id)}')">+ Add other</button>
     </div>`;
 
@@ -8467,12 +8711,10 @@ function renderMoneyPaychecks() {
 function submitPaycheckExtra(paycheckId) {
   const nameEl = document.getElementById(`ext-name-${paycheckId}`);
   const amtEl = document.getElementById(`ext-amt-${paycheckId}`);
-  const noteEl = document.getElementById(`ext-note-${paycheckId}`);
   const name = (nameEl?.value || '').trim();
   const amount = Number(amtEl?.value || 0);
-  const note = (noteEl?.value || '').trim();
   if (!name && !amount) return;
-  addPaycheckExtra(paycheckId, { name: name || 'Extra', amount, note });
+  addPaycheckExtra(paycheckId, { name: name || 'Extra', amount });
   paycheckCardOpen[paycheckId] = true;
   renderMoney();
 }
@@ -8597,7 +8839,6 @@ function onPaycheckPointerUp(ev) {
   if (!toPaycheckId) return;
   if (source.kind === 'pool') {
     assignBillOccToPaycheck(source.occId, toPaycheckId, getBillMonthDate());
-    paycheckCardOpen[toPaycheckId] = true;
     renderMoney();
     return;
   }
@@ -9579,6 +9820,8 @@ document.addEventListener('visibilitychange', () => {
 
 (function init() {
   applyTheme(getSettings().theme || 'light');
+  ensureCreditCardAccount('Discover', 800);
+  ensureCreditCardAccount('Capital One', 1000);
   recalcGambling();
   updateBrainDumpCount();
 
