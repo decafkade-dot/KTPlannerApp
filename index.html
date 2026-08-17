@@ -157,7 +157,7 @@ select:focus-visible {
 .splash.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
 .splash-art {
   width: min(92vw, 520px); height: min(92vw, 520px);
-  filter: saturate(0.95) brightness(1.02);
+  filter: saturate(0.75) brightness(1.03) opacity(0.95);
   position: relative; z-index: 2;
   display: block;
 }
@@ -245,6 +245,29 @@ select:focus-visible {
 }
 .coffee-divider svg { flex-shrink: 0; }
 
+/* ── Custom asset icons: hand-drawn arrow + cleaning mop ── */
+.arrow-icon {
+  width: 16px; height: 16px;
+  display: inline-block; vertical-align: middle;
+  pointer-events: none; flex-shrink: 0;
+  transition: transform 0.15s ease;
+}
+.arrow-icon.dir-right { transform: rotate(0deg); }
+.arrow-icon.dir-left  { transform: rotate(180deg); }
+.arrow-icon.dir-up    { transform: rotate(-90deg); }
+.arrow-icon.dir-down  { transform: rotate(90deg); }
+.arrow-icon.large { width: 22px; height: 22px; }
+.arrow-icon.small { width: 12px; height: 12px; }
+
+.mop-icon {
+  width: 20px; height: 20px;
+  display: inline-block; vertical-align: middle;
+  pointer-events: none; flex-shrink: 0; object-fit: contain;
+}
+.mop-icon.small  { width: 14px; height: 14px; }
+.mop-icon.medium { width: 22px; height: 22px; }
+.mop-icon.large  { width: 28px; height: 28px; }
+
 /* ── Cozy Theme Stickers ── */
 .theme-sticker {
   --sticker-size: 42px;
@@ -316,8 +339,8 @@ select:focus-visible {
 .gym-this-week-stickers { display: inline-flex; align-items: center; gap: 4px; }
 .month-head, .month-grid { position: relative; z-index: 1; }
 .month-cell { position: relative; overflow: hidden; }
-.month-day-sticker { --sticker-size: 12px; opacity: 0.92; }
-.month-day-sticker.gym-mini { --sticker-size: 10px; opacity: 0.88; }
+.month-day-sticker { --sticker-size: 10px; opacity: 0.9; }
+.month-day-sticker.gym-mini { --sticker-size: 9px; opacity: 0.85; }
 .month-top-row { display: none; }
 .month-cell .month-date {
   position: absolute; top: 6px; left: 6px;
@@ -330,22 +353,22 @@ select:focus-visible {
   gap: 2px; max-width: 66%; flex-wrap: nowrap; pointer-events: none; z-index: 2;
 }
 .month-cell .month-icons-tr .theme-sticker,
-.month-cell .month-icons-tr img { --sticker-size: 14px; width: 14px; height: 14px; flex-shrink: 1; min-width: 0; }
+.month-cell .month-icons-tr img { --sticker-size: 11px; width: 11px; height: 11px; flex-shrink: 1; min-width: 0; }
 .month-cell .month-icons-tr[data-count="3"] .theme-sticker,
-.month-cell .month-icons-tr[data-count="3"] img { --sticker-size: 12px; width: 12px; height: 12px; }
+.month-cell .month-icons-tr[data-count="3"] img { --sticker-size: 10px; width: 10px; height: 10px; }
 .month-cell .month-icons-tr[data-count="4"] .theme-sticker,
-.month-cell .month-icons-tr[data-count="4"] img { --sticker-size: 11px; width: 11px; height: 11px; }
+.month-cell .month-icons-tr[data-count="4"] img { --sticker-size: 9px; width: 9px; height: 9px; }
 .month-cell .month-icons-tr[data-count="5"] .theme-sticker,
 .month-cell .month-icons-tr[data-count="5"] img,
 .month-cell .month-icons-tr[data-count="6"] .theme-sticker,
-.month-cell .month-icons-tr[data-count="6"] img { --sticker-size: 9px; width: 9px; height: 9px; }
+.month-cell .month-icons-tr[data-count="6"] img { --sticker-size: 8px; width: 8px; height: 8px; }
 .month-cell .month-shot-br {
   position: absolute; bottom: 4px; right: 4px;
-  width: 16px; height: 16px; z-index: 2; pointer-events: none;
+  width: 12px; height: 12px; z-index: 2; pointer-events: none;
   display: inline-flex; align-items: center; justify-content: center;
 }
 .month-cell .month-shot-br .theme-sticker,
-.month-cell .month-shot-br .month-shot-img { --sticker-size: 16px; width: 16px; height: 16px; opacity: 0.95; object-fit: contain; display: block; }
+.month-cell .month-shot-br .month-shot-img { --sticker-size: 12px; width: 12px; height: 12px; opacity: 0.95; object-fit: contain; display: block; }
 .month-cell .month-crossout {
   position: absolute; inset: 0; z-index: 3; pointer-events: none;
   background-image: url('images/cross out.svg');
@@ -1465,24 +1488,19 @@ body.paycheck-dragging .paycheck-pool-row {
 .month-tag.income.biweekly { background: #E2B3F2; color: var(--espresso); }
 .month-tag.shot { background: #FCEFC7; color: #8A6D1D; }
 .cal-action-row {
-  display: flex; align-items: center; justify-content: center;
-  gap: 10px; margin: 6px 0 10px;
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 6px; margin: 6px 0 12px;
 }
 .cal-action-btn {
-  width: 38px; height: 38px; border-radius: 50%;
-  background: var(--bg-input); border: 1px solid var(--border-soft);
+  min-height: 42px; border-radius: var(--radius);
+  background: var(--bg-card); border: 1px solid var(--border-soft);
   display: inline-flex; align-items: center; justify-content: center;
-  cursor: pointer; padding: 0; box-shadow: var(--shadow-sm);
+  cursor: pointer; padding: 4px; box-shadow: var(--shadow-sm);
   transition: transform 0.16s ease, background 0.2s ease, border-color 0.2s ease;
-  position: relative; overflow: hidden;
+  -webkit-tap-highlight-color: transparent; position: relative; overflow: hidden;
 }
-.cal-action-btn::before {
-  content: ''; position: absolute; inset: 0;
-  background: var(--rainbow); opacity: 0.18; pointer-events: none;
-  border-radius: inherit;
-}
-.cal-action-btn:active { transform: scale(0.92); }
-.cal-action-btn .theme-sticker { --sticker-size: 24px; opacity: 0.95; position: relative; z-index: 1; }
+.cal-action-btn:active { transform: scale(0.97); background: var(--bg-hover); }
+.cal-action-btn .theme-sticker { --sticker-size: 26px; opacity: 0.95; position: relative; z-index: 1; }
 .cal-action-btn .theme-sticker svg { filter: drop-shadow(0 1px 1px rgba(60,40,25,0.18)); }
 .week-planner-actions { display: flex; gap: 6px; align-items: center; }
 .tiny-nav-btn {
@@ -1623,10 +1641,10 @@ body.paycheck-dragging .paycheck-pool-row {
 .ev-dot { width: 5px; height: 5px; border-radius: 50%; }
 .agenda-day-title {
   display: flex; justify-content: space-between; align-items: baseline; gap: 8px;
-  margin: 4px 0 10px;
+  margin: 2px 0 6px;
 }
-.agenda-day-title strong { font-size: 14px; color: var(--espresso); }
-.agenda-day-title span { font-size: 11px; color: var(--text-muted); font-weight: 700; }
+.agenda-day-title strong { font-size: 13px; color: var(--espresso); }
+.agenda-day-title span { font-size: 10px; color: var(--text-muted); font-weight: 700; }
 .schedule-list { margin-bottom: 14px; }
 .schedule-row {
   display: flex; gap: 12px; padding: 10px 6px; margin: 0 -6px;
@@ -1643,15 +1661,15 @@ body.paycheck-dragging .paycheck-pool-row {
 .schedule-row-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
 .schedule-row .inline-edit-btn { margin-left: auto; align-self: center; }
 
-.timeline { margin-bottom: 14px; }
+.timeline { margin-bottom: 8px; }
 .timeline-shell {
-  display: grid; grid-template-columns: 50px 1fr; gap: 10px;
-  min-height: 220px; position: relative;
+  display: grid; grid-template-columns: 42px 1fr; gap: 8px;
+  min-height: 160px; position: relative;
 }
 .timeline-ruler, .timeline-lane { position: relative; height: var(--timeline-height); }
 .timeline-hour {
   position: absolute; left: 0; right: 0; transform: translateY(-50%);
-  font-size: 10px; color: var(--text-muted);
+  font-size: 9px; color: var(--text-muted);
 }
 .timeline-lane {
   border-left: 2px solid var(--border-soft);
@@ -1663,18 +1681,18 @@ body.paycheck-dragging .paycheck-pool-row {
   border-top: 1px dashed var(--border-soft); z-index: 0;
 }
 .timeline-block {
-  position: absolute; left: 10px; right: 0;
-  border-radius: 12px; padding: 8px 38px 8px 10px;
+  position: absolute; left: 8px; right: 0;
+  border-radius: 10px; padding: 5px 32px 5px 10px;
   box-shadow: var(--shadow-sm); border: 1px solid rgba(92,61,46,0.08);
-  overflow: hidden; cursor: pointer; min-height: 30px; z-index: 1;
+  overflow: hidden; cursor: pointer; min-height: 24px; z-index: 1;
 }
 .timeline-block::before {
   content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 5px;
   background: var(--block-color);
 }
-.timeline-block-title { font-size: 13px; font-weight: 800; color: var(--text); line-height: 1.2; }
-.timeline-block-time { font-size: 10px; color: var(--text-muted); margin-top: 3px; }
-.timeline-block-detail { font-size: 10px; color: var(--text-secondary); margin-top: 3px; }
+.timeline-block-title { font-size: 12px; font-weight: 800; color: var(--text); line-height: 1.2; }
+.timeline-block-time { font-size: 9px; color: var(--text-muted); margin-top: 2px; }
+.timeline-block-detail { font-size: 9px; color: var(--text-secondary); margin-top: 2px; }
 .timeline-block .inline-edit-btn {
   position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
 }
@@ -1725,16 +1743,21 @@ body.paycheck-dragging .paycheck-pool-row {
   background: var(--caramel-light); border-radius: var(--radius);
   padding: 16px 18px 22px; margin-bottom: 14px; border: 1px solid var(--border-soft);
 }
-.home-gym-card > .home-gym-sticker {
-  position: absolute; z-index: 3; pointer-events: none;
-  display: inline-flex; align-items: center; justify-content: center;
+.home-gym-card > .home-gym-stickers {
+  position: absolute; top: 10px; left: 12px; z-index: 3; pointer-events: none;
+  display: inline-flex; align-items: center; gap: 4px;
 }
-.home-gym-card > .home-gym-sticker .theme-sticker { --sticker-size: 34px; opacity: 0.9; }
-.home-gym-card > .home-gym-sticker-tl { top: 10px; left: 12px; right: auto; bottom: auto; transform: rotate(-6deg); }
-.home-gym-card > .home-gym-sticker-br { bottom: 8px; right: 12px; top: auto; left: auto; transform: rotate(6deg); }
+.home-gym-card > .home-gym-stickers > .home-gym-sticker {
+  display: inline-flex; align-items: center; justify-content: center;
+  position: static; right: auto; top: auto; bottom: auto; left: auto;
+  opacity: 0.9;
+}
+.home-gym-card > .home-gym-stickers > .home-gym-sticker:first-child { transform: rotate(-6deg); }
+.home-gym-card > .home-gym-stickers > .home-gym-sticker:last-child  { transform: rotate(6deg); }
+.home-gym-card > .home-gym-stickers .theme-sticker { --sticker-size: 32px; opacity: 0.9; }
 .home-gym-row {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  padding-left: 44px; position: relative; z-index: 2;
+  padding-left: 80px; position: relative; z-index: 2; min-height: 40px;
 }
 .home-gym-title { font-size: 15px; font-weight: 700; color: var(--espresso); }
 .home-gym-sub { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
@@ -2378,6 +2401,10 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
 .modal-overlay.day-modal-overlay {
   align-items: stretch;
   padding: 0;
+  /* Day modal is a full-screen "page"; keep it below transient sheets
+     (event edit, transaction, etc.) so they layer on top instead of
+     being hidden behind it. */
+  z-index: 260;
 }
 .day-modal-sheet {
   width: 100%; max-width: 100%; max-height: 100%; height: 100%;
@@ -2433,6 +2460,109 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
   white-space: nowrap;
 }
 .day-modal-gym-remove:active { background: var(--danger-light); }
+
+/* ── Day-modal 2-column grid: schedule left, TO DO + NOTES right. ── */
+.day-modal-grid {
+  display: grid; grid-template-columns: 1fr; gap: 14px;
+  margin-bottom: 16px;
+}
+@media (min-width: 700px) {
+  .day-modal-grid { grid-template-columns: 1.4fr 1fr; align-items: start; }
+}
+.day-modal-schedule { min-width: 0; }
+.day-modal-side { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+
+.day-panel {
+  border: 1.5px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  background: var(--bg-card);
+}
+.day-panel-title {
+  font-size: 13px; font-weight: 800; letter-spacing: 0.6px;
+  color: var(--espresso); text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.day-panel-body { display: flex; flex-direction: column; gap: 2px; }
+.day-panel-empty {
+  font-size: 12px; color: var(--text-muted);
+  padding: 10px 2px; text-align: center;
+}
+
+.day-todo-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 4px; border-bottom: 1px solid var(--border-soft);
+  min-width: 0;
+}
+.day-todo-row:last-of-type { border-bottom: none; }
+.day-todo-check {
+  width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0;
+  border: 1.5px solid var(--border); background: var(--bg-input);
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+  padding: 0; transition: background 0.2s, border-color 0.2s;
+}
+.day-todo-row.checked .day-todo-check {
+  background: var(--espresso); border-color: var(--espresso);
+}
+.day-todo-check svg { width: 12px; height: 12px; stroke: #fff; stroke-width: 2.5; opacity: 0; transition: opacity 0.2s; }
+.day-todo-row.checked .day-todo-check svg { opacity: 1; }
+.day-todo-text {
+  flex: 1; min-width: 0; font-size: 13px; color: var(--text);
+  overflow-wrap: anywhere; line-height: 1.3;
+}
+.day-todo-row.checked .day-todo-text {
+  color: var(--text-muted); text-decoration: line-through;
+  text-decoration-color: var(--nude);
+}
+.day-todo-tag {
+  font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px;
+  color: var(--pal-pink-strong); background: var(--pal-pink);
+  padding: 2px 6px; border-radius: 999px; flex-shrink: 0;
+}
+.day-todo-x {
+  width: 24px; height: 24px; border-radius: 50%;
+  border: 0; background: transparent; color: var(--text-muted);
+  cursor: pointer; font-size: 16px; line-height: 1; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: color 0.15s, background 0.15s;
+  flex-shrink: 0;
+}
+.day-todo-x:hover { color: var(--danger); background: var(--danger-light); }
+
+.day-todo-add {
+  display: flex; gap: 6px; margin-top: 8px; padding-top: 8px;
+  border-top: 1px dashed var(--border-soft);
+}
+.day-todo-add input {
+  flex: 1; min-width: 0; padding: 9px 11px;
+  border-radius: 10px; border: 1px solid var(--border);
+  background: var(--bg-input); color: var(--text);
+  font-family: inherit; font-size: 14px; outline: none;
+  transition: font-size 0.15s ease, border-color 0.2s ease;
+}
+.day-todo-add input:focus { font-size: 11px; border-color: var(--espresso); }
+.day-todo-add button {
+  width: 36px; height: 36px; border-radius: 10px;
+  border: 0; background: var(--espresso); color: #fff;
+  cursor: pointer; font-size: 18px; line-height: 1;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: transform 0.12s ease;
+}
+.day-todo-add button:active { transform: scale(0.94); }
+
+.day-notes-text {
+  width: 100%; min-height: 130px; resize: vertical;
+  padding: 10px 12px; border-radius: 10px;
+  border: 1px solid var(--border); background: var(--bg-input);
+  color: var(--text); font-family: inherit; font-size: 14px;
+  outline: none; line-height: 1.5;
+  transition: border-color 0.15s, font-size 0.15s ease;
+}
+.day-notes-text:focus { border-color: var(--espresso); font-size: 11px; }
+@media (prefers-reduced-motion: reduce) {
+  .day-todo-add input, .day-notes-text { transition: none; }
+}
+
 .timeline-label {
   display: inline-flex; padding: 2px 7px; border-radius: 999px;
   font-size: 10px; font-weight: 800; color: var(--espresso);
@@ -3650,6 +3780,20 @@ const ICONS = {
   pencil: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`,
   plus: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>`,
 };
+
+/* Global arrow icon (uses images/arrow.svg — the hand-drawn curled arrow).
+   The source SVG's baked orientation is right-pointing, so CSS rotation
+   flips it left/up/down as needed. */
+function arrowIcon(dir = 'right', extra = '') {
+  const cls = `arrow-icon dir-${dir}${extra ? ' ' + extra : ''}`;
+  return `<img class="${cls}" src="images/arrow.svg" alt="" aria-hidden="true">`;
+}
+
+/* Cleaning mop icon (uses images/cleaning-mop.svg — colored illustration). */
+function mopIcon(size = '') {
+  const cls = `mop-icon${size ? ' ' + size : ''}`;
+  return `<img class="${cls}" src="images/cleaning-mop.svg" alt="" aria-hidden="true">`;
+}
 /* ═══════════════════════ SUPABASE SYNC ═══════════════════════ */
 
 let sbClient = null;
@@ -4456,6 +4600,29 @@ function getScheduleCustom() { return ls('gnd-schedule-custom', {}); }
 function saveScheduleCustom(s) { lsSave('gnd-schedule-custom', s); }
 function getTodos() { return dayData('todos') || defTodos(); }
 function saveTodos(todos) { saveDayData('todos', todos); }
+
+/* Per-date to-do + notes helpers powering the day modal's TO DO / NOTES panels. */
+function getTodosForDate(dateKey) { return ls(`gnd-${dateKey}-todos`, null) || []; }
+function saveTodosForDate(dateKey, todos) { saveDayDataForDate(dateKey, 'todos', todos); }
+function getNotesForDate(dateKey) { return ls(`gnd-${dateKey}-notes`, '') || ''; }
+function saveNotesForDate(dateKey, note) { saveDayDataForDate(dateKey, 'notes', String(note || '')); }
+function addTodoForDate(dateKey, title) {
+  const clean = String(title || '').trim();
+  if (!clean) return;
+  const todos = getTodosForDate(dateKey);
+  todos.push({ id: 'td' + Date.now(), title: clean, urgency: 'medium', notes: '', done: false });
+  saveTodosForDate(dateKey, todos);
+}
+function toggleTodoForDate(dateKey, id) {
+  const todos = getTodosForDate(dateKey);
+  const t = todos.find(x => x.id === id);
+  if (!t) return;
+  t.done = !t.done;
+  saveTodosForDate(dateKey, todos);
+}
+function deleteTodoForDate(dateKey, id) {
+  saveTodosForDate(dateKey, getTodosForDate(dateKey).filter(x => x.id !== id));
+}
 function normalizeGroceryDays(days, fallback = MEAL_DAY_KEYS.length) {
   return Math.max(1, Math.min(MEAL_DAY_KEYS.length, Math.round(Number(days) || fallback)));
 }
@@ -5122,8 +5289,8 @@ function renderToday() {
 
   let html = buildHomeHubNav();
   html += buildRoutineTimesBanner();
-  html += buildMonthCalendar();
   html += buildNextShiftCard();
+  html += buildMonthCalendar();
   html += buildDueSoonSection();
   html += buildHomeGymCheck(gym);
 
@@ -5173,9 +5340,9 @@ function buildMonthCalendar() {
   const monthName = focus.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
   let html = `<div class="card month-card theme-card"><div class="month-head"><div><div class="month-title">${monthName}</div><div class="page-date">${getTimeGreeting()} · ${formatDate()}</div></div><div class="month-nav">
-    <button class="tiny-nav-btn" onclick="moveCalendarMonth(-1)" title="Previous month" ${calendarMonthOffset===0?'disabled':''}>&#8249;</button>
+    <button class="tiny-nav-btn" onclick="moveCalendarMonth(-1)" title="Previous month" ${calendarMonthOffset===0?'disabled':''}>${arrowIcon('left')}</button>
     <div class="month-count">${calendarMonthOffset + 1}/3</div>
-    <button class="tiny-nav-btn" onclick="moveCalendarMonth(1)" title="Next month" ${calendarMonthOffset===2?'disabled':''}>&#8250;</button>
+    <button class="tiny-nav-btn" onclick="moveCalendarMonth(1)" title="Next month" ${calendarMonthOffset===2?'disabled':''}>${arrowIcon('right')}</button>
     <button class="tiny-nav-btn" onclick="calendarMonthOffset=0;resetScheduleWeek()" title="Jump to today" aria-label="Jump to today">•</button>
   </div></div>
   <div class="cal-action-row">
@@ -5338,8 +5505,10 @@ function buildHomeGymCheck(gym) {
   const done = !!gym.completed;
   const title = scheduled ? 'Gym today' : 'No gym scheduled today';
   return `<div class="home-gym-card theme-row-card">
-    <span class="home-gym-sticker home-gym-sticker-tl theme-corner" aria-hidden="true">${themeIcon('bicep')}</span>
-    <span class="home-gym-sticker home-gym-sticker-br theme-corner" aria-hidden="true">${themeIcon('leg')}</span>
+    <span class="home-gym-stickers" aria-hidden="true">
+      <span class="home-gym-sticker theme-corner">${themeIcon('bicep')}</span>
+      <span class="home-gym-sticker theme-corner">${themeIcon('leg')}</span>
+    </span>
     <div class="home-gym-row">
       <div><div class="home-gym-title">${esc(title)}</div></div>
       <button class="home-gym-btn ${done?'done':''}" onclick="toggleGymToday()">${done ? 'Went today' : 'Did I go?'}</button>
@@ -5693,9 +5862,9 @@ function buildScheduleSection() {
 
   let html = `<div class="card theme-card week-planner-card">${themeIcon('morning', 'theme-corner')}
     <div class="week-planner-head"><div><div class="week-planner-title">Week at a Glance</div><div class="page-date">${formatShortDate(weekStart)} - ${formatShortDate(weekEnd)}</div></div><div class="week-planner-actions">
-    <button class="tiny-nav-btn" onclick="moveScheduleWeek(-1)" title="Previous week">&#8249;</button>
+    <button class="tiny-nav-btn" onclick="moveScheduleWeek(-1)" title="Previous week">${arrowIcon('left')}</button>
     <button class="tiny-nav-btn" onclick="resetScheduleWeek()" title="This week">•</button>
-    <button class="tiny-nav-btn" onclick="moveScheduleWeek(1)" title="Next week">&#8250;</button>
+    <button class="tiny-nav-btn" onclick="moveScheduleWeek(1)" title="Next week">${arrowIcon('right')}</button>
   </div></div>`;
 
   html += `<div class="week-glance">`;
@@ -5829,10 +5998,11 @@ function buildDayGlanceHtml(dateKey, allowEdit = true) {
       ? `<button class="day-glance-block-x" type="button" title="Unassign cleaning task" aria-label="Unassign cleaning task" onclick="event.stopPropagation();unassignCleaningTaskFromUI('${attr(b.cleaningTaskId)}')">✕</button>`
       : '';
     const titleAttr = `${b.title}${b.end && b.end !== b.time ? ` · ${formatTime(b.time)} – ${formatTime(b.end)}` : ''}${b.detail ? ` · ${b.detail}` : ''}`;
+    const cleaningIcon = b.source === 'cleaning' ? mopIcon('small') : '';
     html += `<div class="day-glance-block${cleaningClass}${doneClass}" title="${attr(titleAttr)}" style="top:${topPct}%;height:${heightPct}%;left:calc(${leftPct}% + 2px);width:calc(${colWidth}% - 4px);--block-color:${evColor(b.type)};">
       <div class="day-glance-block-inner">
         <div class="day-glance-block-time">${formatTime(b.time)}${b.end && b.end !== b.time ? ` – ${formatTime(b.end)}` : ''}</div>
-        <div class="day-glance-block-title">${esc(b.title)}</div>
+        <div class="day-glance-block-title">${cleaningIcon}${esc(b.title)}</div>
         ${b.detail ? `<div class="day-glance-block-detail">${esc(b.detail)}</div>` : ''}
       </div>
       ${canEdit ? pencilBtn('Edit schedule item', `openEventModal('${dateKey}','${b.id || ''}','${b.customKey || ''}')`, 'day-glance-block-edit') : ''}
@@ -5931,8 +6101,9 @@ function buildAllDayStrip(allDayBlocks) {
   return `<div class="allday-strip">${chips}</div>`;
 }
 
-function buildTimelineHtml(dateKey, allowEdit = true) {
-  const blocks = getScheduleBlocksForDate(dateKey);
+function buildTimelineHtml(dateKey, allowEdit = true, opts = {}) {
+  let blocks = getScheduleBlocksForDate(dateKey);
+  if (opts.hideCleaning) blocks = blocks.filter(b => b.source !== 'cleaning');
   if (blocks.length === 0) return `<div class="timeline"><div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px;">Nothing scheduled</div></div>`;
 
   const allDayBlocks = blocks.filter(b => b.allDay);
@@ -5953,8 +6124,8 @@ function buildTimelineHtml(dateKey, allowEdit = true) {
   const allEnds = normalized.map(b => b.duration >= 15 ? b.end : b.start + 30);
   const windowStart = Math.max(0, Math.floor((Math.min(...allStarts) - 45) / 60) * 60);
   const windowEnd = Math.min(1440, Math.ceil((Math.max(...allEnds) + 45) / 60) * 60);
-  const pxPerMinute = 0.72;
-  const laneHeight = Math.max(220, Math.round((windowEnd - windowStart) * pxPerMinute));
+  const pxPerMinute = 0.6;
+  const laneHeight = Math.max(150, Math.round((windowEnd - windowStart) * pxPerMinute));
   const hourMarks = [];
   for (let h = Math.ceil(windowStart / 60) * 60; h <= windowEnd; h += 60) {
     hourMarks.push(h);
@@ -5975,15 +6146,16 @@ function buildTimelineHtml(dateKey, allowEdit = true) {
   busyBlocks.forEach(b => {
     const canEdit = allowEdit && b.editable !== false;
     const top = Math.max(0, (b.start - windowStart) * pxPerMinute);
-    const height = Math.max(34, b.duration * pxPerMinute);
+    const height = Math.max(26, b.duration * pxPerMinute);
     const highlightClass = highlightedAcademicEventId && b.id === highlightedAcademicEventId ? ' highlighted' : '';
     const cleaningClass = b.source === 'cleaning' ? ' cleaning' : '';
     const doneClass = b.cleaningDone ? ' done' : '';
     const cleaningBtn = b.source === 'cleaning'
       ? `<button class="timeline-block-action" type="button" title="Unassign from this day" aria-label="Unassign cleaning task" onclick="event.stopPropagation();unassignCleaningTaskFromUI('${attr(b.cleaningTaskId)}')">✕</button>`
       : '';
+    const cleaningIcon = b.source === 'cleaning' ? mopIcon('small') : '';
     html += `<div class="timeline-block${highlightClass}${cleaningClass}${doneClass}" style="top:${top}px;height:${height}px;--block-color:${evColor(b.type)};">
-      <div class="timeline-block-title">${esc(b.title)}</div>
+      <div class="timeline-block-title">${cleaningIcon}${esc(b.title)}</div>
       <div class="timeline-block-time">${formatTime(b.time)}${b.end && b.end !== b.time ? ` - ${formatTime(b.end)}` : ''}</div>
       ${b.detail ? `<div class="timeline-block-detail">${esc(b.detail)}</div>` : ''}
       ${canEdit ? pencilBtn('Edit schedule item', `openEventModal('${dateKey}','${b.id || ''}','${b.customKey || ''}')`) : ''}
@@ -6098,9 +6270,9 @@ function renderDayModal(dateKey) {
   const gymScheduled = ['gym','upper','lower'].includes(gymKind);
   const gymLabel = gymKind === 'lower' ? 'Lower body' : gymKind === 'upper' ? 'Upper body' : 'Gym';
   sheet.innerHTML = `<div class="day-modal-head">
-    <button class="day-modal-nav-btn" type="button" onclick="navigateDayModal(-1)" aria-label="Previous day">&#8249;</button>
+    <button class="day-modal-nav-btn" type="button" onclick="navigateDayModal(-1)" aria-label="Previous day">${arrowIcon('left')}</button>
     <div class="day-modal-title-wrap"><div class="day-modal-title">${formatDate(date)}</div><div class="day-modal-date">${date.toLocaleDateString('en-US', { year: 'numeric' })}</div></div>
-    <button class="day-modal-nav-btn" type="button" onclick="navigateDayModal(1)" aria-label="Next day">&#8250;</button>
+    <button class="day-modal-nav-btn" type="button" onclick="navigateDayModal(1)" aria-label="Next day">${arrowIcon('right')}</button>
     <button class="modal-close-btn" onclick="closeDayModal()" aria-label="Close">&times;</button>
   </div>
   ${gymScheduled ? `<div class="day-modal-gym">
@@ -6108,13 +6280,69 @@ function renderDayModal(dateKey) {
     <div class="day-modal-gym-text"><strong>${esc(gymLabel)}</strong> scheduled</div>
     <button class="day-modal-gym-remove" type="button" onclick="removeGymForDate('${dateKey}')">Didn't go · remove</button>
   </div>` : ''}
-  <div class="agenda-day-title"><strong>Timed agenda</strong><span>Real time blocks</span></div>
-  ${buildTimelineHtml(dateKey, true)}
+  <div class="day-modal-grid">
+    <div class="day-modal-schedule">
+      <div class="agenda-day-title"><strong>Timed agenda</strong><span>Real time blocks</span></div>
+      ${buildTimelineHtml(dateKey, true, { hideCleaning: true })}
+    </div>
+    <div class="day-modal-side">
+      ${buildDayTodoListHtml(dateKey)}
+      ${buildDayNotesHtml(dateKey)}
+    </div>
+  </div>
   ${buildDayMoneyHtml(dateKey)}
   ${themeDivider('puppy', 'puppy')}
   <div class="day-modal-actions">
     <button class="add-btn" onclick="rebalanceAcademicBlocksNow(true)" style="border-style:solid;margin:0;">Rebalance Academic Blocks</button>
     <button class="modal-submit" onclick="closeDayModal();openEventModal('${dateKey}')">Add Event</button>
+  </div>`;
+}
+
+/* TO DO panel: cleaning tasks assigned to the day + freeform per-date todos. */
+function buildDayTodoListHtml(dateKey) {
+  const todos = getTodosForDate(dateKey);
+  const cleaning = getCleaningBlocksForDate(dateKey);
+  let body = '';
+  cleaning.forEach(c => {
+    body += `<div class="day-todo-row cleaning ${c.cleaningDone?'checked':''}">
+      <button class="day-todo-check" type="button" onclick="toggleCleaningTask('${attr(c.cleaningTaskId)}');refreshDayModalIfOpen()">${checkSvg()}</button>
+      ${mopIcon('small')}
+      <span class="day-todo-text">${esc(c.title)}</span>
+      <button class="day-todo-x" type="button" title="Unassign from this day" onclick="unassignCleaningTaskFromUI('${attr(c.cleaningTaskId)}');refreshDayModalIfOpen()">&times;</button>
+    </div>`;
+  });
+  todos.forEach(t => {
+    body += `<div class="day-todo-row ${t.done?'checked':''}">
+      <button class="day-todo-check" type="button" onclick="toggleTodoForDate('${attr(dateKey)}','${attr(t.id)}');refreshDayModalIfOpen()">${checkSvg()}</button>
+      <span class="day-todo-text">${esc(t.title)}</span>
+      <button class="day-todo-x" type="button" title="Delete" onclick="deleteTodoForDate('${attr(dateKey)}','${attr(t.id)}');refreshDayModalIfOpen()">&times;</button>
+    </div>`;
+  });
+  if (!cleaning.length && !todos.length) {
+    body += `<div class="day-panel-empty">Nothing yet — cleaning tasks dropped on this day will land here.</div>`;
+  }
+  return `<div class="day-panel">
+    <div class="day-panel-title">TO DO</div>
+    <div class="day-panel-body">
+      ${body}
+      <form class="day-todo-add" onsubmit="event.preventDefault();const i=this.querySelector('input');addTodoForDate('${attr(dateKey)}',i.value);i.value='';refreshDayModalIfOpen()">
+        <input type="text" placeholder="Add a to-do…" maxlength="140" autocomplete="off" />
+        <button type="submit" aria-label="Add to-do">+</button>
+      </form>
+    </div>
+  </div>`;
+}
+
+/* NOTES panel: freeform per-date textarea; saves on blur so mid-typing
+   re-renders elsewhere won't blow away what you're writing. */
+function buildDayNotesHtml(dateKey) {
+  const note = getNotesForDate(dateKey);
+  return `<div class="day-panel">
+    <div class="day-panel-title">NOTES</div>
+    <div class="day-panel-body">
+      <textarea class="day-notes-text" placeholder="Freeform notes for the day…"
+        onblur="saveNotesForDate('${attr(dateKey)}',this.value)">${esc(note)}</textarea>
+    </div>
   </div>`;
 }
 
@@ -6936,6 +7164,7 @@ function buildCleaningBlock(tasks, week) {
     html += `<div class="check-item cleaning-task-row ${done?'checked':''}" draggable="true" data-cleaning-task="${attr(task.id)}" ondragstart="onCleaningDragStart(event,'${attr(task.id)}')" ondragend="onCleaningDragEnd(event)" onclick="toggleCleaningTask('${attr(task.id)}')">
       <span class="cleaning-drag-grip" aria-hidden="true">⋮⋮</span>
       <div class="check-box">${checkSvg()}</div>
+      ${mopIcon('small')}
       <div class="check-label">${esc(task.title)}</div>
       ${badge}
     </div>`;
@@ -8186,12 +8415,12 @@ function renderMoneyBills() {
   const paidCount = bills.filter(b => paid[b.key]).length;
 
   let html = `<div class="bill-month-nav">
-    <button class="tiny-nav-btn" onclick="moveBillMonth(-1)" ${billMonthOffset===0?'disabled':''}>&#8249;</button>
+    <button class="tiny-nav-btn" onclick="moveBillMonth(-1)" ${billMonthOffset===0?'disabled':''}>${arrowIcon('left')}</button>
     <div>
       <div class="bill-month-label">${billMonthName}</div>
       <div class="bill-month-sub">${formatMoney(totalAll)} total · ${paidCount}/${bills.length} paid</div>
     </div>
-    <button class="tiny-nav-btn" onclick="moveBillMonth(1)" ${billMonthOffset===4?'disabled':''}>&#8250;</button>
+    <button class="tiny-nav-btn" onclick="moveBillMonth(1)" ${billMonthOffset===4?'disabled':''}>${arrowIcon('right')}</button>
   </div>`;
 
   const chevron = `<svg class="collapse-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>`;
@@ -8522,12 +8751,12 @@ function renderMoneyPaychecks() {
   }
 
   html += `<div class="bill-month-nav">
-    <button class="tiny-nav-btn" onclick="moveBillMonth(-1)" ${billMonthOffset===0?'disabled':''}>&#8249;</button>
+    <button class="tiny-nav-btn" onclick="moveBillMonth(-1)" ${billMonthOffset===0?'disabled':''}>${arrowIcon('left')}</button>
     <div>
       <div class="bill-month-label">${esc(monthName)}</div>
       <div class="bill-month-sub">Edit each payday independently of your budget sheet.</div>
     </div>
-    <button class="tiny-nav-btn" onclick="moveBillMonth(1)" ${billMonthOffset===4?'disabled':''}>&#8250;</button>
+    <button class="tiny-nav-btn" onclick="moveBillMonth(1)" ${billMonthOffset===4?'disabled':''}>${arrowIcon('right')}</button>
   </div>`;
 
   if (!paychecks.length) {
