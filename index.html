@@ -5513,7 +5513,7 @@ function monthTopRightIconsForDate(date) {
   // Cleaning tasks scheduled on this date via the picker or drag-drop.
   const cleaningAssignments = getCleaningAssignments();
   if ((cleaningAssignments[dk] || []).length) {
-    out.push({ icon: 'shower', cls: 'corner-cleaning' });
+    out.push({ png: 'images/cleaning-mop.svg', cls: 'corner-cleaning' });
   }
   if (typeof incomeOccurrencesForDate === 'function' && incomeOccurrencesForDate(date).length) {
     out.push({ icon: 'money', cls: 'corner-money' });
