@@ -2035,6 +2035,62 @@ body.paycheck-dragging .paycheck-pool-row {
 }
 .bill-card-section[data-card="Discover"] .bill-cat-name    { color: var(--pal-blue-strong, #7A9FEE); }
 .bill-card-section[data-card="Capital One"] .bill-cat-name { color: var(--pal-purple-strong, #C48BDF); }
+.bill-card-section[data-card="First Financial"] .bill-cat-name { color: var(--pal-green-strong, #6DA76D); }
+
+/* ── First Financial funding view ── */
+.ff-header {
+  padding: 10px 12px; margin-bottom: 10px; border-radius: 12px;
+  background: rgba(109,167,109,0.10); border: 1px solid rgba(109,167,109,0.30);
+  display: flex; flex-direction: column; gap: 6px;
+}
+.ff-tagline { font-size: 12px; color: var(--text); line-height: 1.35; }
+.ff-tagline strong { color: var(--espresso); }
+.ff-month-total {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 10px; font-size: 12px; color: var(--text-muted);
+  padding-top: 4px; border-top: 1px dashed rgba(109,167,109,0.35);
+}
+.ff-month-total strong {
+  font-family: var(--font-display); font-size: 17px; font-weight: 800;
+  color: var(--espresso);
+}
+.ff-paycheck-card {
+  margin-top: 8px; padding: 10px 12px 8px; border-radius: 12px;
+  background: var(--bg-input); border: 1px solid var(--border-soft);
+}
+.ff-paycheck-card.ff-unassigned {
+  border-style: dashed; background: transparent;
+}
+.ff-paycheck-head {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  gap: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border-soft);
+  margin-bottom: 6px;
+}
+.ff-paycheck-name { font-size: 13px; font-weight: 700; color: var(--text); }
+.ff-paycheck-date { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.ff-paycheck-total { text-align: right; }
+.ff-paycheck-total-label {
+  font-size: 9px; font-weight: 800; letter-spacing: 0.4px;
+  text-transform: uppercase; color: var(--text-muted);
+}
+.ff-paycheck-total-amt {
+  font-family: var(--font-display); font-size: 17px; font-weight: 800;
+  color: var(--pal-green-strong, #6DA76D); line-height: 1.1; margin-top: 2px;
+}
+.ff-item-list { display: grid; gap: 4px; padding: 4px 0 2px; }
+.ff-item {
+  display: flex; justify-content: space-between; gap: 10px;
+  font-size: 12px; color: var(--text-secondary);
+}
+.ff-item span:last-child { font-weight: 700; color: var(--espresso); white-space: nowrap; }
+.ff-item-empty {
+  font-size: 11px; color: var(--text-muted); font-style: italic;
+  padding: 4px 0;
+}
+.ff-empty {
+  text-align: center; font-size: 12px; color: var(--text-muted);
+  padding: 18px 8px; border: 1.5px dashed var(--border-soft); border-radius: 12px;
+}
 .bill-card-section.drop-target .bill-cat-header,
 .bill-card-section.drop-target .bill-cat-body {
   border-color: var(--espresso);
@@ -8833,7 +8889,150 @@ function renderMoneyBills() {
     html += `</div></div>`;
   });
 
+  html += buildFirstFinancialSection(billMonth);
+
   return html;
+}
+
+/* First Financial funding view: bills grouped by the paycheck they're
+   assigned to, so for each paycheck you see the amount to move from
+   Huntington → First Financial to cover its bills. Unassigned bills
+   (still due this month but not tied to a paycheck) get their own
+   bucket at the bottom so nothing goes missing. */
+function buildFirstFinancialSection(billMonth) {
+  const chevron = `<svg class="collapse-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>`;
+  const openKey = '@first-financial';
+  const isOpen = billCatOpen[openKey] !== false;
+  const monthName = billMonth.toLocaleDateString('en-US', { month: 'long' });
+
+  const eligible = BILLS.filter(billBelongsOnPaychecksTab);
+  const plan = getPaycheckPlan(billMonth);
+  const paychecks = incomeOccurrencesForMonth(null, billMonth).slice().sort((a, b) => a.date - b.date);
+  const instances = {};
+  paychecks.forEach(p => { instances[p.id] = getPaycheckInstance(p.id, billMonth); });
+
+  const nextMonth = nextMonthDate(billMonth);
+  const allOccs = paycheckOccurrencesForMonth(eligible, billMonth, false)
+    .concat(paycheckOccurrencesForMonth(eligible, nextMonth, true));
+
+  const buckets = {};
+  paychecks.forEach(p => { buckets[p.id] = []; });
+  const unassigned = [];
+
+  allOccs.forEach(o => {
+    const explicit = plan.assignments[o.occId];
+    if (explicit && buckets[explicit] !== undefined) {
+      buckets[explicit].push(o);
+      return;
+    }
+    if (findOccurrenceAssignment(o.occId)) return;
+    if (!o.fromNextMonth) unassigned.push(o);
+  });
+
+  // Effective amount for a bill occurrence honoring any paycheck override.
+  const occAmount = (o, paycheckId) => {
+    if (paycheckId && instances[paycheckId]) {
+      const ov = instances[paycheckId].billOverrides[o.billKey] || {};
+      if (ov.skip) return null;
+      if (ov.amount !== undefined) return Number(ov.amount);
+    }
+    return Number(o.bill?.amount || 0);
+  };
+
+  const perPaycheck = paychecks.map(p => {
+    const inst = instances[p.id];
+    let total = 0;
+    const items = [];
+    buckets[p.id].forEach(o => {
+      const amt = occAmount(o, p.id);
+      if (amt === null) return;
+      total += amt;
+      items.push({ name: o.bill.name, amount: amt, fromNextMonth: o.fromNextMonth, date: o.date });
+    });
+    inst.extras.forEach(e => {
+      if (e.skip) return;
+      const amt = Number(e.amount || 0);
+      total += amt;
+      items.push({ name: e.name || 'Extra', amount: amt, extra: true });
+    });
+    return { paycheck: p, total, items };
+  });
+
+  let unassignedTotal = 0;
+  const unassignedItems = [];
+  unassigned.forEach(o => {
+    const amt = Number(o.bill?.amount || 0);
+    unassignedTotal += amt;
+    unassignedItems.push({ name: o.bill.name, amount: amt, date: o.date });
+  });
+
+  const monthlyTotal = perPaycheck.reduce((s, p) => s + p.total, 0) + unassignedTotal;
+
+  let body = `<div class="ff-header">
+    <div class="ff-tagline">Fund from <strong>Huntington</strong> → <strong>First Financial</strong> so bills clear on time.</div>
+    <div class="ff-month-total"><span>${esc(monthName)} total to transfer</span><strong>${formatMoney(monthlyTotal)}</strong></div>
+  </div>`;
+
+  if (!paychecks.length) {
+    body += `<div class="ff-empty">No paychecks scheduled for ${esc(monthName)}. Add an income source on the Income tab to break this down by paycheck.</div>`;
+  }
+
+  perPaycheck.forEach(({ paycheck, total, items }) => {
+    const dateLabel = paycheck.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    body += `<div class="ff-paycheck-card">
+      <div class="ff-paycheck-head">
+        <div>
+          <div class="ff-paycheck-name">${esc(paycheck.label)}</div>
+          <div class="ff-paycheck-date">${esc(dateLabel)}</div>
+        </div>
+        <div class="ff-paycheck-total">
+          <div class="ff-paycheck-total-label">Send</div>
+          <div class="ff-paycheck-total-amt">${formatMoney(total)}</div>
+        </div>
+      </div>`;
+    if (!items.length) {
+      body += `<div class="ff-item-empty">No bills assigned to this paycheck yet. Drag some over on the Paychecks tab.</div>`;
+    } else {
+      body += `<div class="ff-item-list">`;
+      items.forEach(it => {
+        const suffix = it.extra ? ' · extra' : it.fromNextMonth ? ' · early' : it.date ? ' · ' + it.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+        body += `<div class="ff-item"><span>${esc(it.name)}${esc(suffix)}</span><span>${formatMoney(it.amount)}</span></div>`;
+      });
+      body += `</div>`;
+    }
+    body += `</div>`;
+  });
+
+  if (unassignedItems.length) {
+    body += `<div class="ff-paycheck-card ff-unassigned">
+      <div class="ff-paycheck-head">
+        <div>
+          <div class="ff-paycheck-name">Unassigned bills</div>
+          <div class="ff-paycheck-date">Not tied to a paycheck yet</div>
+        </div>
+        <div class="ff-paycheck-total">
+          <div class="ff-paycheck-total-label">Cover</div>
+          <div class="ff-paycheck-total-amt">${formatMoney(unassignedTotal)}</div>
+        </div>
+      </div>
+      <div class="ff-item-list">`;
+    unassignedItems.forEach(it => {
+      const dateStr = it.date ? it.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+      body += `<div class="ff-item"><span>${esc(it.name)}${dateStr ? ' · ' + esc(dateStr) : ''}</span><span>${formatMoney(it.amount)}</span></div>`;
+    });
+    body += `</div></div>`;
+  }
+
+  return `<div class="bill-cat-section bill-card-section ff-section ${isOpen ? 'open' : ''}" data-card="First Financial">
+    <div class="bill-cat-header theme-row-card" onclick="billCatOpen['${openKey}']=!billCatOpen['${openKey}'];renderMoney()">
+      <div class="bill-cat-left">
+        <div class="bill-cat-name">First Financial</div>
+        <div class="bill-cat-sub">${formatMoney(monthlyTotal)} to transfer this month · ${perPaycheck.length} paycheck${perPaycheck.length===1?'':'s'}</div>
+      </div>
+      ${chevron}
+    </div>
+    <div class="bill-cat-body">${body}</div>
+  </div>`;
 }
 
 /* ── Drag a bill row from Subscriptions/Variable onto a card section. ── */
