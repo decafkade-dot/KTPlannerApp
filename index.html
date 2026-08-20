@@ -4824,15 +4824,11 @@ function upcomingCreditCardCreditsForAccount(acctId, monthDate = getBillMonthDat
   return total;
 }
 
+/* Current balance is a manually-set number. Bills marked paid, income
+   received, and logged transactions are informational only — they no longer
+   move this value. Update it yourself after you actually pay everything. */
 function accountCurrentBalance(acctId) {
-  const today = todayKey();
-  const txTotal = getTransactions()
-    .filter(t => t.accountId === acctId && (t.date || today) <= today)
-    .reduce((sum, t) => sum + Number(t.amount || 0), 0);
-  const paidBills = paidBillEntriesForAccount(acctId).reduce((sum, e) => sum + e.amount, 0);
-  const receivedIncome = isDiscoverAccountId(acctId) ? 0 : receivedIncomeEntriesForAccount(acctId).reduce((sum, e) => sum + Number(e.amount || 0), 0);
-  const ccPayments = paidCreditCardCreditsForAccount(acctId);
-  return accountStartingBalance(acctId) + txTotal + paidBills + receivedIncome + ccPayments;
+  return accountStartingBalance(acctId);
 }
 
 function acctBalance(acctId) {
@@ -8323,16 +8319,8 @@ function renderMoneyAccounts() {
           <input type="text" class="text-input" value="${attr(acct.name)}" onchange="updateAccountField('${acct.id}','name',this.value)">
         </div>
         <div class="acct-edit-row">
-          <div class="field-label">Set Current Balance</div>
-          <div class="field-hint">Enter what's actually in the account right now. The math reanchors so everything stays accurate going forward.</div>
-          <div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;">
-            <input type="number" class="text-input" id="set-bal-${attr(acct.id)}" step="0.01" inputmode="decimal" placeholder="${Number(b.current).toFixed(2)}">
-            <button class="modal-submit" style="padding:10px 14px;margin:0;white-space:nowrap;" onclick="setCurrentBalanceFor('${acct.id}')">Set</button>
-          </div>
-        </div>
-        <div class="acct-edit-row">
-          <div class="field-label">Raw Starting Balance</div>
-          <div class="field-hint">Advanced — the baseline number the math is built on. Use "Set Current Balance" above unless you know what you're doing.</div>
+          <div class="field-label">Current Balance</div>
+          <div class="field-hint">Enter what's actually in the account. It stays put — marking bills paid or logging transactions won't change this. Update it yourself after you pay everything.</div>
           <input type="number" class="text-input" step="0.01" inputmode="decimal" value="${Number(acct.startingBalance || 0)}" onchange="updateAccountField('${acct.id}','startingBalance',this.value)">
         </div>
         ${isDiscover ? `<div class="acct-edit-row">
@@ -8383,20 +8371,6 @@ function buildDiscoverSafeSpendPanel(info) {
       <div class="discover-safe-free ${status.tone}"><div class="discover-safe-label">Free after reserve</div><div class="discover-safe-val">${formatMoney(freeAfterReserve)}</div></div>
     </div>
   </div>`;
-}
-
-function setCurrentBalanceFor(id) {
-  const input = document.getElementById('set-bal-' + id);
-  if (!input) return;
-  const desired = parseFloat(input.value);
-  if (isNaN(desired)) { alert('Enter a number first.'); return; }
-  const accts = getAccounts();
-  const acct = accts.find(a => a.id === id);
-  if (!acct) return;
-  const current = accountCurrentBalance(id);
-  acct.startingBalance = Number(acct.startingBalance || 0) + (desired - current);
-  saveAccounts(accts);
-  renderMoney();
 }
 
 function deleteAccountDirect(id) {
