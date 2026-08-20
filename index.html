@@ -1920,6 +1920,39 @@ body.paycheck-dragging .paycheck-pool-row {
 .acct-edit-row .field-label { font-size: 12px; margin-bottom: 4px; }
 .acct-edit-row .text-input { width: 100%; }
 
+/* ── 12-Month Projection ── */
+.budget-projection-controls { margin-bottom: 12px; }
+.budget-projection-controls .field-label { font-size: 12px; margin-bottom: 4px; }
+.budget-projection-controls .text-input { width: 100%; margin-bottom: 6px; }
+.budget-proj-table {
+  background: var(--bg-input); border-radius: var(--radius-sm);
+  padding: 8px 10px; overflow-x: auto;
+}
+.budget-proj-head, .budget-proj-row {
+  display: grid;
+  grid-template-columns: 68px minmax(72px,1fr) minmax(72px,1fr) minmax(72px,1fr) minmax(84px,1.1fr);
+  gap: 6px; align-items: center;
+  padding: 7px 0; font-size: 12px;
+}
+.budget-proj-head {
+  font-size: 10px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.3px; color: var(--text-muted);
+  border-bottom: 1px solid var(--border-soft); padding-bottom: 6px;
+}
+.budget-proj-head > span:not(:first-child),
+.budget-proj-row > span:not(:first-child) { text-align: right; }
+.budget-proj-row { color: var(--text-secondary); border-bottom: 1px solid var(--border-soft); }
+.budget-proj-row:last-child { border-bottom: none; }
+.budget-proj-row > span:first-child { font-weight: 600; color: var(--text); }
+.budget-proj-row .neg { color: var(--danger); font-weight: 700; }
+.budget-proj-row .pos { color: var(--success); font-weight: 700; }
+.budget-proj-row .negative { color: var(--danger); }
+.budget-proj-row.total {
+  border-top: 1.5px solid var(--border); border-bottom: none;
+  margin-top: 4px; padding-top: 10px;
+  font-size: 13px; color: var(--espresso); font-weight: 700;
+}
+
 /* Discover safe-spend panel (on the Discover account card body). */
 .discover-safe-panel {
   margin-bottom: 14px; padding: 12px 14px; border-radius: var(--radius-sm);
@@ -4985,8 +5018,9 @@ function getBillMonthDate() {
   return d;
 }
 
+const MAX_BILL_MONTH_OFFSET = 24;
 function moveBillMonth(delta) {
-  billMonthOffset = Math.max(0, Math.min(4, billMonthOffset + delta));
+  billMonthOffset = Math.max(0, Math.min(MAX_BILL_MONTH_OFFSET, billMonthOffset + delta));
   renderMoney();
 }
 
@@ -7586,6 +7620,15 @@ function isDiscoverFolder(folder) {
   return !!folder && moneyNameKey(folder.name) === 'discover';
 }
 
+/* Any account that isn't Discover and has a Credit Line set (or a gas
+   reserve already set) is treated as a gas-reserve card — the panel shows
+   there regardless of what the account is named. */
+function isGasReserveCard(acct, accounts = getAccounts()) {
+  if (!acct) return false;
+  if (isDiscoverAccountId(acct.id, accounts)) return false;
+  return Number(acct.creditLimit || 0) > 0 || Number(acct.gasReserve || 0) > 0;
+}
+
 function billFolderKey(bill, accounts = getAccounts(), map = getBillAccounts()) {
   if (map[bill.key]) return map[bill.key];
   const source = bill.source || 'Unassigned';
@@ -7626,8 +7669,7 @@ function billsForFolder(folderKey) {
   return BILLS.filter(b => billFolderKey(b, accounts, map) === folderKey);
 }
 
-function billOccurrencesForMonth() {
-  const monthDate = getBillMonthDate();
+function billOccurrencesForMonth(monthDate = getBillMonthDate()) {
   const y = monthDate.getFullYear();
   const m = monthDate.getMonth();
   const daysInMonth = new Date(y, m + 1, 0).getDate();
@@ -8167,6 +8209,162 @@ function buildIncomeSection(selectedFolder = null) {
 
 let moneySubTab = 'accounts';
 let moneyAcctOpen = null;
+let budgetProjectionOpen = false;
+let budgetProjectionAcctId = null;
+
+/* Project a single account's income vs bills for a given month. Numbers
+   ignore paid/received flags — this is a forward-looking plan, so all
+   scheduled bills and expected income count. Whenever a paycheck-instance
+   override exists (bill amount, bill skip, paycheck amount, or extras),
+   the projection reflects the budgeted number instead of the raw one. */
+function projectionForAccountMonth(accountId, monthDate) {
+  const folderKey = `acct:${accountId}`;
+  const planMonthKey = paycheckPlanKey(monthDate);
+  const plan = getPaycheckPlan(monthDate);
+  const acctPaychecks = incomeOccurrencesForMonth(accountId, monthDate);
+  const instances = {};
+  acctPaychecks.forEach(p => { instances[p.id] = getPaycheckInstance(p.id, monthDate); });
+  const isDiscover = isDiscoverAccountId(accountId);
+
+  // Income: honor per-paycheck amount overrides. Discover has no direct income.
+  let income = 0;
+  if (!isDiscover) {
+    acctPaychecks.forEach(p => {
+      const inst = instances[p.id];
+      const amt = inst.amountOverride !== null ? inst.amountOverride : Number(p.amount || 0);
+      income += amt;
+    });
+  }
+
+  // Bills: iterate every occurrence in the month. If the occurrence is
+  // assigned to a paycheck, apply that paycheck's override (amount or skip).
+  // Otherwise fall back to the raw bill amount.
+  let bills = 0;
+  BILLS.forEach(b => {
+    const dates = billOccurrenceDatesInMonth(b, monthDate);
+    dates.forEach((d, index) => {
+      const occFolderKey = billFolderKey(b);
+      if (occFolderKey !== folderKey) return;
+      const occId = billOccId(b.key, monthDate, index);
+      const assignedPaycheckId = plan.assignments[occId];
+      let amt = Number(b.amount || 0);
+      if (assignedPaycheckId) {
+        const inst = getPaycheckInstance(assignedPaycheckId, monthDate);
+        const ov = inst.billOverrides[b.key] || {};
+        if (ov.skip) return;
+        if (ov.amount !== undefined) amt = Number(ov.amount);
+      }
+      bills += amt;
+    });
+  });
+
+  // Extras attached to this account's paychecks add to outflow.
+  let extras = 0;
+  acctPaychecks.forEach(p => {
+    instances[p.id].extras.forEach(e => {
+      if (e.skip) return;
+      extras += Number(e.amount || 0);
+    });
+  });
+  bills += extras;
+
+  // Credit-card payments flowing INTO this account (e.g. from checking to
+  // Discover) count as inflow on the receiving side.
+  const accounts = getAccounts();
+  const paid = getBillsPaid(monthDate);
+  let ccCredits = 0;
+  BILLS.forEach(b => {
+    if (billPaysAccountId(b, accounts) !== accountId) return;
+    if (paid[b.key]) return;
+    ccCredits += Number(b.amount || 0);
+  });
+
+  return { income, bills, ccCredits, net: income - bills + ccCredits };
+}
+
+function buildBudgetProjectionSection() {
+  const accounts = getAccounts();
+  if (!accounts.length) return '';
+  if (!budgetProjectionAcctId || !accounts.some(a => a.id === budgetProjectionAcctId)) {
+    budgetProjectionAcctId = accounts[0].id;
+  }
+  const acct = accounts.find(a => a.id === budgetProjectionAcctId);
+  const startBalance = Number(acct.startingBalance || 0);
+  const startMonth = getBillMonthDate();
+  // Project far enough to reach the end of next calendar year so budgeting
+  // through Dec of next year is always visible.
+  const today = new Date();
+  const monthsToNextYearEnd = ((today.getFullYear() + 1) - startMonth.getFullYear()) * 12
+    + (11 - startMonth.getMonth()) + 1;
+  const monthCount = Math.max(12, monthsToNextYearEnd);
+  const rows = [];
+  let running = startBalance;
+  let totalIncome = 0, totalBills = 0, totalCredits = 0;
+  for (let i = 0; i < monthCount; i++) {
+    const d = new Date(startMonth.getFullYear(), startMonth.getMonth() + i, 1);
+    const p = projectionForAccountMonth(acct.id, d);
+    running += p.net;
+    totalIncome += p.income;
+    totalBills += p.bills;
+    totalCredits += p.ccCredits;
+    rows.push({ date: d, ...p, end: running });
+  }
+  const netTotal = totalIncome - totalBills + totalCredits;
+  const endAll = startBalance + netTotal;
+  const chevron = `<svg class="collapse-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>`;
+  const acctOptions = accounts.map(a => `<option value="${attr(a.id)}" ${a.id === acct.id ? 'selected' : ''}>${esc(a.name)}</option>`).join('');
+  const monthFmt = d => d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+
+  let body = `<div class="budget-projection-controls">
+    <label class="field-label" for="budget-proj-acct">Account</label>
+    <select id="budget-proj-acct" class="text-input" onchange="setBudgetProjectionAcct(this.value)">${acctOptions}</select>
+    <div class="field-hint">Projection reaches through Dec ${today.getFullYear() + 1}. Amounts reflect any paycheck-instance overrides (bill amounts, skips, paycheck amounts, extras) — so the more you budget on the Paychecks tab, the more accurate the numbers become.</div>
+  </div>
+  <div class="budget-proj-table">
+    <div class="budget-proj-head">
+      <span>Month</span><span>+ Income</span><span>− Bills</span><span>Net</span><span>End Balance</span>
+    </div>`;
+  rows.forEach(r => {
+    const netClass = r.net < 0 ? 'neg' : r.net > 0 ? 'pos' : '';
+    const endClass = r.end < 0 ? 'negative' : '';
+    body += `<div class="budget-proj-row">
+      <span>${esc(monthFmt(r.date))}</span>
+      <span class="pos">${formatMoney(r.income + r.ccCredits)}</span>
+      <span class="neg">${formatMoney(r.bills)}</span>
+      <span class="${netClass}">${r.net < 0 ? '-' : r.net > 0 ? '+' : ''}${formatMoney(Math.abs(r.net))}</span>
+      <span class="${endClass}"><strong>${formatMoney(r.end)}</strong></span>
+    </div>`;
+  });
+  const netAllClass = netTotal < 0 ? 'neg' : netTotal > 0 ? 'pos' : '';
+  const endAllClass = endAll < 0 ? 'negative' : '';
+  body += `<div class="budget-proj-row total">
+    <span>${monthCount}-mo total</span>
+    <span class="pos">${formatMoney(totalIncome + totalCredits)}</span>
+    <span class="neg">${formatMoney(totalBills)}</span>
+    <span class="${netAllClass}">${netTotal < 0 ? '-' : netTotal > 0 ? '+' : ''}${formatMoney(Math.abs(netTotal))}</span>
+    <span class="${endAllClass}"><strong>${formatMoney(endAll)}</strong></span>
+  </div>
+  </div>`;
+
+  const endLabel = monthFmt(rows[rows.length - 1].date);
+  const subtitle = `Starting ${formatMoney(startBalance)} → ${formatMoney(endAll)} by ${endLabel}`;
+  return `<div class="acct-card theme-card ${budgetProjectionOpen ? 'open' : ''}" style="margin-top:14px;">
+    <div class="acct-card-header" onclick="budgetProjectionOpen=!budgetProjectionOpen;renderMoney()">
+      <div class="acct-card-dot" style="background:var(--pal-green)"></div>
+      <div class="acct-card-info">
+        <div class="acct-card-name">Budget Projection</div>
+        <div class="acct-card-bal">${esc(subtitle)}</div>
+      </div>
+      ${chevron}
+    </div>
+    <div class="acct-card-body">${body}</div>
+  </div>`;
+}
+
+function setBudgetProjectionAcct(id) {
+  budgetProjectionAcctId = id;
+  renderMoney();
+}
 let moneyIncomeOpen = null;
 let billCatOpen = { Necessities: true, 'Credit Card Payments': false, Subscriptions: false, Variable: false, Other: false };
 let paycheckCardOpen = {}; // paycheckId -> bool
@@ -8283,7 +8481,9 @@ function renderMoneyAccounts() {
     const isOpen = moneyAcctOpen === acct.id;
     const color = colorById(acct.color || ACCOUNT_COLORS[0].id);
     const isDiscover = isDiscoverAccountId(acct.id);
+    const isGasCard = isGasReserveCard(acct);
     const discInfo = isDiscover ? discoverSafeSpendInfo(acct) : null;
+    const gasInfo = isGasCard ? cardGasReserveInfo(acct) : null;
     html += `<div class="acct-card theme-card ${isOpen?'open':''}">
       <div class="acct-card-header" onclick="moneyAcctOpen=moneyAcctOpen==='${acct.id}'?null:'${acct.id}';renderMoney()">
         <div class="acct-card-dot" style="background:${color.bg}"></div>
@@ -8296,6 +8496,7 @@ function renderMoneyAccounts() {
       </div>
       <div class="acct-card-body">
         ${isDiscover ? buildDiscoverSafeSpendPanel(discInfo) : ''}
+        ${isGasCard ? buildCardGasReservePanel(gasInfo) : ''}
         <div class="balance-breakdown">
           <div class="balance-breakdown-row">
             <span>Current Balance</span>
@@ -8323,10 +8524,15 @@ function renderMoneyAccounts() {
           <div class="field-hint">Enter what's actually in the account. It stays put — marking bills paid or logging transactions won't change this. Update it yourself after you pay everything.</div>
           <input type="number" class="text-input" step="0.01" inputmode="decimal" value="${Number(acct.startingBalance || 0)}" onchange="updateAccountField('${acct.id}','startingBalance',this.value)">
         </div>
-        ${isDiscover ? `<div class="acct-edit-row">
-          <div class="field-label">Credit Line</div>
-          <div class="field-hint">Your total available credit. Used to calculate how much you can spend without eating into the monthly subscription reserve.</div>
-          <input type="number" class="text-input" step="0.01" inputmode="decimal" value="${Number(acct.creditLimit || 0)}" placeholder="e.g. 800" onchange="updateAccountField('${acct.id}','creditLimit',this.value)">
+        <div class="acct-edit-row">
+          <div class="field-label">Credit Line ${isDiscover ? '' : '<span style="color:var(--text-muted);font-weight:400;">(leave 0 if this isn\'t a credit card)</span>'}</div>
+          <div class="field-hint">Your total available credit. Used to calculate how much you can spend without eating into the ${isDiscover ? 'monthly subscription' : 'gas'} reserve.</div>
+          <input type="number" class="text-input" step="0.01" inputmode="decimal" value="${Number(acct.creditLimit || 0)}" placeholder="${isDiscover ? 'e.g. 800' : 'e.g. 1000'}" onchange="updateAccountField('${acct.id}','creditLimit',this.value)">
+        </div>
+        ${!isDiscover ? `<div class="acct-edit-row">
+          <div class="field-label">Gas Reserve (per month)</div>
+          <div class="field-hint">How much room to keep free on this card so you can always fill up. Set it to your typical monthly gas spend — the balance can climb to Credit Line − Gas Reserve before you're in the danger zone. Set to 0 if you don't want a reserve on this account.</div>
+          <input type="number" class="text-input" step="0.01" inputmode="decimal" value="${Number(acct.gasReserve || 0)}" placeholder="e.g. 80" onchange="updateAccountField('${acct.id}','gasReserve',this.value)">
         </div>` : ''}
         <div class="acct-edit-row">
           <div class="field-label">Color</div>
@@ -8338,6 +8544,7 @@ function renderMoneyAccounts() {
   });
 
   html += `<button class="add-btn" onclick="openAcctModal()">+ Add Account</button>`;
+  html += buildBudgetProjectionSection();
   return html;
 }
 
@@ -8347,9 +8554,51 @@ function updateAccountField(id, field, value) {
   if (!acct) return;
   if (field === 'startingBalance') acct.startingBalance = parseFloat(value) || 0;
   else if (field === 'creditLimit') acct.creditLimit = Math.max(0, parseFloat(value) || 0);
+  else if (field === 'gasReserve') acct.gasReserve = Math.max(0, parseFloat(value) || 0);
   else acct[field] = value;
   saveAccounts(accts);
   renderMoney();
+}
+
+/* Gas-reserve info for any non-Discover credit card. The idea: never let
+   the balance climb high enough that you don't have room left for gas.
+   Set the reserve to your typical monthly gas spend. */
+function cardGasReserveInfo(account) {
+  if (!account) return null;
+  const limit = Math.max(0, Number(account.creditLimit || 0));
+  const reserve = Math.max(0, Number(account.gasReserve || 0));
+  const safeCeiling = Math.max(0, limit - reserve);
+  const current = accountCurrentBalance(account.id);
+  const availableNow = Math.max(0, limit - current);
+  const freeAfterReserve = availableNow - reserve;
+  const underwater = freeAfterReserve < 0;
+  return {
+    account, limit, reserve, safeCeiling,
+    current, availableNow, freeAfterReserve, underwater
+  };
+}
+
+function buildCardGasReservePanel(info) {
+  if (!info) return '';
+  const { account, limit, reserve, safeCeiling, current, availableNow, freeAfterReserve, underwater } = info;
+  const status = limit <= 0
+    ? { tone: 'muted', msg: 'Set the Credit Line below to unlock the gas-reserve math.' }
+    : reserve <= 0
+      ? { tone: 'muted', msg: 'Set a Gas Reserve below (your typical monthly gas spend) and this card will warn you before the balance eats into it.' }
+      : underwater
+        ? { tone: 'danger', msg: `You are ${formatMoney(Math.abs(freeAfterReserve))} into your gas reserve — pay some down before spending more so you can always cover gas.` }
+        : { tone: 'ok', msg: `Keep the balance at or below ${formatMoney(safeCeiling)} and you'll always have ${formatMoney(reserve)} free for gas. Right now you have ${formatMoney(freeAfterReserve)} beyond that.` };
+  return `<div class="discover-safe-panel ${status.tone}">
+    <div class="discover-safe-title">${esc(account.name)} gas-reserve</div>
+    <div class="discover-safe-msg">${esc(status.msg)}</div>
+    <div class="discover-safe-grid">
+      <div><div class="discover-safe-label">Credit line</div><div class="discover-safe-val">${formatMoney(limit)}</div></div>
+      <div><div class="discover-safe-label">Gas reserve / mo</div><div class="discover-safe-val">${formatMoney(reserve)}</div></div>
+      <div><div class="discover-safe-label">Safe ceiling</div><div class="discover-safe-val">${formatMoney(safeCeiling)}</div></div>
+      <div><div class="discover-safe-label">Currently available</div><div class="discover-safe-val">${formatMoney(availableNow)}</div></div>
+      <div class="discover-safe-free ${status.tone}"><div class="discover-safe-label">Free after reserve</div><div class="discover-safe-val">${formatMoney(freeAfterReserve)}</div></div>
+    </div>
+  </div>`;
 }
 
 function buildDiscoverSafeSpendPanel(info) {
@@ -8447,7 +8696,7 @@ function renderMoneyBills() {
       <div class="bill-month-label">${billMonthName}</div>
       <div class="bill-month-sub">${formatMoney(totalAll)} total · ${paidCount}/${bills.length} paid</div>
     </div>
-    <button class="tiny-nav-btn" onclick="moveBillMonth(1)" ${billMonthOffset===4?'disabled':''}>${arrowIcon('right')}</button>
+    <button class="tiny-nav-btn" onclick="moveBillMonth(1)" ${billMonthOffset===MAX_BILL_MONTH_OFFSET?'disabled':''}>${arrowIcon('right')}</button>
   </div>`;
 
   const chevron = `<svg class="collapse-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>`;
@@ -8783,7 +9032,7 @@ function renderMoneyPaychecks() {
       <div class="bill-month-label">${esc(monthName)}</div>
       <div class="bill-month-sub">Edit each payday independently of your budget sheet.</div>
     </div>
-    <button class="tiny-nav-btn" onclick="moveBillMonth(1)" ${billMonthOffset===4?'disabled':''}>${arrowIcon('right')}</button>
+    <button class="tiny-nav-btn" onclick="moveBillMonth(1)" ${billMonthOffset===MAX_BILL_MONTH_OFFSET?'disabled':''}>${arrowIcon('right')}</button>
   </div>`;
 
   if (!paychecks.length) {
