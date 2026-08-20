@@ -2091,6 +2091,38 @@ body.paycheck-dragging .paycheck-pool-row {
   text-align: center; font-size: 12px; color: var(--text-muted);
   padding: 18px 8px; border: 1.5px dashed var(--border-soft); border-radius: 12px;
 }
+
+/* Sent state for a First Financial paycheck card — one click marks the
+   whole block done, not the individual bills. */
+.ff-paycheck-card.ff-sent {
+  opacity: 0.55; background: var(--bg-input);
+}
+.ff-paycheck-card.ff-sent .ff-paycheck-total-amt,
+.ff-paycheck-card.ff-sent .ff-item span:last-child {
+  color: var(--text-muted); text-decoration: line-through;
+}
+.ff-sent-btn {
+  border: 1px solid var(--border-soft); background: var(--bg-card);
+  color: var(--text-muted); border-radius: 999px;
+  padding: 4px 10px; font-size: 11px; font-weight: 700; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 4px;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.ff-sent-btn:hover { color: var(--espresso); border-color: var(--espresso); }
+.ff-sent-btn.on {
+  color: var(--pal-green-strong, #6DA76D);
+  border-color: var(--pal-green-strong, #6DA76D);
+  background: rgba(109,167,109,0.08);
+}
+.ff-paycheck-head-right {
+  display: flex; flex-direction: column; align-items: flex-end; gap: 6px;
+}
+
+/* Blur any money display for the bill-hub account — user doesn't want to
+   see the balance, only that the account exists. */
+.blur-money {
+  filter: blur(6px); user-select: none; pointer-events: none;
+}
 .bill-card-section.drop-target .bill-cat-header,
 .bill-card-section.drop-target .bill-cat-body {
   border-color: var(--espresso);
@@ -7676,6 +7708,24 @@ function isDiscoverFolder(folder) {
   return !!folder && moneyNameKey(folder.name) === 'discover';
 }
 
+/* Bill-hub = the checking account bills come out of (default: any account
+   named "First Financial"). Funder = the checking account that funds the
+   bill hub (default: any account named "Huntington"). Both can be forced
+   with acct.role = 'bill-hub' | 'funder'. */
+function isBillHubAccount(acct) {
+  if (!acct) return false;
+  if (acct.role === 'bill-hub') return true;
+  return moneyNameKey(acct.name).includes('first financial');
+}
+function isFunderAccount(acct) {
+  if (!acct) return false;
+  if (acct.role === 'funder') return true;
+  return moneyNameKey(acct.name).includes('huntington');
+}
+function getBillHubAccount(accounts = getAccounts()) {
+  return accounts.find(isBillHubAccount) || null;
+}
+
 /* Any account that isn't Discover and has a Credit Line set (or a gas
    reserve already set) is treated as a gas-reserve card — the panel shows
    there regardless of what the account is named. */
@@ -8292,15 +8342,22 @@ function projectionForAccountMonth(accountId, monthDate) {
     });
   }
 
-  // Bills: iterate every occurrence in the month. If the occurrence is
-  // assigned to a paycheck, apply that paycheck's override (amount or skip).
-  // Otherwise fall back to the raw bill amount.
+  // Bills: for a funder account (Huntington), the outflow is the transfer
+  // to First Financial — every paycheck-tab bill for the month, no matter
+  // what folder tag it currently carries. Huntington never pays a bill
+  // directly under this model. For any other account, bills = its own
+  // folder-assigned bills (existing behavior).
+  const acctForRole = getAccounts().find(a => a.id === accountId);
+  const isFunder = isFunderAccount(acctForRole) && !!getBillHubAccount();
+  const billSourceBills = isFunder ? BILLS.filter(billBelongsOnPaychecksTab) : BILLS;
   let bills = 0;
-  BILLS.forEach(b => {
+  billSourceBills.forEach(b => {
     const dates = billOccurrenceDatesInMonth(b, monthDate);
     dates.forEach((d, index) => {
-      const occFolderKey = billFolderKey(b);
-      if (occFolderKey !== folderKey) return;
+      if (!isFunder) {
+        const occFolderKey = billFolderKey(b);
+        if (occFolderKey !== folderKey) return;
+      }
       const occId = billOccId(b.key, monthDate, index);
       const assignedPaycheckId = plan.assignments[occId];
       let amt = Number(b.amount || 0);
@@ -8339,7 +8396,8 @@ function projectionForAccountMonth(accountId, monthDate) {
 }
 
 function buildBudgetProjectionSection() {
-  const accounts = getAccounts();
+  // Bill-hub balance is intentionally hidden — user doesn't need to see it.
+  const accounts = getAccounts().filter(a => !isBillHubAccount(a));
   if (!accounts.length) return '';
   if (!budgetProjectionAcctId || !accounts.some(a => a.id === budgetProjectionAcctId)) {
     budgetProjectionAcctId = accounts[0].id;
@@ -8371,14 +8429,19 @@ function buildBudgetProjectionSection() {
   const acctOptions = accounts.map(a => `<option value="${attr(a.id)}" ${a.id === acct.id ? 'selected' : ''}>${esc(a.name)}</option>`).join('');
   const monthFmt = d => d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
 
+  const isFunderView = isFunderAccount(acct) && !!getBillHubAccount();
+  const outLabel = isFunderView ? '− To FF' : '− Bills';
+  const funderHint = isFunderView
+    ? ` <strong>${esc(acct.name)}</strong> never pays bills directly — the "To FF" column is the total transferred to First Financial each month, so End Balance = what stays in ${esc(acct.name)} after funding.`
+    : '';
   let body = `<div class="budget-projection-controls">
     <label class="field-label" for="budget-proj-acct">Account</label>
     <select id="budget-proj-acct" class="text-input" onchange="setBudgetProjectionAcct(this.value)">${acctOptions}</select>
-    <div class="field-hint">Projection reaches through Dec ${today.getFullYear() + 1}. Amounts reflect any paycheck-instance overrides (bill amounts, skips, paycheck amounts, extras) — so the more you budget on the Paychecks tab, the more accurate the numbers become.</div>
+    <div class="field-hint">Projection reaches through Dec ${today.getFullYear() + 1}. Amounts reflect paycheck-instance overrides (bill amounts, skips, paycheck amounts, extras) — the more you budget on the Paychecks tab, the more accurate the numbers become.${funderHint}</div>
   </div>
   <div class="budget-proj-table">
     <div class="budget-proj-head">
-      <span>Month</span><span>+ Income</span><span>− Bills</span><span>Net</span><span>End Balance</span>
+      <span>Month</span><span>+ Income</span><span>${outLabel}</span><span>Net</span><span>End Balance</span>
     </div>`;
   rows.forEach(r => {
     const netClass = r.net < 0 ? 'neg' : r.net > 0 ? 'pos' : '';
@@ -8538,16 +8601,21 @@ function renderMoneyAccounts() {
     const color = colorById(acct.color || ACCOUNT_COLORS[0].id);
     const isDiscover = isDiscoverAccountId(acct.id);
     const isGasCard = isGasReserveCard(acct);
+    const isBillHub = isBillHubAccount(acct);
     const discInfo = isDiscover ? discoverSafeSpendInfo(acct) : null;
     const gasInfo = isGasCard ? cardGasReserveInfo(acct) : null;
+    const blur = isBillHub ? ' blur-money' : '';
+    const balSub = isBillHub
+      ? `Bills funnel through here · balance hidden`
+      : `Now · After ${esc(billMonthName)} bills ${formatMoney(b.projected)}`;
     html += `<div class="acct-card theme-card ${isOpen?'open':''}">
       <div class="acct-card-header" onclick="moneyAcctOpen=moneyAcctOpen==='${acct.id}'?null:'${acct.id}';renderMoney()">
         <div class="acct-card-dot" style="background:${color.bg}"></div>
         <div class="acct-card-info">
           <div class="acct-card-name">${esc(acct.name)}</div>
-          <div class="acct-card-bal">Now · After ${esc(billMonthName)} bills ${formatMoney(b.projected)}</div>
+          <div class="acct-card-bal">${balSub}</div>
         </div>
-        <div class="acct-card-amount ${b.current < 0 ? 'negative' : ''}">${formatMoney(b.current)}</div>
+        <div class="acct-card-amount${blur} ${b.current < 0 ? 'negative' : ''}">${formatMoney(b.current)}</div>
         ${chevron}
       </div>
       <div class="acct-card-body">
@@ -8556,19 +8624,19 @@ function renderMoneyAccounts() {
         <div class="balance-breakdown">
           <div class="balance-breakdown-row">
             <span>Current Balance</span>
-            <span class="${b.current < 0 ? 'negative' : ''}">${formatMoney(b.current)}</span>
+            <span class="${blur} ${b.current < 0 ? 'negative' : ''}">${formatMoney(b.current)}</span>
           </div>
           <div class="balance-breakdown-row">
             <span>Upcoming Expenses (${esc(billMonthName)})</span>
-            <span class="neg">-${formatMoney(b.upcomingExpenses)}</span>
+            <span class="neg${blur}">-${formatMoney(b.upcomingExpenses)}</span>
           </div>
           <div class="balance-breakdown-row">
             <span>Upcoming Income (${esc(billMonthName)})</span>
-            <span class="pos">+${formatMoney(b.upcomingIncome)}</span>
+            <span class="pos${blur}">+${formatMoney(b.upcomingIncome)}</span>
           </div>
           <div class="balance-breakdown-row total ${b.projected < 0 ? 'negative' : ''}">
             <span>Remaining After Bills</span>
-            <span>${formatMoney(b.projected)}</span>
+            <span class="${blur}">${formatMoney(b.projected)}</span>
           </div>
         </div>
         <div class="acct-edit-row">
@@ -8894,6 +8962,22 @@ function renderMoneyBills() {
   return html;
 }
 
+/* Sent-flag storage — one bool per paycheck per month tracking whether
+   the transfer from Huntington → First Financial has been completed. */
+function ffSentKey(monthDate) {
+  return `gnd-ff-sent-${monthDate.getFullYear()}-${monthDate.getMonth()}`;
+}
+function getFfSent(monthDate) { return ls(ffSentKey(monthDate), {}); }
+function saveFfSent(map, monthDate) { lsSave(ffSentKey(monthDate), map); }
+function toggleFfPaycheckSent(paycheckId) {
+  const monthDate = getBillMonthDate();
+  const map = getFfSent(monthDate);
+  if (map[paycheckId]) delete map[paycheckId];
+  else map[paycheckId] = true;
+  saveFfSent(map, monthDate);
+  renderMoney();
+}
+
 /* First Financial funding view: bills grouped by the paycheck they're
    assigned to, so for each paycheck you see the amount to move from
    Huntington → First Financial to cover its bills. Unassigned bills
@@ -8966,11 +9050,16 @@ function buildFirstFinancialSection(billMonth) {
     unassignedItems.push({ name: o.bill.name, amount: amt, date: o.date });
   });
 
+  const sent = getFfSent(billMonth);
   const monthlyTotal = perPaycheck.reduce((s, p) => s + p.total, 0) + unassignedTotal;
+  const remaining = perPaycheck.reduce((s, p) => s + (sent[p.paycheck.id] ? 0 : p.total), 0) + unassignedTotal;
 
   let body = `<div class="ff-header">
     <div class="ff-tagline">Fund from <strong>Huntington</strong> → <strong>First Financial</strong> so bills clear on time.</div>
-    <div class="ff-month-total"><span>${esc(monthName)} total to transfer</span><strong>${formatMoney(monthlyTotal)}</strong></div>
+    <div class="ff-month-total">
+      <span>${esc(monthName)} still to transfer</span>
+      <strong>${formatMoney(remaining)}${remaining < monthlyTotal ? ` <span style="color:var(--text-muted);font-weight:600;font-size:11px;">of ${formatMoney(monthlyTotal)}</span>` : ''}</strong>
+    </div>
   </div>`;
 
   if (!paychecks.length) {
@@ -8979,15 +9068,20 @@ function buildFirstFinancialSection(billMonth) {
 
   perPaycheck.forEach(({ paycheck, total, items }) => {
     const dateLabel = paycheck.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-    body += `<div class="ff-paycheck-card">
+    const isSent = !!sent[paycheck.id];
+    const btnLabel = isSent ? '✓ Sent' : 'Mark sent';
+    body += `<div class="ff-paycheck-card ${isSent ? 'ff-sent' : ''}">
       <div class="ff-paycheck-head">
         <div>
           <div class="ff-paycheck-name">${esc(paycheck.label)}</div>
           <div class="ff-paycheck-date">${esc(dateLabel)}</div>
         </div>
-        <div class="ff-paycheck-total">
-          <div class="ff-paycheck-total-label">Send</div>
-          <div class="ff-paycheck-total-amt">${formatMoney(total)}</div>
+        <div class="ff-paycheck-head-right">
+          <div class="ff-paycheck-total">
+            <div class="ff-paycheck-total-label">Send</div>
+            <div class="ff-paycheck-total-amt">${formatMoney(total)}</div>
+          </div>
+          <button type="button" class="ff-sent-btn ${isSent ? 'on' : ''}" onclick="toggleFfPaycheckSent('${attr(paycheck.id)}')">${btnLabel}</button>
         </div>
       </div>`;
     if (!items.length) {
@@ -9023,11 +9117,15 @@ function buildFirstFinancialSection(billMonth) {
     body += `</div></div>`;
   }
 
+  const sentCount = perPaycheck.filter(p => sent[p.paycheck.id]).length;
+  const headerSub = paychecks.length
+    ? `${formatMoney(remaining)} still to transfer · ${sentCount}/${perPaycheck.length} paycheck${perPaycheck.length===1?'':'s'} sent`
+    : `${formatMoney(monthlyTotal)} to transfer this month`;
   return `<div class="bill-cat-section bill-card-section ff-section ${isOpen ? 'open' : ''}" data-card="First Financial">
     <div class="bill-cat-header theme-row-card" onclick="billCatOpen['${openKey}']=!billCatOpen['${openKey}'];renderMoney()">
       <div class="bill-cat-left">
         <div class="bill-cat-name">First Financial</div>
-        <div class="bill-cat-sub">${formatMoney(monthlyTotal)} to transfer this month · ${perPaycheck.length} paycheck${perPaycheck.length===1?'':'s'}</div>
+        <div class="bill-cat-sub">${headerSub}</div>
       </div>
       ${chevron}
     </div>
