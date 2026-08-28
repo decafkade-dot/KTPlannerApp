@@ -5379,6 +5379,25 @@ function submitPaycheckBillAmt(paycheckId, billKey, rawValue) {
   }
   renderMoney();
 }
+/* Commit an amount edit for a single paycheck occurrence. Empty string
+   clears the override so the card falls back to the income source's
+   base amount. Used for variable paydays like VA (fixed disability +
+   variable BAH lumped together). */
+function submitPaycheckAmount(paycheckId, rawValue) {
+  const trimmed = String(rawValue == null ? '' : rawValue).trim();
+  if (trimmed === '') {
+    setPaycheckAmountOverride(paycheckId, null);
+  } else {
+    const n = Number(trimmed);
+    if (Number.isNaN(n) || n < 0) return;
+    setPaycheckAmountOverride(paycheckId, n);
+  }
+  renderMoney();
+}
+function clearPaycheckAmountOverride(paycheckId) {
+  setPaycheckAmountOverride(paycheckId, null);
+  renderMoney();
+}
 function addPaycheckExtra(paycheckId, extra, monthDate = getBillMonthDate()) {
   const inst = getPaycheckInstance(paycheckId, monthDate);
   const id = `extra-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
@@ -9374,6 +9393,24 @@ function renderMoneyPaychecks() {
       </button>
       <div class="paycheck-card-body">
         <div class="paycheck-instance-controls">
+          <div class="paycheck-amount-row">
+            <div class="field-label">Amount for this payday${instance.amountOverride !== null ? ' <span class="paycheck-edited-badge">edited</span>' : ''}</div>
+            <div class="paycheck-amount-inputs">
+              <label class="paycheck-row-amt-edit${instance.amountOverride !== null ? ' is-override' : ''}" title="Set the amount for this payday only (clear to reset to base ${formatMoney(Number(p.amount || 0))})">
+                <span class="paycheck-row-amt-currency">$</span>
+                <input type="number" step="0.01" min="0" inputmode="decimal"
+                  class="paycheck-row-amt-input" style="width:110px;"
+                  value="${Number(paycheckAmt).toFixed(2)}"
+                  onclick="event.stopPropagation();this.select()"
+                  onfocus="this.select()"
+                  onblur="submitPaycheckAmount('${attr(p.id)}',this.value)"
+                  onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}">
+              </label>
+              ${instance.amountOverride !== null
+                ? `<button type="button" class="paycheck-tool-btn" onclick="clearPaycheckAmountOverride('${attr(p.id)}')" title="Reset to ${formatMoney(Number(p.amount || 0))}">Reset</button>`
+                : ''}
+            </div>
+          </div>
           <button type="button" class="paycheck-received-btn ${isReceived ? 'on' : ''}"
             onclick="toggleIncomeReceived('${attr(p.id)}','${attr(p.dateKey)}')">${isReceived ? '✓ Received' : 'Mark received'}</button>
         </div>
