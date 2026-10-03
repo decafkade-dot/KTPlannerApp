@@ -2929,6 +2929,7 @@ const IMG_ICONS = {
   todayTab: 'Assets/images/todo.png',
   calendarTab: 'Assets/images/calendar.svg',
   routinesTab: 'Assets/images/routines.png',
+  clock: 'Assets/images/clock.svg',
   healthTab: 'Assets/images/health.png',
   moneyTab: 'Assets/images/moneytab.svg',
   payday: 'Assets/images/piggy-bank.png',
@@ -4447,7 +4448,7 @@ function buildCalendarActions() {
     { icon: 'academic', label: 'School', onclick: 'openSyllabusImportModal()' },
     { icon: 'calendarTab', label: 'Appointment', onclick: `openEventModal('${todayKey()}')` },
     { icon: 'mop', label: 'Chores', onclick: 'openChoresModal()' },
-    { icon: 'routinesTab', label: 'Reschedule', onclick: 'autoRescheduleAll()' },
+    { icon: 'clock', label: 'Reschedule', onclick: 'autoRescheduleAll()' },
   ];
   return `<div class="card cal-actions">
     <div class="cal-action-row">${actions.map(a => `<button class="cal-action-btn" type="button" onclick="${a.onclick}">${themeIcon(a.icon)}<span class="cal-action-label">${esc(a.label)}</span></button>`).join('')}</div>
