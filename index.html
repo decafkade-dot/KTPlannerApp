@@ -64,7 +64,6 @@ img.img-missing { visibility: hidden; }
   --radius-xs: 6px;
   --nav-h: 64px;
   --safe-top: env(safe-area-inset-top, 0px);
-  --safe-left: env(safe-area-inset-left, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --page-pad: 20px;
   --font-display: 'Patrick Hand SC', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -199,12 +198,12 @@ select:focus-visible {
   pointer-events: none; flex-shrink: 0;
   transition: transform 0.15s ease;
 }
-/* Base SVG orientation is such that .dir-right must rotate 90deg
-   (not -90deg) for the arrow tip to actually point right. */
-.arrow-icon.dir-right { transform: rotate(90deg); }
-.arrow-icon.dir-left  { transform: rotate(-90deg); }
-.arrow-icon.dir-up    { transform: rotate(180deg); }
-.arrow-icon.dir-down  { transform: rotate(0deg); }
+/* The picture points right; left is a mirror image so the curve still
+   reads naturally. */
+.arrow-icon.dir-right { transform: none; }
+.arrow-icon.dir-left  { transform: scaleX(-1); }
+.arrow-icon.dir-up    { transform: rotate(-90deg); }
+.arrow-icon.dir-down  { transform: rotate(90deg); }
 .arrow-icon.large { width: 22px; height: 22px; }
 .arrow-icon.small { width: 12px; height: 12px; }
 
@@ -335,45 +334,61 @@ body { background: var(--bg); }
   .tab-page.turn-forward, .tab-page.turn-back { animation: none; }
 }
 
-:root { --phone-tabs-h: 56px; --rail-w: 84px; }
-.book-tabs {
-  display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 190;
-  padding: 0 4px var(--safe-bottom);
-  background: var(--bg-card); border-top: 1px solid var(--border-soft);
-  box-shadow: 0 -2px 10px rgba(60,40,25,0.08);
-}
+/* Section buttons. Wide screens (tablet, computer): two stacks of cards
+   in the open space either side of the page, always in view. Phones:
+   a bar pinned along the bottom. */
+:root { --phone-tabs-h: 56px; }
 .book-tab {
-  position: relative; flex: 1 1 0; min-width: 0; height: var(--phone-tabs-h);
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
-  padding: 4px 2px 2px; border: none; background: none;
-  color: var(--text-muted); cursor: pointer; -webkit-tap-highlight-color: transparent;
+  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  border: none; background: none; color: var(--text-muted); cursor: pointer; -webkit-tap-highlight-color: transparent;
 }
-.book-tab::before {
-  content: ''; position: absolute; top: 0; left: 20%; right: 20%; height: 3px;
-  border-radius: 0 0 3px 3px; background: var(--tab-color); opacity: 0.35;
-}
+.book-tab::before { content: ''; position: absolute; background: var(--tab-color); opacity: 0.35; }
 .book-tab.active { color: var(--espresso); }
 .book-tab.active::before { opacity: 1; }
-.book-tab-sticker { width: 24px; height: 24px; object-fit: contain; display: block; flex-shrink: 0; }
+.book-tab-sticker { object-fit: contain; display: block; flex-shrink: 0; }
 .book-tab-label {
-  font-family: var(--font-display); font-size: 14px; line-height: 1.1;
+  font-family: var(--font-display); line-height: 1.1;
   max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-body:not(.nav-left) .app { padding-bottom: calc(var(--phone-tabs-h) + var(--safe-bottom)); }
-body:not(.nav-left) .cleaning-picker-sheet { bottom: calc(var(--phone-tabs-h) + var(--safe-bottom) + 10px); }
 
-/* Left rail */
-body.nav-left .app { padding-left: calc(var(--rail-w) + var(--safe-left, 0px)); }
-body.nav-left .top-bar { left: var(--rail-w); }
-body.nav-left .book-tabs {
-  top: 0; bottom: 0; right: auto; width: calc(var(--rail-w) + var(--safe-left, 0px));
-  flex-direction: column; justify-content: center; gap: 6px;
-  padding: calc(var(--safe-top) + 8px) 0 calc(var(--safe-bottom) + 8px) var(--safe-left, 0px);
-  border-top: none; border-right: 1px solid var(--border-soft);
-  box-shadow: 2px 0 10px rgba(60,40,25,0.08);
+@media (max-width: 799px) {
+  .book-tabs {
+    display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 190;
+    padding: 0 4px var(--safe-bottom);
+    background: var(--bg-card); border-top: 1px solid var(--border-soft);
+    box-shadow: 0 -2px 10px rgba(60,40,25,0.08);
+  }
+  .nav-group { display: contents; }
+  .book-tab { flex: 1 1 0; min-width: 0; height: var(--phone-tabs-h); padding: 4px 2px 2px; }
+  .book-tab::before { top: 0; left: 20%; right: 20%; height: 3px; border-radius: 0 0 3px 3px; }
+  .book-tab-sticker { width: 24px; height: 24px; }
+  .book-tab-label { font-size: 13px; }
+  .app { padding-bottom: calc(var(--phone-tabs-h) + var(--safe-bottom)); }
+  body .cleaning-picker-sheet { bottom: calc(var(--phone-tabs-h) + var(--safe-bottom) + 10px); }
 }
-body.nav-left .book-tab { flex: 0 0 auto; height: 64px; width: 100%; }
-body.nav-left .book-tab::before { top: 18%; bottom: 18%; left: 0; right: auto; width: 3px; height: auto; border-radius: 0 3px 3px 0; }
+
+@media (min-width: 800px) {
+  .book-tabs { position: fixed; inset: 0; z-index: 5; pointer-events: none; }
+  .nav-group {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    display: flex; flex-direction: column; gap: 14px;
+    width: min(132px, calc((100vw - var(--book-max)) / 2 - 36px));
+    pointer-events: auto;
+  }
+  .nav-group-a { right: calc(50% + var(--book-max) / 2 + 18px); }
+  .nav-group-b { left: calc(50% + var(--book-max) / 2 + 18px); }
+  .book-tab {
+    width: 100%; padding: 16px 8px 12px; gap: 8px; overflow: hidden;
+    background: var(--bg-card); border: 1px solid var(--border-soft); border-radius: 18px;
+    box-shadow: var(--shadow-sm); color: var(--espresso);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .book-tab::before { top: 0; left: 0; right: 0; height: 5px; }
+  .book-tab:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+  .book-tab.active { border-color: var(--tab-color); box-shadow: 0 0 0 2px var(--tab-color), var(--shadow-sm); }
+  .book-tab-sticker { width: 44px; height: 44px; }
+  .book-tab-label { font-size: 15px; }
+}
 
 /* A little stack of sticky notes, in the sticky-note colors. */
 .sticky-stack-icon { position: relative; display: inline-block; }
@@ -955,7 +970,7 @@ body.paycheck-dragging .paycheck-pool-row {
 .month-nav {
   display: flex; align-items: center; gap: 8px;
 }
-.month-title, .week-planner-title {
+.month-title {
   font-size: 19.5px; font-weight: 700; color: var(--espresso);
 }
 .month-grid {
@@ -1985,7 +2000,6 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
 </style>
 </head>
 <body>
-<script>if (localStorage.getItem('device-nav-side') === 'left') document.body.classList.add('nav-left');</script>
 <div class="loading-screen" id="loading-screen" aria-hidden="true"><img src="Assets/images/loading-book.svg" alt=""></div>
 <script>/* Never leave the loading screen up if start-up hits an error. */ setTimeout(() => document.getElementById('loading-screen')?.classList.add('done'), 6000);</script>
 
@@ -2435,14 +2449,6 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
     Back
   </button>
   <h2 style="font-family:var(--font-display);font-size:24px;color:var(--espresso);margin-bottom:20px;">Settings</h2>
-
-  <div class="card">
-    <div class="card-title" style="margin-bottom:8px;">Navigation bar</div>
-    <div style="display:flex;gap:8px;">
-      <button class="cat-btn" id="nav-side-bottom" style="flex:1" onclick="setNavSide('bottom')">Bottom</button>
-      <button class="cat-btn" id="nav-side-left" style="flex:1" onclick="setNavSide('left')">Left side</button>
-    </div>
-  </div>
 
   <div class="card">
     <div class="card-title" style="margin-bottom:8px;">Supabase Sync</div>
@@ -2906,7 +2912,6 @@ const THEME_ICONS = {
   bicep: `<svg viewBox="0 0 512 512" fill="none"><path fill="#FFD3B6" d="M472 362.5c-6.9-25.8-29.8-48.2-65-58.1c-26.4-7.4-74.2-17.3-118.6-5.5c-26.9 7.1-54.7 23.9-78.1 39.4V335c0-5.7.2-24.7.9-36.4c.4-12.5.8-25.3 1.6-38c.5-12.9 1.5-25.6 2.6-38.2c.8-12.8 2.9-24.6 4.4-36.5c1.9-10.9 5.4-21.5 9.2-31.3c12.8 8.1 30.9 14 53.8 14c30.6 0 45.1-9.4 51.2-16.3c3-3.4 8.2-9.8 3.8-21.9c-4.2-11.3-10.2-9.3-10.2-13.6c0-5.7 2.2-5.5 11-10c20-10.1 17.9-27.4 17.8-43.7c.1-1.2.1-2.3.1-3.5c0-32.8-31.9-59.4-71.1-59.4c-.8 0-1.6 0-2.4.1l-.2-.3c-32.8 0-53.6 9.7-66.1 24.2c-.6.4-1.1.8-1.7 1.3c-1.6 1.6-3.3 3.2-5.1 5c-6.7 6.8-16.8 17.7-20.8 24.6c-5.8 8-11.8 16.9-17.4 26.2c-6.4 9.4-11.8 19.5-18.5 30c-6.6 10.5-12.3 21.9-19.2 33.4c-12.5 23.3-26.7 48-38.9 73.7C83 244.1 71.2 270.3 62.2 296c-4.5 12.9-8.4 25.6-11.7 37.9c-3.1 12.6-6.5 24.1-7.9 35.9c-.2 1.5-.4 3-.5 4.5c-7.8 49.9-8.6 106.5-1.7 115.2c7.9 10.1 29.3 13.1 49.5 11.7c13.8-.9 77.9 10.5 140.5 10.5c3.6.1 7.2.2 10.9.2c47.9.2 100.9-3.3 132.2-17.2c91.6-40.5 113.2-77 98.5-132.2z"/><path fill="#EDC0A2" d="M302.4 434.1c-2.1 0-4.2-.1-6.4-.2c-27.9-1.7-53.4-14.1-71.9-35c-3.4-3.8-3.1-9.7.8-13.1c3.8-3.4 9.7-3.1 13.1.8c15.2 17.2 36.2 27.4 59.1 28.7c22.9 1.4 45-6.3 62.1-21.5c3.8-3.4 9.7-3.1 13.1.8c3.4 3.8 3.1 9.7-.8 13.1c-19.2 17.1-43.5 26.4-69.1 26.4z"/></svg>`,
   leg: `<svg viewBox="0 0 36 36" fill="none"><path fill="#AF7E57" d="M24.854.731c3.633 1.239 4.935 8.505.991 10.297c-1.586.72-4.049 1.511-6.185 1.032c-2.737-.613-4.721-.238-4.721-.238s4.797 2.19 6.339 6.323c1.542 4.133 1.072 7.171 3.235 9.163c1.708 1.573 2.79 3.7 1.639 4.994c-1.545 1.738-3.929-.028-6.1 2.48c-1.522 1.758-4.81 1.182-7.088.142c-2.879-1.314.807-2.191 1.842-2.297c1.15-.117 5.29-2.348 3.33-5.544c-4.196-6.841-8.501-10.544-11.313-12.61c-2.514-1.846-2.772-5.313-.147-8.465c1.662-1.996 5.229-3.554 9.253-4.733c2.8-.821 5.973-1.551 8.925-.544z"/><path fill="#90603E" d="M8.267 13.047l-.042-.02a.78.78 0 0 1-.324-1.054c1.154-2.179.472-3.999.443-4.076a.783.783 0 0 1 .44-1.01a.777.777 0 0 1 1.009.432c.041.102.993 2.541-.513 5.383a.78.78 0 0 1-1.013.345z"/></svg>`,
   sleep: `<svg viewBox="0 0 512 512" fill="none"><circle fill="#F8E99B" cx="252.278" cy="255.998" r="252.278"/><path fill="#F6E27D" d="M252.278 3.724V508.28c139.329 0 252.278-112.949 252.278-252.278S391.608 3.724 252.278 3.724z"/><path fill="#A58868" d="M159.334 329.03c-30.901 0-60.762-14.752-62.018-15.381l17.772-35.648c.227.112 22.906 11.196 44.246 11.196 21.259 0 43.98-11.063 44.204-11.175l17.813 35.627C220.096 314.278 190.235 329.03 159.334 329.03z"/><path fill="#947859" d="M345.223 329.03c-30.901 0-60.762-14.752-62.018-15.381l17.772-35.648c.227.112 22.906 11.196 44.246 11.196 21.259 0 43.981-11.063 44.204-11.175l17.814 35.627C405.985 314.278 376.124 329.03 345.223 329.03z"/><path fill="#A58868" d="M252.278 435.252c-14.643 0-26.556-11.913-26.556-26.556 0-14.643 11.913-26.556 26.556-26.556 14.645 0 26.556 11.913 26.556 26.556 0 14.643-11.911 26.556-26.556 26.556z"/><polygon fill="#3862CC" points="278.834 222.81 192.528 222.81 178.446 188.811 224.112 143.143 185.889 143.143 185.889 103.31 272.195 103.31 286.277 137.31 240.611 182.977 278.834 182.977"/><polygon fill="#3862CC" points="391.695 196.252 305.389 196.252 291.307 162.253 336.973 116.585 298.751 116.585 298.751 76.752 385.056 76.752 399.139 110.752 353.472 156.418 391.695 156.418"/><polygon fill="#3862CC" points="504.556 169.696 418.251 169.696 404.168 135.697 449.835 90.029 411.612 90.029 411.612 50.196 497.918 50.196 512 84.197 466.334 129.863 504.556 129.863"/></svg>`,
-  morning: `<svg viewBox="0 0 1024 1024" fill="none"><path d="M155.864 538.294a343.871 342.482 90 1 0 684.965 0 343.871 342.482 90 1 0-684.965 0Z" fill="#FFCA6C"/><path d="M766.407 538.294c0 148.662-120.013 269.175-268.06 269.175-33.678 0-65.9-6.235-95.585-17.613a269.232 269.232 0 0 1-172.487-251.562c0-148.64 120.013-269.164 268.083-269.164 39.754 0 77.494 8.704 111.423 24.303A269.232 269.232 0 0 1 766.407 538.294z" fill="#F2F2F2"/><path d="M766.407 538.294c0 148.662-120.013 269.175-268.06 269.175-33.678 0-65.9-6.235-95.585-17.613L609.781 293.433A269.232 269.232 0 0 1 766.407 538.294z" fill="#FFF"/><path d="M873.381 386.992l-87.916-88.246a2.15 2.15 0 0 1-.228-.228l-24.041-24.132-112.174-112.629c49.55-49.766 123.734-59.71 183.149-29.866v.023c14.859 7.43 28.786 17.408 41.21 29.844 61.918 62.202 61.918 163.055 0 225.234z" fill="#FFCA6C"/><path d="M123.335 387.004c-61.94-62.202-61.94-163.044 0-225.246 61.952-62.202 162.384-62.202 224.336 0L235.508 274.375 123.335 387.004z" fill="#FFCA6C"/><path d="M498.347 553.882c8.556 0 15.519-6.975 15.519-15.576V412.5c0-8.602-6.952-15.576-15.52-15.576-8.566 0-15.518 6.974-15.518 15.576v110.228h-58.857c-8.568 0-15.52 6.963-15.52 15.576s6.941 15.576 15.52 15.576h74.376z" fill="#333"/></svg>`,
   money: `<svg viewBox="0 -196 1416 1416" fill="none"><path d="M55.351 290.041h1038.391c18.82 0 33.211 14.391 33.211 33.211v645.397c0 18.819-14.391 33.21-33.211 33.21H55.351c-18.819 0-33.21-14.391-33.21-33.21V323.252c0-17.713 14.391-33.211 33.21-33.211z" fill="#9DBE87"/><path d="M954.257 902.227H194.837c0-52.03-43.174-95.204-95.204-95.204V472.7c52.03 0 95.204-43.174 95.204-95.204h759.42c0 52.03 43.175 95.204 95.205 95.204v334.322c-53.137 0-95.205 43.174-95.205 95.204z" fill="#D6F0C5"/><path d="M576.761 790.417c-35.425 0-73.064-13.284-99.632-47.602c-7.75-9.963-5.535-23.247 3.321-30.997c9.963-7.749 23.247-5.535 30.997 3.321c26.568 34.318 67.528 35.425 94.097 26.569c22.14-7.75 35.424-22.141 35.424-37.639c0-14.391-34.317-24.354-64.207-33.21c-46.495-14.392-105.168-30.997-105.168-86.349c0-26.568 16.606-50.923 45.388-65.314c35.425-17.713 95.205-24.355 151.663 16.605c9.963 7.749 12.177 21.034 4.428 30.997c-7.749 9.963-21.034 12.177-30.997 4.428c-37.639-27.676-79.706-26.569-105.168-13.284c-13.284 6.642-22.14 16.605-22.14 26.568c0 21.034 30.996 30.997 73.063 44.281c45.388 13.284 95.205 28.783 95.205 75.278c0 34.318-25.462 65.315-65.315 79.706c-11.07 3.321-26.568 6.642-40.96 6.642z" fill="#131313"/><path d="M574.547 549.085c-12.177 0-22.14-9.963-22.14-22.14v-48.71c0-12.177 9.963-22.14 22.14-22.14s22.14 9.963 22.14 22.14v48.71c0 13.284-9.963 22.14-22.14 22.14z" fill="#131313"/><path d="M574.547 832.484c-12.177 0-22.14-9.963-22.14-22.14v-36.532c0-12.177 9.963-22.14 22.14-22.14s22.14 9.963 22.14 22.14v36.532c0 12.177-9.963 22.14-22.14 22.14z" fill="#131313"/><circle cx="285.613" cy="653.146" r="40.96" fill="#AECD99"/><circle cx="865.695" cy="653.146" r="40.96" fill="#AECD99"/></svg>`,
   bill: `<svg viewBox="0 0 1024 1024" fill="none"><path d="M853.333333 874.666667H170.666667c-46.933333 0-85.333333-38.4-85.333334-85.333334V343.466667c0-27.733333 12.8-53.333333 36.266667-70.4L512 0l390.4 273.066667c23.466667 14.933333 36.266667 42.666667 36.266667 70.4V789.333333c0 46.933333-38.4 85.333333-85.333334 85.333334z" fill="#78909C"/><path d="M298.666667 21.333333h426.666666v661.333334H298.666667z" fill="#AED581"/><path d="M277.333333 0v704h469.333334V0H277.333333z m426.666667 661.333333H320V42.666667h384v618.666666z" fill="#558B2F"/><path d="M725.333333 64c0 36.266667-6.4 64-42.666666 64s-64-27.733333-64-64 27.733333-42.666667 64-42.666667 42.666667 6.4 42.666666 42.666667zM341.333333 21.333333c36.266667 0 64 6.4 64 42.666667s-27.733333 64-64 64-42.666667-27.733333-42.666666-64 6.4-42.666667 42.666666-42.666667z" fill="#558B2F"/><path d="M512 170.666667m-42.666667 0a42.666667 42.666667 0 1 0 85.333334 0 42.666667 42.666667 0 1 0-85.333334 0Z" fill="#558B2F"/><path d="M512 426.666667m-128 0a128 128 0 1 0 256 0 128 128 0 1 0-256 0Z" fill="#558B2F"/><path d="M853.333333 874.666667H170.666667c-46.933333 0-85.333333-38.4-85.333334-85.333334V362.666667l426.666667 277.333333 426.666667-277.333333v426.666666c0 46.933333-38.4 85.333333-85.333334 85.333334z" fill="#CFD8DC"/></svg>`,
   academic: `<svg viewBox="0 0 512 512" fill="none"><rect y="8.198" fill="#CFDCE5" width="370.957" height="495.607"/><path fill="#4EBFED" d="M432.203 93.909l39.898-85.711 39.898 85.711v385.139c0 13.673-11.083 24.756-24.756 24.756h-30.286c-13.673 0-24.756-11.083-24.756-24.756V93.909z"/><path fill="#FF6F52" d="M511.996 438.44v40.606c0 13.671-11.086 24.757-24.757 24.757h-30.287c-13.671 0-24.744-11.086-24.744-24.757V438.44h79.788z"/><rect x="473.027" y="93.909" fill="#97E1F7" width="14.845" height="344.529"/><path fill="#3BA4BC" d="M432.203 479.048c0 13.673 11.083 24.756 24.756 24.756h7.55c-6.855 0-12.414-11.083-12.414-24.756V93.909l20.007-85.711-39.898 85.711v385.139z"/><polygon fill="#FCD577" points="511.996 93.91 432.208 93.91 472.096 8.195"/><path fill="#E25749" d="M464.512 503.802h-7.559c-13.671 0-24.744-11.086-24.744-24.757V438.44h19.882v40.606c0 13.671 5.567 24.756 12.421 24.756z"/><polygon fill="#EAC36E" points="452.09 93.91 432.208 93.91 472.096 8.195"/><rect x="432.199" y="429.156" fill="#FCD577" width="79.801" height="18.558"/><rect x="76.918" y="72.858" fill="#415E72" width="217.12" height="18.558"/><rect x="268.279" y="168.287" fill="#415E72" width="56.291" height="18.558"/><rect x="46.393" y="168.287" fill="#415E72" width="209.511" height="18.558"/><rect x="46.393" y="264.395" fill="#415E72" width="278.177" height="18.558"/><rect x="121.681" y="216.341" fill="#415E72" width="202.892" height="18.558"/><rect x="46.393" y="216.341" fill="#415E72" width="62.912" height="18.558"/><rect x="46.393" y="408.556" fill="#415E72" width="278.177" height="18.558"/><rect x="244.154" y="360.502" fill="#415E72" width="80.416" height="18.558"/><rect x="46.393" y="360.502" fill="#415E72" width="185.385" height="18.558"/></svg>`,
@@ -2921,14 +2926,16 @@ const IMG_ICONS = {
   homeTab: 'Assets/images/home.svg',
   brainstorm: 'Assets/images/brainstorm.svg',
   work: 'Assets/images/work.svg?v=3', // ?v: same filename as the old art, skip the cached copy
-  todayTab: 'Assets/images/today.svg',
+  todayTab: 'Assets/images/todo.png',
   calendarTab: 'Assets/images/calendar.svg',
-  routinesTab: 'Assets/images/routines.svg',
-  healthTab: 'Assets/images/health.svg',
+  routinesTab: 'Assets/images/routines.png',
+  healthTab: 'Assets/images/health.png',
   moneyTab: 'Assets/images/moneytab.svg',
   notesTab: 'Assets/images/notes.svg',
-  moon: 'Assets/images/moon.svg',
-  mealPrep: 'Assets/images/meal prep.svg',
+  moon: 'Assets/images/evening-routine.png',
+  morning: 'Assets/images/morning-routine.png',
+  eat: 'Assets/images/eat.png',
+  mealPrep: 'Assets/images/meal-prep.png',
   chicken: 'Assets/images/chicken.svg',
   beef: 'Assets/images/beef.svg',
   bathroom: 'Assets/images/bathroom.svg',
@@ -2972,12 +2979,11 @@ const ICONS = {
   plus: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>`,
 };
 
-/* Global arrow icon (uses Assets/images/arrow.svg — the hand-drawn curled arrow).
-   The source SVG's baked orientation is right-pointing, so CSS rotation
-   flips it left/up/down as needed. */
+/* Global arrow icon (Assets/images/arrow.png, a curved arrow pointing
+   right); CSS turns it left/up/down as needed. */
 function arrowIcon(dir = 'right', extra = '') {
   const cls = `arrow-icon dir-${dir}${extra ? ' ' + extra : ''}`;
-  return `<img class="${cls}" src="Assets/images/arrow.svg" alt="" aria-hidden="true">`;
+  return `<img class="${cls}" src="Assets/images/arrow.png" alt="" aria-hidden="true">`;
 }
 
 /* Household task icons: bathroom, litter box, laundry, dishes, trash and
@@ -3913,8 +3919,8 @@ let currentTab = 'home';
    section is a page you turn to. Order decides which way a page turns. */
 const BOOK_SECTIONS = [
   { tab: 'calendar', label: 'Calendar', img: 'Assets/images/calendar.svg', color: 'var(--pal-blue-strong)' },
-  { tab: 'routines', label: 'Routines', img: 'Assets/images/routines.svg', color: 'var(--pal-purple-strong)' },
-  { tab: 'health', label: 'Health', img: 'Assets/images/health.svg', color: 'var(--pal-yellow-strong)' },
+  { tab: 'routines', label: 'Routines', img: 'Assets/images/routines.png', color: 'var(--pal-purple-strong)' },
+  { tab: 'health', label: 'Health', img: 'Assets/images/health.png', color: 'var(--pal-yellow-strong)' },
   { tab: 'money', label: 'Money', img: 'Assets/images/moneytab.svg', color: 'var(--pal-green-strong)' },
   { tab: 'notes', label: 'Notes', img: 'Assets/images/notes.svg', color: 'var(--rainbow-down)' },
 ];
@@ -3952,14 +3958,18 @@ function bookSectionIcon(section, cls) {
   return pngSticker(section.img, cls);
 }
 
-/* Index tabs: down the page edge on wide screens, along the bottom on phones (CSS). */
+/* Section buttons: half beside each side of the page on wide screens, one
+   bar along the bottom on phones (CSS). */
 function updateBookTabs() {
   const nav = document.getElementById('book-tabs');
   if (!nav) return;
   const tabs = [{ tab: 'home', label: 'Home', img: 'Assets/images/home.svg', color: 'var(--nude)' }, ...BOOK_SECTIONS];
-  nav.innerHTML = tabs.map(section => `<button class="book-tab ${(SUB_PAGES[currentTab] || currentTab) === section.tab ? 'active' : ''}" type="button" style="--tab-color:${section.color}" onclick="switchTab('${section.tab}')" title="${esc(section.label)}" aria-label="${esc(section.label)}">
+  const tabHtml = section => `<button class="book-tab ${(SUB_PAGES[currentTab] || currentTab) === section.tab ? 'active' : ''}" type="button" style="--tab-color:${section.color}" onclick="switchTab('${section.tab}')" title="${esc(section.label)}" aria-label="${esc(section.label)}">
     ${bookSectionIcon(section, 'book-tab-sticker')}<span class="book-tab-label">${esc(section.label)}</span>
-  </button>`).join('');
+  </button>`;
+  const half = Math.ceil(tabs.length / 2);
+  nav.innerHTML = `<div class="nav-group nav-group-a">${tabs.slice(0, half).map(tabHtml).join('')}</div>`
+    + `<div class="nav-group nav-group-b">${tabs.slice(half).map(tabHtml).join('')}</div>`;
 }
 
 /* ═══════════════════════ HOME / TODAY ═══════════════════════ */
@@ -5020,7 +5030,7 @@ function weekMealsHtml(date, settings = getMealSettings()) {
   const meal = (label, choice) => {
     const kind = choice === 'beef' ? 'beef' : 'chicken';
     const name = MEAL_OPTIONS.entree[kind].label;
-    return `<span class="wg-meal" title="${attr(`${label}: ${name}`)}">${themeIcon(kind, 'wg-meal-icon')}${label}</span>`;
+    return `<span class="wg-meal" title="${attr(`${label}: ${name}`)}">${themeIcon('eat', 'wg-meal-icon')}${label}</span>`;
   };
   return `<div class="wg-meals">${meal('Lunch', day.lunch)}${meal('Dinner', day.dinner)}</div>`;
 }
@@ -5093,14 +5103,11 @@ const DINNER_TIME = 18 * 60;
 function getMealTimeBlocksForDate(dateKey, morningBlock) {
   const planDay = MEAL_DAY_BY_DOW[dateFromKey(dateKey).getDay()];
   const planned = planDay ? getMealOptionsForDay(planDay) : null;
-  const entreeIcon = option => Object.keys(MEAL_OPTIONS.entree).find(k => MEAL_OPTIONS.entree[k] === option) || 'mealPrep';
   const meal = (key, title, start) => ({
     id: `meal-${key}-${dateKey}`, source: 'mealtime', title, type: 'meal', editable: false,
     time: minutesToClock(start), end: minutesToClock(start + MEAL_TIME_MINUTES),
     detail: planned ? planned[key].label : '',
-    // Lunch and dinner show the meal plan's chicken / beef; on free
-    // (weekend) days they get no picture.
-    mealIcon: key === 'breakfast' ? 'mealPrep' : planned ? entreeIcon(planned[key]) : '',
+    mealIcon: 'eat',
   });
   const breakfastAt = morningBlock ? timeToMinutes(morningBlock.time) : MORNING_ROUTINE_START;
   return [meal('breakfast', 'Breakfast', breakfastAt), meal('lunch', 'Lunch', LUNCH_TIME), meal('dinner', 'Dinner', DINNER_TIME)];
@@ -8246,7 +8253,7 @@ function buildMealPlan(h) {
 
     html += `<div class="collapse-section" style="margin-bottom:8px;">
       <div class="collapse-header ${isOpen?'open':''}" onclick="toggleMealDay('${day}')" style="padding:10px 14px;">
-        <div><div class="collapse-title-row"><div class="collapse-title" style="font-size:15px;">${MEAL_DAY_LABELS[day]}</div>${themeIcon(d.lunch === 'beef' ? 'beef' : 'chicken', 'meal-day-icon')}${themeIcon(d.dinner === 'beef' ? 'beef' : 'chicken', 'meal-day-icon')}</div>
+        <div><div class="collapse-title-row"><div class="collapse-title" style="font-size:15px;">${MEAL_DAY_LABELS[day]}</div>${themeIcon('eat', 'meal-day-icon')}</div>
         <div class="collapse-sub">${esc(bOpt.label)} · ${esc(lOpt.label)} · ${esc(dOpt.label)} · ${Math.round(cals)} cal</div></div>
         ${chevron}
       </div>
@@ -8531,21 +8538,7 @@ function openSettings() {
     document.getElementById('sb-key').value = cfg.key || '';
     document.getElementById('sb-status').innerHTML = sbClient ? '<span style="color:var(--success)">Connected</span>' : '';
   }
-  updateNavSideButtons();
   document.getElementById('settings-panel').classList.add('open');
-}
-
-/* Where the section bar sits: along the bottom (default) or down the left. */
-function getNavSide() { return localStorage.getItem('device-nav-side') === 'left' ? 'left' : 'bottom'; }
-function setNavSide(side) {
-  localStorage.setItem('device-nav-side', side);
-  document.body.classList.toggle('nav-left', side === 'left');
-  updateNavSideButtons();
-}
-function updateNavSideButtons() {
-  const side = getNavSide();
-  document.getElementById('nav-side-bottom')?.classList.toggle('active', side === 'bottom');
-  document.getElementById('nav-side-left')?.classList.toggle('active', side === 'left');
 }
 
 function closeSettings() {
