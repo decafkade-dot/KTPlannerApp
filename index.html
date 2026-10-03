@@ -152,14 +152,14 @@ select:focus-visible {
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-thumb { background: var(--nude); border-radius: 4px; }
 
-/* ── Loading screen: the cat, until the first page is drawn ── */
+/* ── Loading screen: writing in a book, until the first page is drawn ── */
 .loading-screen {
   position: fixed; inset: 0; z-index: 10000;
   display: flex; align-items: center; justify-content: center;
   background: var(--bg);
   transition: opacity 0.25s ease, visibility 0.25s ease;
 }
-.loading-screen img { width: 150px; height: 150px; }
+.loading-screen img { width: 180px; height: 180px; }
 .loading-screen.done { opacity: 0; visibility: hidden; pointer-events: none; }
 
 /* ── Celebration overlay (confetti) ── */
@@ -1985,8 +1985,8 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
 </head>
 <body>
 <script>if (localStorage.getItem('device-nav-side') === 'left') document.body.classList.add('nav-left');</script>
-<div class="loading-screen" id="loading-screen" aria-hidden="true"><img src="Assets/images/loading-cat.gif" alt=""></div>
-<script>/* Never leave the cat up if start-up hits an error. */ setTimeout(() => document.getElementById('loading-screen')?.classList.add('done'), 6000);</script>
+<div class="loading-screen" id="loading-screen" aria-hidden="true"><img src="Assets/images/loading-book.svg" alt=""></div>
+<script>/* Never leave the loading screen up if start-up hits an error. */ setTimeout(() => document.getElementById('loading-screen')?.classList.add('done'), 6000);</script>
 
 <div class="celebrate-overlay" id="celebrate-overlay" aria-hidden="true" onclick="dismissCelebrate()">
   <div class="celebrate-lottie-wrap">
@@ -8574,8 +8574,8 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
-/* The cat plays through once (the gif loops every ~1.5s), then fades out. */
-const LOADING_SCREEN_MIN_MS = 1470;
+/* The book animation plays through once (it loops every 2.7s), then fades out. */
+const LOADING_SCREEN_MIN_MS = 2700;
 function hideLoadingScreen() {
   const el = document.getElementById('loading-screen');
   if (!el) return;
