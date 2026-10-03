@@ -1872,6 +1872,7 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
 }
 .time-row-time small { font-size: 11px; font-weight: 600; color: var(--text-muted); }
 .time-row-icon { --sticker-size: 26px; }
+.time-row-icon-blank { width: 26px; flex-shrink: 0; }
 .time-row-inline-icon { --sticker-size: 20px; }
 .time-row-main { flex: 1; min-width: 0; }
 .time-row-title {
@@ -4350,11 +4351,12 @@ function billBelongsOnPaychecksTab(bill) {
 /* Home is the open page of the book: the routine times at a glance and
    one button for every section. Nothing else lives here. */
 /* Home: the day at a glance. What to do when stays open at the top; the
-   to-do list, bills due this week and notes fold up like the Routines page. */
+   to-do list, bills due this week, the week view and notes fold up like
+   the Routines page. */
 const HOME_SECTIONS_KEY = 'device-home-open';
 function getHomeOpen() {
-  try { return { todo: true, bills: true, notes: true, ...JSON.parse(localStorage.getItem(HOME_SECTIONS_KEY) || '{}') }; }
-  catch (e) { return { todo: true, bills: true, notes: true }; }
+  try { return { todo: true, bills: true, week: true, notes: true, ...JSON.parse(localStorage.getItem(HOME_SECTIONS_KEY) || '{}') }; }
+  catch (e) { return { todo: true, bills: true, week: true, notes: true }; }
 }
 function toggleHomeSection(id) {
   const open = getHomeOpen();
@@ -4388,6 +4390,7 @@ function renderHome() {
   html += buildTodayTimeList(dk);
   html += homeSection('todo', 'To do', `${todo.done}/${todo.total} done`, todo.html, 'todayTab');
   html += homeSection('bills', 'Bills this week', bills.sub, bills.html, 'moneyTab');
+  html += homeSection('week', 'This week', '', buildScheduleSection(), 'calendarTab');
   html += homeSection('notes', 'Notes', '', buildTodayNotesCard(dk), 'notesTab');
   document.getElementById('page-home').innerHTML = html;
 }
@@ -4418,7 +4421,6 @@ function buildWeekBillsBody() {
 function renderCalendar() {
   let html = themePageHeader('Calendar', 'One day at a time.', ['calendarTab']);
   html += buildCalendarActions();
-  html += buildScheduleSection();
   html += buildMonthCalendar();
   document.getElementById('page-calendar').innerHTML = html;
 }
@@ -4588,7 +4590,7 @@ function buildTodayTimeList(dateKey) {
     const state = now >= start && now < end && hasEnd ? 'now' : end <= now ? 'past' : '';
     html += `<div class="time-row ${state}" style="--block-color:${evColor(b.type)}">
       <div class="time-row-time">${formatTime(b.time)}${hasEnd ? `<small>${formatTime(b.end)}</small>` : ''}</div>
-      ${themeIcon(blockIconName(b), 'time-row-icon')}
+      ${themeIcon(blockIconName(b), 'time-row-icon') || '<span class="time-row-icon-blank" aria-hidden="true"></span>'}
       <div class="time-row-main">
         <div class="time-row-title">${esc(b.title)}${state === 'now' ? '<span class="time-row-now">Now</span>' : ''}</div>
         ${b.detail ? `<div class="time-row-detail">${esc(b.detail)}</div>` : ''}
@@ -4952,8 +4954,8 @@ function buildScheduleSection() {
   const events = getEvents();
   const mealSettings = getMealSettings();
 
-  let html = `<div class="card theme-card week-planner-card">
-    <div class="week-planner-head"><div><div class="week-planner-title">This Week</div><div class="page-date">${formatShortDate(weekStart)} – ${formatShortDate(weekEnd)}</div></div><div class="week-planner-actions">
+  let html = `<div class="week-planner-card">
+    <div class="week-planner-head"><div class="page-date">${formatShortDate(weekStart)} – ${formatShortDate(weekEnd)}</div><div class="week-planner-actions">
     <button class="tiny-nav-btn" onclick="moveScheduleWeek(-1)" title="Previous week">${arrowIcon('left')}</button>
     <button class="tiny-nav-btn" onclick="resetScheduleWeek()" title="This week">•</button>
     <button class="tiny-nav-btn" onclick="moveScheduleWeek(1)" title="Next week">${arrowIcon('right')}</button>
@@ -5096,7 +5098,9 @@ function getMealTimeBlocksForDate(dateKey, morningBlock) {
     id: `meal-${key}-${dateKey}`, source: 'mealtime', title, type: 'meal', editable: false,
     time: minutesToClock(start), end: minutesToClock(start + MEAL_TIME_MINUTES),
     detail: planned ? planned[key].label : '',
-    mealIcon: planned && key !== 'breakfast' ? entreeIcon(planned[key]) : 'mealPrep',
+    // Lunch and dinner show the meal plan's chicken / beef; on free
+    // (weekend) days they get no picture.
+    mealIcon: key === 'breakfast' ? 'mealPrep' : planned ? entreeIcon(planned[key]) : '',
   });
   const breakfastAt = morningBlock ? timeToMinutes(morningBlock.time) : MORNING_ROUTINE_START;
   return [meal('breakfast', 'Breakfast', breakfastAt), meal('lunch', 'Lunch', LUNCH_TIME), meal('dinner', 'Dinner', DINNER_TIME)];
@@ -6949,6 +6953,9 @@ function renderMoneyBills() {
 
   const chevron = `<svg class="collapse-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>`;
 
+  // What has to be in checking for each paycheck comes first.
+  html += buildCheckingSection(billMonth);
+
   BILL_CATEGORIES.forEach(cat => {
     const catBills = bills.filter(b => b.category === cat).sort((a, b) => a.day - b.day);
     const catTotal = catBills.reduce((s, b) => s + b.amount, 0);
@@ -7078,7 +7085,6 @@ function renderMoneyBills() {
     html += `</div></div>`;
   });
 
-  html += buildCheckingSection(billMonth);
 
   return html;
 }
