@@ -2936,6 +2936,7 @@ const IMG_ICONS = {
   morning: 'Assets/images/morning-routine.png',
   eat: 'Assets/images/eat.png',
   mealPrep: 'Assets/images/meal-prep.png',
+  chef: 'Assets/images/chef.svg',
   chicken: 'Assets/images/chicken.svg',
   beef: 'Assets/images/beef.svg',
   bathroom: 'Assets/images/bathroom.svg',
@@ -4497,7 +4498,7 @@ function getTodayTodoGroups(dateKey) {
     title: c.title, done: c.cleaningDone, toggle: `toggleCleaningTask('${attr(c.cleaningTaskId)}')`, meta: c.allDay ? 'any time' : formatTime(c.time), icon: cleaningIcon({ id: c.cleaningTaskId, title: c.title }, 'small'),
   })) });
   groups.push({ key: 'meals', rows: blocks.filter(b => b.source === 'mealprep').map(b => ({
-    title: b.title, done: !!autoDone[b.id], toggle: `toggleAutoDone('${dateKey}','${attr(b.id)}')`, meta: formatTime(b.time), icon: themeIcon('mealPrep', 'todo-icon'),
+    title: b.title, done: !!autoDone[b.id], toggle: `toggleAutoDone('${dateKey}','${attr(b.id)}')`, meta: formatTime(b.time), icon: themeIcon(blockIconName(b), 'todo-icon'),
   })) });
   if (date.getDay() === WEEKLY_RESET_DOW) {
     const reset = getWeeklyReset(date);
@@ -4566,7 +4567,7 @@ function buildTodayTodoBody(dateKey) {
 /* Which icon a schedule block gets in lists (Today, This Week). */
 function blockIconName(b) {
   if (b.source === 'cleaning') return cleaningIconKey({ id: b.cleaningTaskId, title: b.title });
-  if (b.source === 'mealprep') return 'mealPrep';
+  if (b.source === 'mealprep') return b.mealPrepKind === 'grocery' ? 'chef' : 'mealPrep';
   if (b.source === 'mealtime') return b.mealIcon;
   if (b.source === 'shot') return 'syringe';
   if (b.source === 'reset') return 'notesTab';
@@ -5030,7 +5031,7 @@ function weekMealsHtml(date, settings = getMealSettings()) {
   const meal = (label, choice) => {
     const kind = choice === 'beef' ? 'beef' : 'chicken';
     const name = MEAL_OPTIONS.entree[kind].label;
-    return `<span class="wg-meal" title="${attr(`${label}: ${name}`)}">${themeIcon('eat', 'wg-meal-icon')}${label}</span>`;
+    return `<span class="wg-meal" title="${attr(`${label}: ${name}`)}">${themeIcon(kind, 'wg-meal-icon')}${label}</span>`;
   };
   return `<div class="wg-meals">${meal('Lunch', day.lunch)}${meal('Dinner', day.dinner)}</div>`;
 }
@@ -6317,7 +6318,7 @@ function renderGrocery() {
   }).join('');
 
   let html = `<button class="page-back-btn" type="button" onclick="switchTab('routines')">${arrowIcon('left', 'small')}Routines</button>`;
-  html += themePageHeader('Grocery list', `For ${span} on your meal plan`, ['mealPrep']);
+  html += themePageHeader('Grocery list', `For ${span} on your meal plan`, ['chef']);
   html += `<div class="card theme-card grocery-summary">
     <div><div class="grocery-summary-num">${formatMoney(total)}</div><div class="grocery-summary-label">Estimated total</div></div>
     <div><div class="grocery-summary-num">${formatMoney(left)}</div><div class="grocery-summary-label">Still to get</div></div>
