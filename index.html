@@ -10,15 +10,6 @@
 <meta name="theme-color" content="#F7F2EB">
 <meta name="msapplication-TileColor" content="#A2BFFE">
 <link rel="manifest" href="Assets/manifest.webmanifest">
-<link rel="icon" type="image/svg+xml" href="Assets/images/app-icon.svg">
-<link rel="icon" type="image/png" sizes="32x32" href="Assets/images/favicon-32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="Assets/images/favicon-16.png">
-<link rel="apple-touch-icon" href="Assets/images/apple-touch-icon.png">
-<link rel="apple-touch-icon" sizes="180x180" href="Assets/images/apple-touch-icon.png">
-<link rel="apple-touch-icon-precomposed" sizes="192x192" href="Assets/images/apple-touch-icon-precomposed.png">
-<link rel="apple-touch-icon" sizes="192x192" href="Assets/images/app-icon-192.png">
-<link rel="apple-touch-icon" sizes="512x512" href="Assets/images/app-icon-512.png">
-<link rel="mask-icon" href="Assets/images/app-icon.svg" color="#A2BFFE">
 <title>Grounded</title>
 <script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.9.14/dist/dotlottie-wc.js" type="module"></script>
 <script>
@@ -73,6 +64,7 @@ img.img-missing { visibility: hidden; }
   --radius-xs: 6px;
   --nav-h: 64px;
   --safe-top: env(safe-area-inset-top, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --page-pad: 20px;
   --font-display: 'Patrick Hand SC', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -95,8 +87,6 @@ img.img-missing { visibility: hidden; }
   --rainbow-down: linear-gradient(180deg, #A2BFFE 0%, #E2B3F2 28%, #FAB6DC 52%, #FFF6C2 76%, #E8FFD8 100%);
   --desk: #E6DACB;
   --book-max: 580px;
-  --spine-w: 14px;
-  --spine-coil: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='26' viewBox='0 0 14 26'%3E%3Ccircle cx='10' cy='13' r='2.3' fill='%23D9CBBA'/%3E%3Cpath d='M10.4 10.7C5 8.8 1.3 9.9 1.3 13s3.7 4.2 9.1 2.3' fill='none' stroke='%238B6F5E' stroke-width='1.7' stroke-linecap='round'/%3E%3C/svg%3E");
 }
 
 [data-theme="dark"] {
@@ -139,7 +129,6 @@ img.img-missing { visibility: hidden; }
   --rainbow: linear-gradient(90deg, #A2BFFE 0%, #E2B3F2 28%, #FAB6DC 52%, #FFF6C2 76%, #E8FFD8 100%);
   --rainbow-soft: linear-gradient(90deg, rgba(162,191,254,0.32) 0%, rgba(226,179,242,0.32) 28%, rgba(250,182,220,0.32) 52%, rgba(255,246,194,0.32) 76%, rgba(232,255,216,0.32) 100%);
   --desk: #120F0D;
-  --spine-coil: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='26' viewBox='0 0 14 26'%3E%3Ccircle cx='10' cy='13' r='2.3' fill='%23120F0D'/%3E%3Cpath d='M10.4 10.7C5 8.8 1.3 9.9 1.3 13s3.7 4.2 9.1 2.3' fill='none' stroke='%23B08E7A' stroke-width='1.7' stroke-linecap='round'/%3E%3C/svg%3E");
   --shadow-sm: 0 1px 4px rgba(0,0,0,0.2);
   --shadow-md: 0 4px 16px rgba(0,0,0,0.25);
 }
@@ -150,7 +139,7 @@ body {
   min-height: 100vh; color: var(--text); background: var(--bg);
   -webkit-font-smoothing: antialiased; overscroll-behavior: none;
   transition: background 0.4s ease, color 0.3s ease;
-  line-height: 1.55; font-size: 16px;
+  line-height: 1.55; font-size: 17.5px;
 }
 input, textarea, select, button { font-family: inherit; font-size: inherit; touch-action: manipulation; }
 button:focus-visible,
@@ -162,6 +151,16 @@ select:focus-visible {
 }
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-thumb { background: var(--nude); border-radius: 4px; }
+
+/* ── Loading screen: the cat, until the first page is drawn ── */
+.loading-screen {
+  position: fixed; inset: 0; z-index: 10000;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg);
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+.loading-screen img { width: 150px; height: 150px; }
+.loading-screen.done { opacity: 0; visibility: hidden; pointer-events: none; }
 
 /* ── Celebration overlay (confetti) ── */
 .celebrate-overlay {
@@ -183,7 +182,7 @@ select:focus-visible {
 .celebrate-lottie-wrap dotlottie-wc { width: 100%; height: 100%; }
 .celebrate-message {
   margin-top: -10px;
-  font-family: var(--font-display); font-size: 28px; font-weight: 800;
+  font-family: var(--font-display); font-size: 30px; font-weight: 800;
   color: var(--espresso); letter-spacing: 0.4px;
   background: var(--bg-card); padding: 10px 22px; border-radius: 999px;
   border: 1px solid var(--border-soft); box-shadow: var(--shadow-md);
@@ -193,8 +192,6 @@ select:focus-visible {
 .celebrate-overlay.active .celebrate-message {
   transform: translateY(0) scale(1); opacity: 1;
 }
-/* ── Coffee Doodles (decorative SVGs scattered in pages) ── */
-
 /* ── Custom asset icons: hand-drawn arrow + cleaning mop ── */
 .arrow-icon {
   width: 16px; height: 16px;
@@ -270,74 +267,6 @@ select:focus-visible {
 .month-head, .month-grid { position: relative; z-index: 1; }
 .month-cell { position: relative; overflow: hidden; }
 .month-day-sticker { --sticker-size: 8px; opacity: 0.9; }
-.next-shift-card {
-  display: flex; align-items: center; gap: 12px;
-  width: 100%; text-align: left;
-  padding: 12px 16px; margin-bottom: 14px;
-  background: var(--bg-card); border: 1px solid var(--border-soft);
-  border-radius: var(--radius); box-shadow: var(--shadow-sm); cursor: pointer;
-  position: relative; overflow: hidden;
-  transition: transform 0.15s ease, border-color 0.2s ease;
-}
-.next-shift-card::before {
-  content: ''; position: absolute; left: 0; top: 0; bottom: 0;
-  width: 4px; background: var(--rainbow); opacity: 0.85;
-}
-.next-shift-card:active { transform: scale(0.985); border-color: var(--icon-pink); }
-.next-shift-sticker { --sticker-size: 36px; opacity: 0.95; flex-shrink: 0; }
-.next-shift-text { flex: 1; min-width: 0; }
-.next-shift-title {
-  font-family: var(--font-display); font-size: 13px; font-weight: 700;
-  color: var(--text-secondary); letter-spacing: 0.4px; text-transform: uppercase;
-}
-.next-shift-sub {
-  font-size: 16px; font-weight: 700; color: var(--espresso); margin-top: 2px;
-}
-.theme-divider {
-  display: flex; align-items: center; justify-content: center;
-  gap: 8px; padding: 10px 0 12px;
-}
-.theme-divider::before,
-.theme-divider::after {
-  content: ''; height: 1px; background: var(--border-soft); flex: 1;
-}
-.beans-divider-sticker { --sticker-size: 22px; opacity: 0.75; }
-.beans-divider-sticker.beans-flip { transform: rotate(-18deg) scale(1.08); opacity: 0.85; }
-.beans-bg-decor {
-  position: fixed; inset: 0; z-index: 0; pointer-events: none;
-  overflow: hidden;
-}
-.beans-bg-decor .bean {
-  position: absolute; display: inline-block;
-  background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M5.30798 10.1076C5.32119 9.93003 5.14351 9.80257 4.98917 9.89135C3.42339 10.792 2.84061 13.1129 3.46896 15.458C4.11514 17.8696 5.8216 19.4816 7.6834 19.3662C7.81555 19.3581 7.90693 19.2352 7.91347 19.1029C7.92892 18.7907 8.03031 18.446 8.06948 18.1558C8.17453 17.3776 7.97932 16.5981 7.52015 15.9624L5.91538 13.7403C5.39972 13.0263 5.15514 12.1621 5.22041 11.2847L5.30798 10.1076ZM9.70431 18.9966C9.71317 19.0126 9.73457 19.0043 9.75136 18.9968C11.516 18.2141 12.0948 15.7956 11.4326 13.3241C10.7969 10.9515 9.1362 9.35299 7.30865 9.41158C7.15177 9.41661 7.05238 9.58264 7.06451 9.73912C7.10073 10.2065 6.93151 10.8241 6.90173 11.2245C6.84832 11.9424 7.04843 12.6494 7.47034 13.2336L9.0751 15.4557C9.63631 16.2328 9.8749 17.1854 9.7465 18.1366C9.65887 18.7857 9.68126 18.9547 9.70431 18.9966Z' fill='%23744A30' stroke='%232F2118'/%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M17.0946 5.01096C17.1948 4.86379 17.1047 4.66457 16.9266 4.66429C15.1203 4.66139 13.4551 6.37999 12.8268 8.725C12.1806 11.1366 12.8524 13.3859 14.5225 14.2169C14.641 14.2759 14.7816 14.2152 14.8534 14.1039C15.0229 13.8412 15.283 13.5934 15.462 13.3617C15.9421 12.7403 16.1628 11.9676 16.083 11.1874L15.8043 8.4607C15.7147 7.58452 15.935 6.71379 16.4302 5.98655L17.0946 5.01096ZM16.4575 14.9072C16.4571 14.9256 16.4798 14.929 16.4981 14.931C18.4177 15.1354 20.1282 13.3303 20.7904 10.8589C21.4262 8.48629 20.7872 6.27157 19.1752 5.40854C19.0369 5.33446 18.8678 5.42854 18.8 5.57013C18.5977 5.99296 18.1424 6.4432 17.9164 6.77508C17.5112 7.37009 17.331 8.0825 17.4042 8.79938L17.683 11.5261C17.7805 12.4797 17.5108 13.424 16.924 14.1835C16.5235 14.7019 16.4584 14.8594 16.4575 14.9072Z' fill='%23744A30' stroke='%232F2118'/%3E%3C/svg%3E");
-  background-size: contain; background-repeat: no-repeat; background-position: center;
-  opacity: 0.08;
-}
-[data-theme="dark"] .beans-bg-decor .bean { opacity: 0.12; }
-.beans-bg-decor .bean.dark { opacity: 0.12; }
-.beans-bg-decor .bean.light { opacity: 0.05; }
-[data-theme="dark"] .beans-bg-decor .bean.dark { opacity: 0.16; }
-[data-theme="dark"] .beans-bg-decor .bean.light { opacity: 0.07; }
-.beans-bg-decor .b1 { top: 4%; left: 4%; width: 90px; height: 90px; transform: rotate(-15deg); }
-.beans-bg-decor .b2 { top: 12%; right: 5%; width: 64px; height: 64px; transform: rotate(48deg); }
-.beans-bg-decor .b3 { top: 18%; left: 28%; width: 38px; height: 38px; transform: rotate(110deg); }
-.beans-bg-decor .b4 { top: 24%; right: 24%; width: 52px; height: 52px; transform: rotate(-72deg); }
-.beans-bg-decor .b5 { top: 32%; left: 10%; width: 72px; height: 72px; transform: rotate(28deg); }
-.beans-bg-decor .b6 { top: 38%; right: 8%; width: 46px; height: 46px; transform: rotate(-130deg); }
-.beans-bg-decor .b7 { top: 45%; left: 38%; width: 30px; height: 30px; transform: rotate(78deg); }
-.beans-bg-decor .b8 { top: 50%; right: 32%; width: 88px; height: 88px; transform: rotate(-40deg); }
-.beans-bg-decor .b9 { top: 56%; left: 6%; width: 56px; height: 56px; transform: rotate(160deg); }
-.beans-bg-decor .b10 { top: 62%; right: 4%; width: 110px; height: 110px; transform: rotate(-25deg); }
-.beans-bg-decor .b11 { top: 68%; left: 22%; width: 42px; height: 42px; transform: rotate(15deg); }
-.beans-bg-decor .b12 { top: 74%; right: 18%; width: 34px; height: 34px; transform: rotate(-100deg); }
-.beans-bg-decor .b13 { top: 80%; left: 10%; width: 78px; height: 78px; transform: rotate(8deg); }
-.beans-bg-decor .b14 { top: 86%; right: 30%; width: 50px; height: 50px; transform: rotate(58deg); }
-.beans-bg-decor .b15 { bottom: 8%; left: 40%; width: 64px; height: 64px; transform: rotate(-22deg); }
-.beans-bg-decor .b16 { bottom: 4%; right: 10%; width: 96px; height: 96px; transform: rotate(135deg); }
-.beans-bg-decor .b17 { top: 6%; right: 36%; width: 48px; height: 48px; transform: rotate(-55deg); }
-.beans-bg-decor .b18 { bottom: 22%; right: 38%; width: 42px; height: 42px; transform: rotate(90deg); }
-.beans-bg-decor .b19 { top: 70%; left: 46%; width: 36px; height: 36px; transform: rotate(-15deg); }
-.beans-bg-decor .b20 { top: 22%; left: 48%; width: 28px; height: 28px; transform: rotate(60deg); }
 .tab-page { position: relative; z-index: 1; }
 [data-theme="dark"] .theme-sticker svg { filter: drop-shadow(0 2px 2px rgba(0,0,0,0.22)); }
 [data-theme="dark"] .theme-corner {
@@ -375,7 +304,7 @@ select:focus-visible {
   position: absolute; right: -3px; top: -3px;
   min-width: 15px; height: 15px; padding: 0 4px;
   border-radius: 999px; background: #A2BFFE; color: #3A2F28;
-  font-size: 9px; font-weight: 800; line-height: 15px;
+  font-size: 9.5px; font-weight: 800; line-height: 15px;
 }
 
 /* ── App Shell ── */
@@ -389,128 +318,62 @@ select:focus-visible {
 }
 .tab-page.active { display: block; }
 
-/* ── Planner Book ──
-   Every section is a page in one spiral-bound planner: paper page on a
-   darker desk, ring binding down the left edge, stacked page edges on the
-   right. The bean wallpaper sits above the paper and below page content. */
-body { background: var(--desk); }
-.book {
-  position: relative; flex: 1;
-  width: calc(100% - 8px); max-width: var(--book-max);
-  margin: 0 auto 0 0;
-  background: var(--bg);
-  border-radius: 0 12px 12px 0;
-  box-shadow:
-    1px 0 0 var(--border),
-    3px 0 0 var(--bg),
-    4px 0 0 var(--border),
-    6px 0 0 var(--bg),
-    7px 0 0 var(--border),
-    6px 10px 28px rgba(60,40,25,0.14);
-}
-.book::before {
-  content: ''; position: absolute; top: 0; bottom: 0; left: 0;
-  width: var(--spine-w); pointer-events: none;
-  background:
-    var(--spine-coil) 0 10px / var(--spine-w) 26px repeat-y,
-    linear-gradient(to right, rgba(60,40,25,0.10), rgba(60,40,25,0));
-}
-.app > .beans-bg-decor { z-index: 1; }
-.book > .tab-page {
-  z-index: 2; max-width: none;
-  padding-left: calc(var(--spine-w) + 14px);
-  padding-right: 18px;
-}
+/* ── App surface ──
+   One plain page, centered. Navigation is a bar along the bottom, or a
+   rail down the left side when that's picked in Settings. */
+body { background: var(--bg); }
+.book { position: relative; flex: 1; width: 100%; max-width: var(--book-max); margin: 0 auto; }
+.book > .tab-page { z-index: 2; max-width: none; padding-left: 18px; padding-right: 18px; }
 @media (min-width: 620px) {
-  .book {
-    margin: 24px auto; width: calc(100% - 48px);
-    border-radius: 6px 14px 14px 6px;
-  }
-  .top-bar {
-    max-width: var(--book-max); margin: 0 auto;
-    padding-top: calc(var(--safe-top) + 32px);
-  }
+  .top-bar { max-width: var(--book-max); margin: 0 auto; }
 }
 
-/* Turning to a page: a gentle settle, never a flashy flip. */
-.tab-page.turn-forward {
-  transform-origin: left top;
-  animation: pageTurnForward 0.42s cubic-bezier(.2,.75,.25,1);
-}
-.tab-page.turn-back {
-  transform-origin: left top;
-  animation: pageTurnBack 0.34s cubic-bezier(.2,.75,.25,1);
-}
-@keyframes pageTurnForward {
-  from { opacity: 0.2; transform: perspective(1800px) rotateY(-12deg) translateX(8px); }
-  to { opacity: 1; transform: none; }
-}
-@keyframes pageTurnBack {
-  from { opacity: 0.2; transform: translateX(-14px); }
-  to { opacity: 1; transform: none; }
-}
+/* Switching pages: a quick fade, nothing that slows you down. */
+.tab-page.turn-forward, .tab-page.turn-back { animation: pageFade 0.14s ease-out; }
+@keyframes pageFade { from { opacity: 0.4; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
   .tab-page.turn-forward, .tab-page.turn-back { animation: none; }
 }
 
-/* Index tabs on the page edge — only where there's desk room for them. */
-.book-tabs { display: none; }
-@media (min-width: 900px) {
-  .book-tabs {
-    display: flex; flex-direction: column; gap: 6px;
-    position: fixed; z-index: 3;
-    top: calc(var(--safe-top) + 110px);
-    left: calc(50% + var(--book-max) / 2 + 4px);
-  }
-  .book-tab {
-    position: relative; overflow: hidden;
-    display: flex; align-items: center; gap: 7px;
-    width: 132px; padding: 8px 10px 8px 14px;
-    border: 1px solid var(--border-soft); border-left: none;
-    border-radius: 0 12px 12px 0;
-    background: var(--bg-card); color: var(--espresso);
-    box-shadow: var(--shadow-sm); cursor: pointer; text-align: left;
-    transform: translateX(-8px); transition: transform 0.2s ease, background 0.2s ease;
-  }
-  .book-tab::before {
-    content: ''; position: absolute; left: 0; top: 0; bottom: 0;
-    width: 6px; background: var(--tab-color);
-  }
-  .book-tab:hover, .book-tab.active { transform: translateX(0); }
-  .book-tab.active { background: var(--bg); }
-  .book-tab-sticker { width: 22px; height: 22px; object-fit: contain; display: block; flex-shrink: 0; }
-  .book-tab-label { font-family: var(--font-display); font-size: 12px; white-space: nowrap; }
+:root { --phone-tabs-h: 56px; --rail-w: 84px; }
+.book-tabs {
+  display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 190;
+  padding: 0 4px var(--safe-bottom);
+  background: var(--bg-card); border-top: 1px solid var(--border-soft);
+  box-shadow: 0 -2px 10px rgba(60,40,25,0.08);
 }
-/* Phones: the same index tabs run along the bottom edge instead, so Home
-   and every section are always one tap away. */
-@media (max-width: 899px) {
-  :root { --phone-tabs-h: 56px; }
-  .app { padding-bottom: calc(var(--phone-tabs-h) + var(--safe-bottom)); }
-  .book-tabs {
-    display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 190;
-    padding: 0 4px var(--safe-bottom);
-    background: var(--bg-card); border-top: 1px solid var(--border-soft);
-    box-shadow: 0 -2px 10px rgba(60,40,25,0.08);
-  }
-  .book-tab {
-    position: relative; flex: 1 1 0; min-width: 0; height: var(--phone-tabs-h);
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
-    padding: 4px 2px 2px; border: none; background: none;
-    color: var(--text-muted); cursor: pointer;
-  }
-  .book-tab::before {
-    content: ''; position: absolute; top: 0; left: 20%; right: 20%; height: 3px;
-    border-radius: 0 0 3px 3px; background: var(--tab-color); opacity: 0.35;
-  }
-  .book-tab.active { color: var(--espresso); }
-  .book-tab.active::before { opacity: 1; }
-  .book-tab-sticker { width: 24px; height: 24px; object-fit: contain; display: block; flex-shrink: 0; }
-  .book-tab-label {
-    font-family: var(--font-display); font-size: 12px; line-height: 1.1;
-    max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  }
-  body .cleaning-picker-sheet { bottom: calc(var(--phone-tabs-h) + var(--safe-bottom) + 10px); }
+.book-tab {
+  position: relative; flex: 1 1 0; min-width: 0; height: var(--phone-tabs-h);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  padding: 4px 2px 2px; border: none; background: none;
+  color: var(--text-muted); cursor: pointer; -webkit-tap-highlight-color: transparent;
 }
+.book-tab::before {
+  content: ''; position: absolute; top: 0; left: 20%; right: 20%; height: 3px;
+  border-radius: 0 0 3px 3px; background: var(--tab-color); opacity: 0.35;
+}
+.book-tab.active { color: var(--espresso); }
+.book-tab.active::before { opacity: 1; }
+.book-tab-sticker { width: 24px; height: 24px; object-fit: contain; display: block; flex-shrink: 0; }
+.book-tab-label {
+  font-family: var(--font-display); font-size: 14px; line-height: 1.1;
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+body:not(.nav-left) .app { padding-bottom: calc(var(--phone-tabs-h) + var(--safe-bottom)); }
+body:not(.nav-left) .cleaning-picker-sheet { bottom: calc(var(--phone-tabs-h) + var(--safe-bottom) + 10px); }
+
+/* Left rail */
+body.nav-left .app { padding-left: calc(var(--rail-w) + var(--safe-left, 0px)); }
+body.nav-left .top-bar { left: var(--rail-w); }
+body.nav-left .book-tabs {
+  top: 0; bottom: 0; right: auto; width: calc(var(--rail-w) + var(--safe-left, 0px));
+  flex-direction: column; justify-content: center; gap: 6px;
+  padding: calc(var(--safe-top) + 8px) 0 calc(var(--safe-bottom) + 8px) var(--safe-left, 0px);
+  border-top: none; border-right: 1px solid var(--border-soft);
+  box-shadow: 2px 0 10px rgba(60,40,25,0.08);
+}
+body.nav-left .book-tab { flex: 0 0 auto; height: 64px; width: 100%; }
+body.nav-left .book-tab::before { top: 18%; bottom: 18%; left: 0; right: auto; width: 3px; height: auto; border-radius: 0 3px 3px 0; }
 
 /* A little stack of sticky notes, in the sticky-note colors. */
 .sticky-stack-icon { position: relative; display: inline-block; }
@@ -522,67 +385,17 @@ body { background: var(--desk); }
 .sticky-stack-icon i:nth-child(2) { left: 20%; top: 20%; background: #FAB6DC; transform: rotate(7deg); }
 .sticky-stack-icon i:nth-child(3) { left: 34%; top: 32%; background: #FFF6C2; transform: rotate(-3deg); }
 
-/* ── Home: the open index page ── */
+/* ── Home ── */
+.home-section .collapse-body { padding-top: 4px; }
 .home-index-head { text-align: center; padding: 4px 8px 16px; }
 .home-index-title {
-  font-family: var(--font-display); font-size: 24px; color: var(--espresso);
+  font-family: var(--font-display); font-size: 26px; color: var(--espresso);
   line-height: 1.25; letter-spacing: 0.2px;
-}
-.hub-nav.home-index { grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 14px; }
-.book-index-btn {
-  position: relative; overflow: hidden;
-  min-height: 112px; flex-direction: column; gap: 10px;
-  padding: 16px 10px 14px 18px;
-}
-.book-index-btn::before {
-  content: ''; position: absolute; left: 0; top: 0; bottom: 0;
-  width: 8px; background: var(--tab-color);
-}
-.book-index-btn .hub-nav-sticker { width: 48px; height: 48px; }
-.book-index-label {
-  font-family: var(--font-display); font-size: 15px; color: var(--espresso);
-  line-height: 1.15; text-align: center;
-}
-.routine-times .routine-time-val { white-space: nowrap; }
-@media (max-width: 440px) {
-  .tab-page .routine-times { padding: 12px 10px; gap: 4px; }
-  .routine-times .routine-time-val { font-size: 13.5px; }
-}
-button.routine-time-item {
-  background: none; border: none; padding: 0; margin: 0;
-  text-align: left; color: inherit; font: inherit; cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
 }
 
 /* ── Today Focus: day-view panels laid out as a page ── */
-#page-focus > .day-panel { margin-bottom: 14px; }
 
 /* ── Homepage Hub Nav ── */
-.hub-nav {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
-  margin-bottom: 12px;
-}
-.hub-nav-btn {
-  min-height: 42px; border-radius: var(--radius); border: 1px solid var(--border-soft);
-  background: var(--bg-card); color: var(--icon-pink);
-  box-shadow: var(--shadow-sm); cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
-  -webkit-tap-highlight-color: transparent; padding: 4px;
-}
-.hub-nav-btn:active { transform: scale(0.97); background: var(--bg-hover); }
-.hub-nav-btn[data-tab="routines"] { color: var(--pal-purple-strong); }
-.hub-nav-btn[data-tab="money"] { color: var(--pal-green-strong); }
-.hub-nav-btn[data-tab="health"] { color: var(--pal-yellow-strong); }
-[data-theme="dark"] .hub-nav-btn[data-tab="routines"] { color: var(--pal-purple); }
-[data-theme="dark"] .hub-nav-btn[data-tab="money"] { color: var(--pal-green); }
-[data-theme="dark"] .hub-nav-btn[data-tab="health"] { color: var(--pal-yellow); }
-.hub-nav-btn svg { width: 20px; height: 20px; stroke-width: 1.8; }
-.hub-nav-btn .theme-sticker { --sticker-size: 26px; }
-.hub-nav-sticker {
-  width: 28px; height: 28px; object-fit: contain; display: block;
-  filter: drop-shadow(0 2px 2px rgba(60,40,25,0.08));
-}
 
 /* ── Cards & Components ── */
 .card {
@@ -591,16 +404,16 @@ button.routine-time-item {
   border: 1px solid var(--border-soft); margin-bottom: 14px;
 }
 .card-title {
-  font-family: var(--font-display); font-size: 16px; color: var(--espresso);
+  font-family: var(--font-display); font-size: 17.5px; color: var(--espresso);
   letter-spacing: 0.2px;
 }
 
 .page-header { margin-bottom: 18px; display: flex; align-items: center; gap: 12px; }
 .page-greeting {
-  font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--espresso);
+  font-family: var(--font-display); font-size: 24px; font-weight: 700; color: var(--espresso);
   letter-spacing: 0.2px; line-height: 1.3;
 }
-.page-date { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+.page-date { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
 
 .edit-icon-btn,
 .inline-edit-btn {
@@ -618,7 +431,7 @@ button.routine-time-item {
 .inline-edit-btn {
   width: 24px; height: 24px; box-shadow: none;
 }
-.edit-hint { font-size: 11px; color: var(--text-muted); }
+.edit-hint { font-size: 12px; color: var(--text-muted); }
 
 /* ── Checklists ── */
 .check-item {
@@ -636,9 +449,9 @@ button.routine-time-item {
 .check-item.checked .check-box { background: var(--espresso); border-color: var(--espresso); transform: scale(1.05); }
 .check-box svg { width: 14px; height: 14px; stroke: #fff; stroke-width: 2.5; opacity: 0; transition: opacity 0.2s; }
 .check-item.checked .check-box svg { opacity: 1; }
-.check-label { font-size: 14px; color: var(--text); flex: 1; }
+.check-label { font-size: 15px; color: var(--text); flex: 1; }
 .check-item.checked .check-label { color: var(--text-muted); text-decoration: line-through; text-decoration-color: var(--nude); }
-.check-detail { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+.check-detail { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
 .cleaning-add-row {
   display: flex; gap: 8px; margin-top: 10px;
 }
@@ -650,13 +463,13 @@ button.routine-time-item {
 .cleaning-task-row:active { cursor: grabbing; }
 .cleaning-drag-grip {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 18px; flex-shrink: 0; font-size: 14px; letter-spacing: -1px;
+  width: 18px; flex-shrink: 0; font-size: 15px; letter-spacing: -1px;
   color: var(--text-muted); opacity: 0.55; cursor: grab; user-select: none;
 }
 .cleaning-task-row:hover .cleaning-drag-grip { opacity: 0.9; }
 .cleaning-day-badge, .cleaning-assign-btn {
   margin-left: auto; flex-shrink: 0;
-  font-size: 11px; font-weight: 700; letter-spacing: 0.02em;
+  font-size: 12px; font-weight: 700; letter-spacing: 0.02em;
   padding: 4px 9px; border-radius: 999px; cursor: pointer;
   border: 1px solid transparent; transition: transform 0.12s ease, background 0.15s ease;
 }
@@ -685,7 +498,7 @@ body.cleaning-dragging .week-day-btn { transition: transform 0.15s ease, box-sha
   z-index: 90; transition: transform 0.28s cubic-bezier(.2,.85,.25,1);
 }
 .cleaning-picker-sheet.open { transform: translateX(-50%) translateY(0); }
-.cleaning-picker-title { font-size: 15px; font-weight: 800; color: var(--espresso); margin-bottom: 12px; }
+.cleaning-picker-title { font-size: 16px; font-weight: 800; color: var(--espresso); margin-bottom: 12px; }
 .cleaning-picker-grid {
   display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;
 }
@@ -696,8 +509,8 @@ body.cleaning-dragging .week-day-btn { transition: transform 0.15s ease, box-sha
   cursor: pointer; transition: transform 0.12s ease, background 0.15s ease;
 }
 .cleaning-picker-btn:hover { transform: translateY(-2px); background: var(--caramel-light, #f3d9c1); border-color: var(--espresso); }
-.cleaning-picker-day { font-size: 10px; font-weight: 700; color: var(--text-muted); }
-.cleaning-picker-date { font-size: 15px; font-weight: 800; color: var(--text); }
+.cleaning-picker-day { font-size: 11px; font-weight: 700; color: var(--text-muted); }
+.cleaning-picker-date { font-size: 16px; font-weight: 800; color: var(--text); }
 
 /* ── Week planner: 7-day strip + at-a-glance day view ── */
 .week-planner-card { position: relative; }
@@ -707,35 +520,21 @@ body.cleaning-dragging .week-day-btn { transition: transform 0.15s ease, box-sha
   padding: 5px 9px; border-radius: 999px;
   background: var(--bg-hover); border: 1px solid var(--border-soft);
   border-left: 4px solid var(--block-color, var(--nude));
-  font-size: 12px; font-weight: 700; color: var(--text);
+  font-size: 13px; font-weight: 700; color: var(--text);
 }
 .allday-chip.done { opacity: 0.6; }
 .allday-chip.done .allday-chip-title { text-decoration: line-through; }
 .allday-chip-tag {
-  font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em;
+  font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em;
   color: var(--text-muted);
 }
 .allday-chip-x {
   border: none; background: none; cursor: pointer;
-  color: var(--text-muted); font-size: 12px; line-height: 1; padding: 0 2px;
+  color: var(--text-muted); font-size: 13px; line-height: 1; padding: 0 2px;
 }
 .allday-chip-x:hover { color: var(--danger); }
 
 /* ── Routine anchor banner (top of Home) ── */
-.routine-times {
-  display: flex; align-items: stretch; gap: 6px;
-  background: var(--bg-card); border: 1px solid var(--border-soft);
-  border-radius: var(--radius); box-shadow: var(--shadow-sm);
-  padding: 12px 14px; margin-bottom: 14px;
-}
-.routine-time-item { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.routine-time-when {
-  font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;
-  color: var(--pal-purple-strong, var(--text-muted));
-}
-.routine-time-label { font-size: 12px; color: var(--text-muted); font-weight: 600; }
-.routine-time-val { font-size: 16px; font-weight: 800; color: var(--espresso, var(--text)); }
-.routine-time-divider { width: 1px; background: var(--border-soft); align-self: stretch; }
 
 /* ── Week at a Glance (bullet view) ── */
 .week-glance { display: flex; flex-direction: column; gap: 6px; margin: 4px 0 12px; }
@@ -756,21 +555,21 @@ body.cleaning-dragging .week-day-btn { transition: transform 0.15s ease, box-sha
   border: none; background: none; cursor: pointer; padding: 2px 0;
   border-right: 1px dashed var(--border-soft);
 }
-.wg-dayname { font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
-.wg-daynum { font-size: 20px; font-weight: 800; color: var(--text); line-height: 1.1; }
+.wg-dayname { font-size: 12px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.wg-daynum { font-size: 21.5px; font-weight: 800; color: var(--text); line-height: 1.1; }
 .wg-day.today .wg-daynum { color: var(--espresso); }
 .wg-items { flex: 1; display: flex; flex-direction: column; gap: 4px; justify-content: center; min-width: 0; }
-.wg-item { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--text); }
+.wg-item { display: flex; align-items: center; gap: 7px; font-size: 14px; color: var(--text); }
 .wg-item.done .wg-title { text-decoration: line-through; opacity: 0.6; }
-.wg-time { flex: 0 0 auto; font-size: 11px; font-weight: 700; color: var(--text-muted); min-width: 58px; }
+.wg-time { flex: 0 0 auto; font-size: 12px; font-weight: 700; color: var(--text-muted); min-width: 58px; }
 .wg-allday {
-  flex: 0 0 auto; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em;
+  flex: 0 0 auto; font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em;
   color: var(--text-muted); min-width: 58px;
 }
 .wg-title { flex: 1; font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.wg-x { border: none; background: none; cursor: pointer; color: var(--text-muted); font-size: 11px; line-height: 1; padding: 0 2px; }
+.wg-x { border: none; background: none; cursor: pointer; color: var(--text-muted); font-size: 12px; line-height: 1; padding: 0 2px; }
 .wg-x:hover { color: var(--danger); }
-.wg-empty { font-size: 12px; color: var(--text-muted); font-style: italic; }
+.wg-empty { font-size: 13px; color: var(--text-muted); font-style: italic; }
 .week-action-row { display: flex; gap: 8px; margin-top: 10px; }
 .week-action-btn { flex: 1; margin: 0; }
 
@@ -802,11 +601,11 @@ body.cleaning-dragging .week-day-btn { transition: transform 0.15s ease, box-sha
 }
 .paycheck-card-toggle:hover { background: rgba(92,61,46,0.04); }
 .paycheck-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
-.paycheck-card-label { font-size: 13px; font-weight: 800; color: var(--espresso); }
-.paycheck-card-date { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
-.paycheck-card-amount { font-size: 15px; font-weight: 800; color: var(--text); }
+.paycheck-card-label { font-size: 14px; font-weight: 800; color: var(--espresso); }
+.paycheck-card-date { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.paycheck-card-amount { font-size: 16px; font-weight: 800; color: var(--text); }
 .paycheck-card-stats {
-  display: flex; justify-content: space-between; font-size: 11px; font-weight: 700;
+  display: flex; justify-content: space-between; font-size: 12px; font-weight: 700;
   color: var(--text-muted);
 }
 .paycheck-card-stats .over { color: var(--danger); }
@@ -831,11 +630,11 @@ body.cleaning-dragging .week-day-btn { transition: transform 0.15s ease, box-sha
 }
 .paycheck-bill-list { display: flex; flex-direction: column; gap: 6px; }
 .paycheck-bill-empty {
-  text-align: center; font-size: 11px; color: var(--text-muted);
+  text-align: center; font-size: 12px; color: var(--text-muted);
   padding: 14px 6px; border: 1.5px dashed var(--border-soft); border-radius: 12px;
 }
 .paycheck-bill-chip-tag {
-  font-size: 9px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase;
+  font-size: 9.5px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase;
   padding: 2px 6px; border-radius: 999px;
   background: #FFF6C2; color: #6b5400;
   border: 1px solid rgba(170,130,40,0.25);
@@ -848,15 +647,15 @@ body.cleaning-dragging .week-day-btn { transition: transform 0.15s ease, box-sha
   background: #fff8e8; border-color: rgba(170,130,40,0.35);
 }
 .paycheck-pool-chip {
-  font-size: 9px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase;
+  font-size: 9.5px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase;
   padding: 1px 6px; border-radius: 999px;
   background: #FFF6C2; color: #6b5400;
   border: 1px solid rgba(170,130,40,0.3);
   margin-left: 4px;
 }
 .paycheck-pool { margin-bottom: 14px; }
-.paycheck-pool-total { font-size: 13px; font-weight: 800; color: var(--espresso); margin-left: auto; }
-.paycheck-pool-hint { font-size: 12px; color: var(--text-muted); margin: 4px 0 10px; }
+.paycheck-pool-total { font-size: 14px; font-weight: 800; color: var(--espresso); margin-left: auto; }
+.paycheck-pool-hint { font-size: 13px; color: var(--text-muted); margin: 4px 0 10px; }
 .paycheck-pool-list { display: flex; flex-direction: column; gap: 6px; }
 .paycheck-pool-row {
   display: flex; align-items: center; gap: 10px;
@@ -867,18 +666,18 @@ body.cleaning-dragging .week-day-btn { transition: transform 0.15s ease, box-sha
 .paycheck-pool-row:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm, 0 6px 14px -8px rgba(45,30,22,0.18)); }
 .paycheck-pool-row:active { cursor: grabbing; }
 .paycheck-pool-grip {
-  font-size: 14px; letter-spacing: -1px; color: var(--text-muted); opacity: 0.55;
+  font-size: 15px; letter-spacing: -1px; color: var(--text-muted); opacity: 0.55;
   user-select: none; flex-shrink: 0;
 }
 .paycheck-pool-info { flex: 1; min-width: 0; }
-.paycheck-pool-name { font-size: 13px; font-weight: 700; color: var(--text); }
-.paycheck-pool-meta { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
-.paycheck-pool-amt { font-size: 13px; font-weight: 800; color: var(--espresso); }
+.paycheck-pool-name { font-size: 14px; font-weight: 700; color: var(--text); }
+.paycheck-pool-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.paycheck-pool-amt { font-size: 14px; font-weight: 800; color: var(--espresso); }
 .paycheck-picker-grid {
   display: flex; flex-direction: column; gap: 6px;
 }
 .paycheck-picker-btn { flex-direction: column; align-items: stretch; gap: 4px; padding: 12px; }
-.paycheck-picker-amt { font-size: 13px; font-weight: 800; color: var(--espresso); }
+.paycheck-picker-amt { font-size: 14px; font-weight: 800; color: var(--espresso); }
 body.bill-dragging .paycheck-card { transition: transform 0.15s ease, box-shadow 0.15s ease; }
 
 /* Paycheck card state accents (colored left border). */
@@ -891,7 +690,7 @@ body.bill-dragging .paycheck-card { transition: transform 0.15s ease, box-shadow
 .paycheck-edited-badge {
   display: inline-block; padding: 1px 6px; margin-left: 4px;
   background: rgba(214,145,44,0.18); color: #8a5a10;
-  border-radius: 999px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px;
+  border-radius: 999px; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px;
   vertical-align: middle;
 }
 [data-theme="dark"] .paycheck-edited-badge { color: #f0c67a; background: rgba(240,198,122,0.22); }
@@ -903,11 +702,11 @@ body.bill-dragging .paycheck-card { transition: transform 0.15s ease, box-shadow
   background: rgba(0,0,0,0.02);
 }
 [data-theme="dark"] .paycheck-instance-controls { background: rgba(255,255,255,0.03); }
-.paycheck-amount-row .field-label { font-size: 11px; margin-bottom: 4px; }
+.paycheck-amount-row .field-label { font-size: 12px; margin-bottom: 4px; }
 .paycheck-amount-inputs { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .paycheck-amount-inputs .text-input { flex: 1 1 120px; min-width: 100px; }
 .paycheck-received-btn {
-  padding: 8px 12px; border-radius: 999px; font-size: 12px; font-weight: 700;
+  padding: 8px 12px; border-radius: 999px; font-size: 13px; font-weight: 700;
   background: var(--bg-card); border: 1px solid var(--border-soft); color: var(--espresso);
   cursor: pointer; -webkit-tap-highlight-color: transparent;
   align-self: flex-start;
@@ -931,10 +730,10 @@ body.bill-dragging .paycheck-card { transition: transform 0.15s ease, box-shadow
 }
 .paycheck-row-check input { width: 18px; height: 18px; accent-color: var(--espresso); cursor: pointer; }
 .paycheck-row-info { min-width: 0; }
-.paycheck-row-name { font-size: 13px; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; }
-.paycheck-row-meta { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+.paycheck-row-name { font-size: 14px; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; }
+.paycheck-row-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 .paycheck-row-amt-display {
-  text-align: right; font-size: 14px; font-weight: 800; color: var(--espresso);
+  text-align: right; font-size: 15px; font-weight: 800; color: var(--espresso);
   white-space: nowrap; padding: 4px 2px; min-width: 72px;
 }
 /* Editable amount (Credit Card Payments only) — inline $ prefix + right-aligned number. */
@@ -958,12 +757,12 @@ body.bill-dragging .paycheck-card { transition: transform 0.15s ease, box-shadow
   background: rgba(212,165,116,0.12);
 }
 .paycheck-row-amt-currency {
-  font-size: 12px; font-weight: 800; color: var(--text-muted); line-height: 1;
+  font-size: 13px; font-weight: 800; color: var(--text-muted); line-height: 1;
 }
 .paycheck-row-amt-edit:focus-within .paycheck-row-amt-currency { color: var(--espresso); }
 .paycheck-row-amt-input {
   width: 68px; text-align: right;
-  font-size: 14px; font-weight: 800; color: var(--espresso);
+  font-size: 15px; font-weight: 800; color: var(--espresso);
   background: transparent; border: 0; outline: none;
   padding: 2px 0; font-family: inherit;
   -moz-appearance: textfield;
@@ -974,7 +773,7 @@ body.bill-dragging .paycheck-card { transition: transform 0.15s ease, box-shadow
   display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
 }
 .paycheck-tool-btn {
-  padding: 5px 10px; border-radius: 999px; font-size: 11px; font-weight: 700;
+  padding: 5px 10px; border-radius: 999px; font-size: 12px; font-weight: 700;
   background: var(--bg-card); border: 1px solid var(--border-soft); color: var(--text-secondary);
   cursor: pointer; -webkit-tap-highlight-color: transparent;
 }
@@ -1000,10 +799,10 @@ body.bill-dragging .paycheck-card { transition: transform 0.15s ease, box-shadow
    readable, focus size shrinks so a longer name fits in the field while
    you're typing. Transition keeps the jump from feeling abrupt. */
 .paycheck-add-extra .text-input {
-  font-size: 15px;
+  font-size: 16px;
   transition: font-size 0.15s ease;
 }
-.paycheck-add-extra .text-input:focus { font-size: 11px; }
+.paycheck-add-extra .text-input:focus { font-size: 12px; }
 .paycheck-add-extra input[type="number"] { -moz-appearance: textfield; }
 .paycheck-add-extra input[type="number"]::-webkit-outer-spin-button,
 .paycheck-add-extra input[type="number"]::-webkit-inner-spin-button {
@@ -1022,8 +821,8 @@ body.bill-dragging .paycheck-card { transition: transform 0.15s ease, box-shadow
   border-top: 1px solid var(--border-soft);
 }
 .paycheck-card-totals > div { display: flex; flex-direction: column; }
-.paycheck-card-totals span { font-size: 10px; text-transform: uppercase; letter-spacing: 0.3px; color: var(--text-muted); font-weight: 700; }
-.paycheck-card-totals strong { font-size: 15px; font-weight: 800; color: var(--espresso); margin-top: 2px; }
+.paycheck-card-totals span { font-size: 11px; text-transform: uppercase; letter-spacing: 0.3px; color: var(--text-muted); font-weight: 700; }
+.paycheck-card-totals strong { font-size: 16px; font-weight: 800; color: var(--espresso); margin-top: 2px; }
 .paycheck-card-totals .total-remaining strong { color: var(--success, #4c8f61); }
 .paycheck-card-totals .total-remaining.over strong { color: var(--danger); }
 
@@ -1031,7 +830,7 @@ body.bill-dragging .paycheck-card { transition: transform 0.15s ease, box-shadow
 .paycheck-drag-ghost {
   position: fixed; top: 0; left: 0; z-index: 9999;
   padding: 8px 14px; border-radius: 999px;
-  background: var(--espresso); color: #fff; font-size: 12px; font-weight: 800;
+  background: var(--espresso); color: #fff; font-size: 13px; font-weight: 800;
   box-shadow: 0 8px 24px rgba(60,40,25,0.35); pointer-events: none;
   transform: translate(-9999px, -9999px);
   transition: transform 0.02s linear;
@@ -1058,7 +857,7 @@ body.paycheck-dragging .paycheck-pool-row {
 .ring-svg circle { fill: none; stroke-width: 3.5; stroke-linecap: round; }
 .ring-bg { stroke: var(--border-soft); }
 .ring-fill { stroke: var(--espresso); transition: stroke-dashoffset 0.5s ease; }
-.ring-text { font-size: 13px; color: var(--text-secondary); }
+.ring-text { font-size: 14px; color: var(--text-secondary); }
 .ring-count { font-weight: 600; color: var(--espresso); }
 
 /* ── Progress Bar ── */
@@ -1070,7 +869,7 @@ body.paycheck-dragging .paycheck-pool-row {
 .sticky-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin-bottom: 14px; }
 .sticky-note {
   min-height: 120px; padding: 14px; border-radius: 3px;
-  font-size: 13px; color: #3A2F28; line-height: 1.5;
+  font-size: 14px; color: #3A2F28; line-height: 1.5;
   position: relative; word-break: break-word;
   box-shadow: 2px 3px 8px rgba(60,40,25,0.12);
   transition: transform 0.15s;
@@ -1083,13 +882,13 @@ body.paycheck-dragging .paycheck-pool-row {
 }
 .sticky-note textarea {
   width: 100%; height: 100%; min-height: 80px; border: none; background: transparent;
-  font-family: var(--font-body); font-size: 13px; color: #3A2F28;
+  font-family: var(--font-body); font-size: 14px; color: #3A2F28;
   resize: none; outline: none; line-height: 1.5;
 }
 .sticky-note .sticky-del {
   position: absolute; top: 4px; right: 6px; width: 20px; height: 20px;
   border: none; background: rgba(0,0,0,0.08); border-radius: 50%;
-  color: rgba(0,0,0,0.35); font-size: 13px; cursor: pointer;
+  color: rgba(0,0,0,0.35); font-size: 14px; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   opacity: 0; transition: opacity 0.2s;
 }
@@ -1098,16 +897,16 @@ body.paycheck-dragging .paycheck-pool-row {
 .sticky-add {
   min-height: 120px; border: 2px dashed rgba(0,0,0,0.1); border-radius: 3px;
   background: transparent; display: flex; align-items: center; justify-content: center;
-  font-size: 24px; color: var(--text-muted); cursor: pointer; transition: all 0.2s;
+  font-size: 26px; color: var(--text-muted); cursor: pointer; transition: all 0.2s;
 }
 .sticky-add:active { background: var(--espresso-light); }
 
 /* ── Counter ── */
-.counter-unit { font-size: 12px; color: var(--text-muted); }
+.counter-unit { font-size: 13px; color: var(--text-muted); }
 
 /* ── Toggle ── */
 .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; }
-.toggle-label { font-size: 14px; color: var(--text); }
+.toggle-label { font-size: 15px; color: var(--text); }
 .toggle-sw {
   width: 44px; height: 26px; border-radius: 13px;
   background: var(--border); border: none; cursor: pointer;
@@ -1122,18 +921,18 @@ body.paycheck-dragging .paycheck-pool-row {
 .toggle-sw.on .toggle-knob { transform: translateX(18px); }
 
 /* ── Inputs ── */
-.field-label { font-size: 12px; font-weight: 500; color: var(--text-secondary); margin-bottom: 5px; }
+.field-label { font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 5px; }
 .text-input {
   width: 100%; padding: 10px 12px; border-radius: var(--radius-xs);
   border: 1px solid var(--border); background: var(--bg-input);
-  color: var(--text); font-size: 14px; outline: none; transition: border-color 0.2s;
+  color: var(--text); font-size: 15px; outline: none; transition: border-color 0.2s;
 }
 .text-input:focus { border-color: var(--latte); }
 .text-input::placeholder { color: var(--text-muted); }
 .text-area {
   width: 100%; padding: 10px 12px; border-radius: var(--radius-xs);
   border: 1px solid var(--border); background: var(--bg-input);
-  color: var(--text); font-size: 14px; resize: none; outline: none;
+  color: var(--text); font-size: 15px; resize: none; outline: none;
   transition: border-color 0.2s; line-height: 1.5;
 }
 .text-area:focus { border-color: var(--latte); }
@@ -1141,7 +940,7 @@ body.paycheck-dragging .paycheck-pool-row {
 .num-input {
   width: 70px; padding: 6px 8px; border-radius: var(--radius-xs);
   border: 1px solid var(--border); background: var(--bg-input);
-  color: var(--text); font-size: 14px; text-align: center; outline: none;
+  color: var(--text); font-size: 15px; text-align: center; outline: none;
 }
 .num-input:focus { border-color: var(--latte); }
 
@@ -1157,14 +956,14 @@ body.paycheck-dragging .paycheck-pool-row {
   display: flex; align-items: center; gap: 8px;
 }
 .month-title, .week-planner-title {
-  font-size: 18px; font-weight: 700; color: var(--espresso);
+  font-size: 19.5px; font-weight: 700; color: var(--espresso);
 }
 .month-grid {
   display: grid; grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 6px;
 }
 .month-weekday {
-  text-align: center; font-size: 10px; font-weight: 700; color: var(--text-muted);
+  text-align: center; font-size: 11px; font-weight: 700; color: var(--text-muted);
   padding: 2px 0 4px;
 }
 .month-cell {
@@ -1178,7 +977,7 @@ body.paycheck-dragging .paycheck-pool-row {
 .month-cell.muted { opacity: 0.45; }
 .month-cell.today { border-color: var(--espresso); background: var(--espresso-light); }
 .month-cell.selected { box-shadow: inset 0 0 0 2px var(--icon-pink); }
-.month-date { font-size: 12px; font-weight: 700; color: var(--text); }
+.month-date { font-size: 13px; font-weight: 700; color: var(--text); }
 .cal-action-row {
   display: grid; grid-template-columns: repeat(4, 1fr);
   gap: 6px; margin: 6px 0 12px;
@@ -1224,32 +1023,32 @@ body.paycheck-dragging .paycheck-pool-row {
   display: inline-flex; align-items: center; max-width: 52%;
   padding: 3px 8px; border-radius: 999px;
   background: #DCEBFF; color: #234D83;
-  font-size: 10px; font-weight: 900; line-height: 1.1;
+  font-size: 11px; font-weight: 900; line-height: 1.1;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .due-soon-countdown {
   display: inline-flex; align-items: center; justify-content: center;
   min-height: 22px; padding: 3px 8px; border-radius: 999px;
   background: var(--latte-light); color: var(--espresso);
-  font-size: 10px; font-weight: 900; line-height: 1.1; text-align: center;
+  font-size: 11px; font-weight: 900; line-height: 1.1; text-align: center;
   white-space: nowrap; flex-shrink: 0;
 }
 .due-soon-countdown.now { background: var(--danger-light); color: var(--danger); }
 .due-soon-countdown.soon { background: var(--caramel-light); color: var(--espresso); }
 .due-soon-title {
-  margin-top: 7px; color: var(--text); font-size: 14px; font-weight: 800;
+  margin-top: 7px; color: var(--text); font-size: 15px; font-weight: 800;
   line-height: 1.25; overflow-wrap: anywhere;
 }
-.due-soon-date { margin-top: 3px; color: var(--text-muted); font-size: 11px; }
+.due-soon-date { margin-top: 3px; color: var(--text-muted); font-size: 12px; }
 .due-soon-links { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .due-soon-link {
   border: 1px solid #7DA8E8; border-radius: 999px;
   background: #DCEBFF; color: #234D83;
-  padding: 6px 9px; font-size: 11px; font-weight: 800;
+  padding: 6px 9px; font-size: 12px; font-weight: 800;
   cursor: pointer; line-height: 1.1; transition: transform 0.15s ease;
 }
 .due-soon-link:active { transform: scale(0.96); }
-.due-soon-muted { color: var(--text-muted); font-size: 11px; font-weight: 700; }
+.due-soon-muted { color: var(--text-muted); font-size: 12px; font-weight: 700; }
 .timeline-block.highlighted {
   border-color: #37679E; box-shadow: 0 0 0 2px rgba(55,103,158,0.24), var(--shadow-sm);
 }
@@ -1272,8 +1071,8 @@ body.paycheck-dragging .paycheck-pool-row {
   display: flex; justify-content: space-between; align-items: baseline; gap: 8px;
   margin: 2px 0 6px;
 }
-.agenda-day-title strong { font-size: 13px; color: var(--espresso); }
-.agenda-day-title span { font-size: 10px; color: var(--text-muted); font-weight: 700; }
+.agenda-day-title strong { font-size: 14px; color: var(--espresso); }
+.agenda-day-title span { font-size: 11px; color: var(--text-muted); font-weight: 700; }
 
 .timeline { margin-bottom: 8px; }
 .timeline-shell {
@@ -1283,7 +1082,7 @@ body.paycheck-dragging .paycheck-pool-row {
 .timeline-ruler, .timeline-lane { position: relative; height: var(--timeline-height); }
 .timeline-hour {
   position: absolute; left: 0; right: 0; transform: translateY(-50%);
-  font-size: 9px; color: var(--text-muted);
+  font-size: 9.5px; color: var(--text-muted);
 }
 .timeline-lane {
   border-left: 2px solid var(--border-soft);
@@ -1304,9 +1103,9 @@ body.paycheck-dragging .paycheck-pool-row {
   content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 5px;
   background: var(--block-color);
 }
-.timeline-block-title { font-size: 12px; font-weight: 800; color: var(--text); line-height: 1.2; }
-.timeline-block-time { font-size: 9px; color: var(--text-muted); margin-top: 2px; }
-.timeline-block-detail { font-size: 9px; color: var(--text-secondary); margin-top: 2px; }
+.timeline-block-title { font-size: 13px; font-weight: 800; color: var(--text); line-height: 1.2; }
+.timeline-block-time { font-size: 9.5px; color: var(--text-muted); margin-top: 2px; }
+.timeline-block-detail { font-size: 9.5px; color: var(--text-secondary); margin-top: 2px; }
 .timeline-block .inline-edit-btn {
   position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
 }
@@ -1321,7 +1120,7 @@ body.paycheck-dragging .paycheck-pool-row {
   position: absolute; right: 6px; top: 6px;
   width: 22px; height: 22px; border-radius: 50%;
   border: 1px solid var(--border-soft); background: rgba(255,255,255,0.85);
-  color: var(--text-muted); font-size: 13px; line-height: 1; cursor: pointer;
+  color: var(--text-muted); font-size: 14px; line-height: 1; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
 }
 .timeline-block-action:hover { color: var(--danger); border-color: var(--danger); }
@@ -1333,23 +1132,23 @@ body.paycheck-dragging .paycheck-pool-row {
   display: grid; grid-template-columns: 54px 1fr; gap: 8px; align-items: center;
   padding: 8px 10px; border-radius: var(--radius-sm); background: var(--bg-input);
 }
-.timeline-pin-time { font-size: 10px; font-weight: 800; color: var(--text-muted); }
-.timeline-pin-title { font-size: 13px; font-weight: 700; color: var(--text); }
-.timeline-pin-detail { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+.timeline-pin-time { font-size: 11px; font-weight: 800; color: var(--text-muted); }
+.timeline-pin-title { font-size: 14px; font-weight: 700; color: var(--text); }
+.timeline-pin-detail { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 .day-money-section {
   margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--border-soft);
 }
 .day-money-title {
-  font-size: 13px; font-weight: 800; color: var(--espresso); margin-bottom: 8px;
+  font-size: 14px; font-weight: 800; color: var(--espresso); margin-bottom: 8px;
 }
 .day-money-list { display: grid; gap: 7px; }
 .day-money-item {
   display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center;
   padding: 9px 10px; border-radius: var(--radius-sm); background: var(--bg-input);
 }
-.day-money-name { font-size: 13px; font-weight: 700; color: var(--text); }
-.day-money-meta { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
-.day-money-amount { font-size: 13px; font-weight: 800; color: var(--espresso); }
+.day-money-name { font-size: 14px; font-weight: 700; color: var(--text); }
+.day-money-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.day-money-amount { font-size: 14px; font-weight: 800; color: var(--espresso); }
 .day-money-amount.neg { color: var(--danger); }
 .day-money-amount.pos { color: var(--success); }
 
@@ -1365,10 +1164,10 @@ body.paycheck-dragging .paycheck-pool-row {
 .bill-check svg { width: 11px; height: 11px; stroke: #fff; stroke-width: 2.5; opacity: 0; }
 .bill-row.paid .bill-check svg { opacity: 1; }
 .bill-info { flex: 1; }
-.bill-name { font-size: 13px; color: var(--text); }
+.bill-name { font-size: 14px; color: var(--text); }
 .bill-row.paid .bill-name { color: var(--text-muted); text-decoration: line-through; text-decoration-color: var(--nude); }
-.bill-source { font-size: 10px; color: var(--text-muted); }
-.bill-amount { font-size: 13px; font-weight: 600; color: var(--espresso); }
+.bill-source { font-size: 11px; color: var(--text-muted); }
+.bill-amount { font-size: 14px; font-weight: 600; color: var(--espresso); }
 .bill-row.paid .bill-amount { color: var(--text-muted); }
 
 /* ── Money Sub-Tabs ── */
@@ -1376,29 +1175,13 @@ body.paycheck-dragging .paycheck-pool-row {
 .money-tab {
   flex: 1; padding: 12px 4px; border-radius: var(--radius-sm);
   border: 1.5px solid var(--border); background: var(--bg-card);
-  color: var(--text-secondary); font-size: 13px; font-weight: 600;
+  color: var(--text-secondary); font-size: 14px; font-weight: 600;
   cursor: pointer; text-align: center; transition: all 0.2s; min-width: 0;
 }
 .money-tab.active { background: var(--espresso); color: #fff; border-color: var(--espresso); }
 
 /* ── Money Accounts View ── */
-.balance-breakdown {
-  background: var(--bg-input); border-radius: var(--radius-sm);
-  padding: 12px 14px; margin-bottom: 14px;
-}
-.balance-breakdown-row {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 5px 0; font-size: 13px; color: var(--text-secondary);
-}
-.balance-breakdown-row .neg { color: var(--danger); font-weight: 700; }
-.balance-breakdown-row .pos { color: var(--success); font-weight: 700; }
-.balance-breakdown-row .negative { color: var(--danger); }
-.balance-breakdown-row.total {
-  border-top: 1.5px solid var(--border); margin-top: 4px; padding-top: 10px;
-  font-size: 15px; font-weight: 700; color: var(--espresso);
-}
-.balance-breakdown-row.total.negative { color: var(--danger); }
-.field-hint { font-size: 11px; color: var(--text-muted); margin: 2px 0 6px; line-height: 1.4; }
+.field-hint { font-size: 12px; color: var(--text-muted); margin: 2px 0 6px; line-height: 1.4; }
 .acct-card {
   background: var(--bg-card); border: 1.5px solid var(--border-soft);
   border-radius: var(--radius); box-shadow: var(--shadow-sm);
@@ -1410,9 +1193,9 @@ body.paycheck-dragging .paycheck-pool-row {
 }
 .acct-card-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
 .acct-card-info { flex: 1; }
-.acct-card-name { font-size: 15px; font-weight: 600; color: var(--text); }
-.acct-card-bal { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
-.acct-card-amount { font-family: var(--font-display); font-size: 20px; font-weight: 800; color: var(--espresso); }
+.acct-card-name { font-size: 16px; font-weight: 600; color: var(--text); }
+.acct-card-bal { font-size: 14px; color: var(--text-muted); margin-top: 2px; }
+.acct-card-amount { font-family: var(--font-display); font-size: 21.5px; font-weight: 800; color: var(--espresso); }
 .acct-card-amount.negative { color: var(--danger); }
 .acct-card .collapse-chevron { width: 18px; height: 18px; color: var(--text-muted); transition: transform 0.25s ease; flex-shrink: 0; }
 .acct-card.open .collapse-chevron { transform: rotate(180deg); }
@@ -1421,66 +1204,12 @@ body.paycheck-dragging .paycheck-pool-row {
 }
 .acct-card.open .acct-card-body { display: block; padding-top: 14px; }
 .acct-edit-row { margin-bottom: 12px; }
-.acct-edit-row .field-label { font-size: 12px; margin-bottom: 4px; }
+.acct-edit-row .field-label { font-size: 13px; margin-bottom: 4px; }
 .acct-edit-row .text-input { width: 100%; }
 
 /* ── 12-Month Projection ── */
-.budget-projection-controls { margin-bottom: 12px; }
-.budget-projection-controls .field-label { font-size: 12px; margin-bottom: 4px; }
-.budget-projection-controls .text-input { width: 100%; margin-bottom: 6px; }
-.budget-proj-table {
-  background: var(--bg-input); border-radius: var(--radius-sm);
-  padding: 8px 10px; overflow-x: auto;
-}
-.budget-proj-head, .budget-proj-row {
-  display: grid;
-  grid-template-columns: 68px minmax(72px,1fr) minmax(72px,1fr) minmax(72px,1fr) minmax(84px,1.1fr);
-  gap: 6px; align-items: center;
-  padding: 7px 0; font-size: 12px;
-}
-.budget-proj-head {
-  font-size: 10px; font-weight: 800; text-transform: uppercase;
-  letter-spacing: 0.3px; color: var(--text-muted);
-  border-bottom: 1px solid var(--border-soft); padding-bottom: 6px;
-}
-.budget-proj-head > span:not(:first-child),
-.budget-proj-row > span:not(:first-child) { text-align: right; }
-.budget-proj-row { color: var(--text-secondary); border-bottom: 1px solid var(--border-soft); }
-.budget-proj-row:last-child { border-bottom: none; }
-.budget-proj-row > span:first-child { font-weight: 600; color: var(--text); }
-.budget-proj-row .neg { color: var(--danger); font-weight: 700; }
-.budget-proj-row .pos { color: var(--success); font-weight: 700; }
-.budget-proj-row .negative { color: var(--danger); }
-.budget-proj-row.total {
-  border-top: 1.5px solid var(--border); border-bottom: none;
-  margin-top: 4px; padding-top: 10px;
-  font-size: 13px; color: var(--espresso); font-weight: 700;
-}
 
 /* Discover safe-spend panel (on the Discover account card body). */
-.discover-safe-panel {
-  margin-bottom: 14px; padding: 12px 14px; border-radius: var(--radius-sm);
-  border: 1px solid var(--border-soft); background: var(--bg-input);
-}
-.discover-safe-panel.ok { background: rgba(60,140,80,0.08); border-color: rgba(60,140,80,0.35); }
-.discover-safe-panel.danger { background: rgba(192,40,40,0.08); border-color: rgba(192,40,40,0.45); }
-.discover-safe-panel.muted { background: var(--bg-input); }
-.discover-safe-title { font-size: 12px; font-weight: 800; color: var(--espresso); letter-spacing: 0.4px; text-transform: uppercase; }
-.discover-safe-msg { font-size: 13px; color: var(--text); margin: 6px 0 10px; line-height: 1.35; }
-.discover-safe-panel.danger .discover-safe-msg { color: var(--danger); font-weight: 700; }
-.discover-safe-grid {
-  display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 14px;
-}
-.discover-safe-grid > div { display: flex; flex-direction: column; gap: 2px; }
-.discover-safe-label { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3px; }
-.discover-safe-val { font-size: 15px; font-weight: 800; color: var(--espresso); }
-.discover-safe-free {
-  grid-column: 1 / -1; padding: 8px 10px; border-radius: 8px;
-  background: rgba(60,140,80,0.14); border: 1px dashed rgba(60,140,80,0.4);
-}
-.discover-safe-free.danger { background: rgba(192,40,40,0.12); border-color: rgba(192,40,40,0.5); }
-.discover-safe-free.danger .discover-safe-val { color: var(--danger); }
-.discover-safe-free.muted { background: var(--bg-input); border-color: var(--border-soft); }
 
 /* ── Money Transactions View ── */
 
@@ -1495,8 +1224,8 @@ body.paycheck-dragging .paycheck-pool-row {
 }
 .bill-cat-section.open .bill-cat-header { border-radius: var(--radius) var(--radius) 0 0; border-bottom-color: transparent; }
 .bill-cat-left { flex: 1; }
-.bill-cat-name { font-size: 15px; font-weight: 700; color: var(--espresso); }
-.bill-cat-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.bill-cat-name { font-size: 16px; font-weight: 700; color: var(--espresso); }
+.bill-cat-sub { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
 .bill-cat-header .collapse-chevron { width: 18px; height: 18px; color: var(--text-muted); transition: transform 0.25s ease; flex-shrink: 0; }
 .bill-cat-section.open .bill-cat-header .collapse-chevron { transform: rotate(180deg); }
 .bill-cat-body {
@@ -1516,25 +1245,9 @@ body.paycheck-dragging .paycheck-pool-row {
 }
 .bill-card-section[data-card="Discover"] .bill-cat-name    { color: var(--pal-blue-strong, #7A9FEE); }
 .bill-card-section[data-card="Capital One"] .bill-cat-name { color: var(--pal-purple-strong, #C48BDF); }
-.bill-card-section[data-card="First Financial"] .bill-cat-name { color: var(--pal-green-strong, #6DA76D); }
+.bill-card-section[data-card="checking"] .bill-cat-name { color: var(--pal-green-strong, #6DA76D); }
 
-/* ── First Financial funding view ── */
-.ff-header {
-  padding: 10px 12px; margin-bottom: 10px; border-radius: 12px;
-  background: rgba(109,167,109,0.10); border: 1px solid rgba(109,167,109,0.30);
-  display: flex; flex-direction: column; gap: 6px;
-}
-.ff-tagline { font-size: 12px; color: var(--text); line-height: 1.35; }
-.ff-tagline strong { color: var(--espresso); }
-.ff-month-total {
-  display: flex; align-items: baseline; justify-content: space-between;
-  gap: 10px; font-size: 12px; color: var(--text-muted);
-  padding-top: 4px; border-top: 1px dashed rgba(109,167,109,0.35);
-}
-.ff-month-total strong {
-  font-family: var(--font-display); font-size: 17px; font-weight: 800;
-  color: var(--espresso);
-}
+/* ── Checking account: what each paycheck needs ── */
 .ff-paycheck-card {
   margin-top: 8px; padding: 10px 12px 8px; border-radius: 12px;
   background: var(--bg-input); border: 1px solid var(--border-soft);
@@ -1547,34 +1260,36 @@ body.paycheck-dragging .paycheck-pool-row {
   gap: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border-soft);
   margin-bottom: 6px;
 }
-.ff-paycheck-name { font-size: 13px; font-weight: 700; color: var(--text); }
-.ff-paycheck-date { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.ff-paycheck-name { font-size: 14px; font-weight: 700; color: var(--text); }
+.ff-paycheck-date { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
 .ff-paycheck-total { text-align: right; }
 .ff-paycheck-total-label {
-  font-size: 9px; font-weight: 800; letter-spacing: 0.4px;
+  font-size: 9.5px; font-weight: 800; letter-spacing: 0.4px;
   text-transform: uppercase; color: var(--text-muted);
 }
 .ff-paycheck-total-amt {
-  font-family: var(--font-display); font-size: 17px; font-weight: 800;
+  font-family: var(--font-display); font-size: 18.5px; font-weight: 800;
   color: var(--pal-green-strong, #6DA76D); line-height: 1.1; margin-top: 2px;
 }
 .ff-item-list { display: grid; gap: 4px; padding: 4px 0 2px; }
 .ff-item {
   display: flex; justify-content: space-between; gap: 10px;
-  font-size: 12px; color: var(--text-secondary);
+  font-size: 13px; color: var(--text-secondary);
 }
 .ff-item span:last-child { font-weight: 700; color: var(--espresso); white-space: nowrap; }
+.ff-item.paid span { text-decoration: line-through; opacity: 0.5; }
+.bill-sched-tag { display: inline-block; font-size: 12px; padding: 1px 8px; border-radius: 999px; background: var(--pal-blue, #DCE6FF); color: var(--espresso); margin-left: 4px; vertical-align: 1px; }
+.bill-paid-tag { display: inline-block; font-size: 12px; padding: 1px 8px; border-radius: 999px; background: var(--success-light, #E8FFD8); color: var(--espresso); margin-left: 4px; vertical-align: 1px; text-decoration: none; }
 .ff-item-empty {
-  font-size: 11px; color: var(--text-muted); font-style: italic;
+  font-size: 12px; color: var(--text-muted); font-style: italic;
   padding: 4px 0;
 }
 .ff-empty {
-  text-align: center; font-size: 12px; color: var(--text-muted);
+  text-align: center; font-size: 13px; color: var(--text-muted);
   padding: 18px 8px; border: 1.5px dashed var(--border-soft); border-radius: 12px;
 }
 
-/* Sent state for a First Financial paycheck card — one click marks the
-   whole block done, not the individual bills. */
+/* A paycheck whose bills are all paid. */
 .ff-paycheck-card.ff-sent {
   opacity: 0.55; background: var(--bg-input);
 }
@@ -1585,7 +1300,7 @@ body.paycheck-dragging .paycheck-pool-row {
 .ff-sent-btn {
   border: 1px solid var(--border-soft); background: var(--bg-card);
   color: var(--text-muted); border-radius: 999px;
-  padding: 4px 10px; font-size: 11px; font-weight: 700; cursor: pointer;
+  padding: 4px 10px; font-size: 12px; font-weight: 700; cursor: pointer;
   display: inline-flex; align-items: center; gap: 4px;
   transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
@@ -1601,9 +1316,6 @@ body.paycheck-dragging .paycheck-pool-row {
 
 /* Blur any money display for the bill-hub account — user doesn't want to
    see the balance, only that the account exists. */
-.blur-money {
-  filter: blur(6px); user-select: none; pointer-events: none;
-}
 .bill-card-section.drop-target .bill-cat-header,
 .bill-card-section.drop-target .bill-cat-body {
   border-color: var(--espresso);
@@ -1616,19 +1328,19 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
   min-height: 60px;
 }
 .bill-card-empty {
-  text-align: center; font-size: 12px; color: var(--text-muted);
+  text-align: center; font-size: 13px; color: var(--text-muted);
   padding: 18px 8px; border: 1.5px dashed var(--border-soft); border-radius: 12px;
 }
 .bill-card-cat-tag {
   display: inline-block; margin-left: 6px; padding: 1px 6px;
-  font-size: 9px; font-weight: 800; letter-spacing: 0.4px; text-transform: uppercase;
+  font-size: 9.5px; font-weight: 800; letter-spacing: 0.4px; text-transform: uppercase;
   color: var(--text-muted); background: var(--bg-input);
   border-radius: 999px; vertical-align: middle;
 }
 .bill-card-remove {
   width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--border-soft);
   background: var(--bg-card); color: var(--text-muted); cursor: pointer;
-  font-size: 16px; line-height: 1; padding: 0;
+  font-size: 17.5px; line-height: 1; padding: 0;
   display: inline-flex; align-items: center; justify-content: center;
   transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
 }
@@ -1636,20 +1348,20 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
   color: var(--danger); border-color: var(--danger); background: var(--danger-light);
 }
 .bill-edit-info { flex: 1; min-width: 0; }
-.bill-edit-name { font-size: 14px; color: var(--text); font-weight: 500; }
+.bill-edit-name { font-size: 15px; color: var(--text); font-weight: 500; }
 .bill-freq-tag {
   display: inline-block; margin-left: 6px; padding: 1px 6px;
-  font-size: 9px; font-weight: 800; letter-spacing: 0.4px; text-transform: uppercase;
+  font-size: 9.5px; font-weight: 800; letter-spacing: 0.4px; text-transform: uppercase;
   color: var(--espresso); background: rgba(217,180,138,0.35);
   border-radius: 999px; vertical-align: middle;
 }
 [data-theme="dark"] .bill-freq-tag { color: #f2d9b8; background: rgba(217,180,138,0.22); }
-.bill-edit-detail { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.bill-edit-detail { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
 .bill-edit-right { display: flex; align-items: center; gap: 8px; }
-.bill-edit-amt { font-size: 14px; font-weight: 700; color: var(--espresso); white-space: nowrap; }
+.bill-edit-amt { font-size: 15px; font-weight: 700; color: var(--espresso); white-space: nowrap; }
 .bill-edit-btn {
   width: 28px; height: 28px; border-radius: 50%; border: none;
-  background: var(--bg-input); color: var(--text-muted); font-size: 13px;
+  background: var(--bg-input); color: var(--text-muted); font-size: 14px;
   cursor: pointer; display: flex; align-items: center; justify-content: center;
 }
 .bill-month-nav {
@@ -1658,17 +1370,17 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
   background: var(--bg-card); border-radius: var(--radius-sm);
   border: 1px solid var(--border-soft);
 }
-.bill-month-label { font-size: 14px; font-weight: 700; color: var(--espresso); text-align: center; }
-.bill-month-sub { font-size: 11px; color: var(--text-muted); text-align: center; margin-top: 2px; }
+.bill-month-label { font-size: 15px; font-weight: 700; color: var(--espresso); text-align: center; }
+.bill-month-sub { font-size: 12px; color: var(--text-muted); text-align: center; margin-top: 2px; }
 
 /* ── Shared balance/ledger ── */
 .text-input.compact, .modal-input.compact {
-  padding: 7px 8px; font-size: 12px; min-width: 0;
+  padding: 7px 8px; font-size: 13px; min-width: 0;
 }
 .modal-danger {
   width: 100%; padding: 12px; border-radius: var(--radius-sm);
   border: 1px solid var(--danger); background: var(--danger-light); color: var(--danger);
-  font-size: 14px; font-weight: 700; cursor: pointer;
+  font-size: 15px; font-weight: 700; cursor: pointer;
 }
 .color-dot-row { display: flex; gap: 8px; flex-wrap: wrap; }
 .color-dot {
@@ -1676,13 +1388,13 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
   cursor: pointer;
 }
 .color-dot.active { border-color: var(--espresso); box-shadow: 0 0 0 2px var(--bg-card), 0 0 0 4px var(--espresso-light); }
-.tx-note { font-size: 13px; color: var(--text); }
-.tx-amount { font-size: 14px; font-weight: 600; }
+.tx-note { font-size: 14px; color: var(--text); }
+.tx-amount { font-size: 15px; font-weight: 600; }
 .tx-amount.neg { color: var(--danger); }
 .tx-amount.pos { color: var(--success); }
 .tx-del {
   width: 24px; height: 24px; border-radius: 50%; border: none;
-  background: var(--danger-light); color: var(--danger); font-size: 14px;
+  background: var(--danger-light); color: var(--danger); font-size: 15px;
   cursor: pointer; display: flex; align-items: center; justify-content: center;
   opacity: 0; transition: opacity 0.2s;
 }
@@ -1690,7 +1402,7 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
 .add-btn {
   width: 100%; padding: 12px; border-radius: var(--radius-sm);
   border: 2px dashed var(--border); background: transparent;
-  color: var(--espresso); font-size: 14px; font-weight: 500;
+  color: var(--espresso); font-size: 15px; font-weight: 500;
   cursor: pointer; transition: all 0.2s; margin-bottom: 14px;
 }
 .add-btn:active { background: var(--espresso-light); }
@@ -1720,27 +1432,27 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
   width: 72px; height: 172px; border: none; background: transparent;
   position: relative; cursor: pointer; filter: drop-shadow(0 6px 10px rgba(40,100,160,0.13));
 }
-.water-count { font-size: 28px; font-weight: 800; color: var(--espresso); line-height: 1; }
-.water-praise { font-size: 13px; color: var(--success); min-height: 20px; margin-top: 6px; font-weight: 700; }
+.water-count { font-size: 30px; font-weight: 800; color: var(--espresso); line-height: 1; }
+.water-praise { font-size: 14px; color: var(--success); min-height: 20px; margin-top: 6px; font-weight: 700; }
 .water-side { max-width: 170px; }
 .water-reset {
   margin-top: 10px; border: 1px solid var(--border); background: var(--bg-input);
   color: var(--text-secondary); border-radius: 999px; padding: 6px 10px;
-  font-size: 11px; cursor: pointer;
+  font-size: 12px; cursor: pointer;
 }
 @keyframes waterWave {
   0%, 100% { transform: translateX(0); }
   50% { transform: translateX(10px); }
 }
 .meal-choice-row { display: grid; grid-template-columns: 82px 1fr; align-items: center; gap: 8px; }
-.meal-choice-label { font-size: 12px; font-weight: 700; color: var(--espresso); }
+.meal-choice-label { font-size: 13px; font-weight: 700; color: var(--espresso); }
 .meal-choice-options { display: flex; flex-wrap: wrap; gap: 6px; }
 .meal-choice-btn {
   border: 1px solid var(--border); background: var(--bg-input); color: var(--text-secondary);
-  border-radius: 999px; padding: 7px 10px; font-size: 12px; cursor: pointer;
+  border-radius: 999px; padding: 7px 10px; font-size: 13px; cursor: pointer;
 }
 .meal-choice-btn.active { background: var(--espresso); border-color: var(--espresso); color: #fff; }
-.meal-alt { font-size: 12px; color: var(--text-muted); font-style: italic; margin-top: 2px; }
+.meal-alt { font-size: 13px; color: var(--text-muted); font-style: italic; margin-top: 2px; }
 .grocery-controls {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
   margin: 10px 0 12px;
@@ -1750,7 +1462,7 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
 .grocery-row {
   display: flex; justify-content: space-between; gap: 10px;
   padding: 8px 0; border-bottom: 1px solid var(--border-soft);
-  font-size: 13px;
+  font-size: 14px;
 }
 .grocery-row:last-child { border-bottom: none; }
 .grocery-qty { font-weight: 700; color: var(--espresso); text-align: right; white-space: nowrap; }
@@ -1758,16 +1470,16 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
   display: inline-flex; align-items: center; gap: 6px;
   margin: 0 0 10px; padding: 6px 12px 6px 8px; border-radius: 999px;
   border: 1px solid var(--border-soft); background: var(--bg-card);
-  color: var(--espresso); font-size: 13px; cursor: pointer;
+  color: var(--espresso); font-size: 14px; cursor: pointer;
 }
 .grocery-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; text-align: center; }
-.grocery-summary-num { font-family: var(--font-display); font-size: 20px; color: var(--espresso); }
-.grocery-summary-label { font-size: 11px; color: var(--text-muted); }
-.grocery-item .grocery-qty { font-size: 14px; }
+.grocery-summary-num { font-family: var(--font-display); font-size: 21.5px; color: var(--espresso); }
+.grocery-summary-label { font-size: 12px; color: var(--text-muted); }
+.grocery-item .grocery-qty { font-size: 15px; }
 .grocery-item.checked .grocery-qty { color: var(--text-muted); text-decoration: line-through; text-decoration-color: var(--nude); }
 .grocery-note { margin-top: 10px; }
-.todo-title { font-size: 14px; font-weight: 700; color: var(--text); }
-.todo-notes { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+.todo-title { font-size: 15px; font-weight: 700; color: var(--text); }
+.todo-notes { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
 
 .med-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border-soft); cursor: pointer; }
 .med-row:last-child { border-bottom: none; }
@@ -1779,10 +1491,10 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
 .med-row.taken .med-check { background: var(--success); border-color: var(--success); }
 .med-check svg { width: 12px; height: 12px; stroke: #fff; stroke-width: 2.5; opacity: 0; }
 .med-row.taken .med-check svg { opacity: 1; }
-.med-name { font-size: 14px; color: var(--text); }
+.med-name { font-size: 15px; color: var(--text); }
 .med-row.taken .med-name { color: var(--text-muted); text-decoration: line-through; text-decoration-color: var(--nude); }
-.med-dose { font-size: 11px; color: var(--text-muted); }
-.med-sched { font-size: 10px; font-weight: 600; color: var(--latte); background: var(--latte-light); padding: 2px 8px; border-radius: 10px; display: inline-block; margin-top: 2px; }
+.med-dose { font-size: 12px; color: var(--text-muted); }
+.med-sched { font-size: 11px; font-weight: 600; color: var(--latte); background: var(--latte-light); padding: 2px 8px; border-radius: 10px; display: inline-block; margin-top: 2px; }
 
 /* ── Modal ── */
 .modal-overlay {
@@ -1801,24 +1513,24 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
 }
 .modal-overlay.open .modal-sheet { transform: translateY(0); }
 .modal-handle { width: 36px; height: 4px; border-radius: 2px; background: var(--border); margin: 0 auto 14px; }
-.modal-title { font-family: var(--font-display); font-size: 18px; color: var(--espresso); margin-bottom: 14px; }
+.modal-title { font-family: var(--font-display); font-size: 19.5px; color: var(--espresso); margin-bottom: 14px; }
 .modal-field { margin-bottom: 14px; }
 .modal-input {
   width: 100%; padding: 11px 14px; border-radius: var(--radius-xs);
   border: 1px solid var(--border); background: var(--bg-input);
-  color: var(--text); font-size: 15px; outline: none;
+  color: var(--text); font-size: 16px; outline: none;
 }
 .modal-input:focus { border-color: var(--latte); }
 .cat-btn {
   padding: 7px 12px; border-radius: 20px;
   border: 1.5px solid var(--border); background: var(--bg-input);
-  color: var(--text-secondary); font-size: 12px; cursor: pointer; transition: all 0.2s;
+  color: var(--text-secondary); font-size: 13px; cursor: pointer; transition: all 0.2s;
 }
 .cat-btn.active { background: var(--espresso); color: #fff; border-color: var(--espresso); }
 .modal-submit {
   width: 100%; padding: 13px; border-radius: var(--radius-sm);
   border: none; background: var(--espresso); color: #fff;
-  font-size: 15px; font-weight: 600; cursor: pointer; transition: opacity 0.2s;
+  font-size: 16px; font-weight: 600; cursor: pointer; transition: opacity 0.2s;
   margin-top: 8px;
 }
 .modal-submit:active { opacity: 0.85; }
@@ -1858,17 +1570,17 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
 .day-modal-nav-btn {
   width: 40px; height: 40px; border-radius: 50%;
   border: 1px solid var(--border-soft); background: var(--bg-input);
-  color: var(--espresso); font-size: 20px; cursor: pointer;
+  color: var(--espresso); font-size: 21.5px; cursor: pointer;
   display: inline-flex; align-items: center; justify-content: center;
   -webkit-tap-highlight-color: transparent;
 }
 .day-modal-nav-btn:active { transform: scale(0.94); }
-.day-modal-title { font-size: 20px; font-weight: 800; color: var(--espresso); }
-.day-modal-date { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+.day-modal-title { font-size: 21.5px; font-weight: 800; color: var(--espresso); }
+.day-modal-date { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
 .modal-close-btn {
   width: 30px; height: 30px; border-radius: 50%;
   border: 1px solid var(--border-soft); background: var(--bg-input);
-  color: var(--text-secondary); cursor: pointer; font-size: 18px;
+  color: var(--text-secondary); cursor: pointer; font-size: 19.5px;
 }
 .day-modal-actions { display: grid; gap: 8px; margin-top: 12px; }
 
@@ -1890,13 +1602,13 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
   background: var(--bg-card);
 }
 .day-panel-title {
-  font-size: 13px; font-weight: 800; letter-spacing: 0.6px;
+  font-size: 14px; font-weight: 800; letter-spacing: 0.6px;
   color: var(--espresso); text-transform: uppercase;
   margin-bottom: 8px;
 }
 .day-panel-body { display: flex; flex-direction: column; gap: 2px; }
 .day-panel-empty {
-  font-size: 12px; color: var(--text-muted);
+  font-size: 13px; color: var(--text-muted);
   padding: 10px 2px; text-align: center;
 }
 
@@ -1918,7 +1630,7 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
 .day-todo-check svg { width: 12px; height: 12px; stroke: #fff; stroke-width: 2.5; opacity: 0; transition: opacity 0.2s; }
 .day-todo-row.checked .day-todo-check svg { opacity: 1; }
 .day-todo-text {
-  flex: 1; min-width: 0; font-size: 13px; color: var(--text);
+  flex: 1; min-width: 0; font-size: 14px; color: var(--text);
   overflow-wrap: anywhere; line-height: 1.3;
 }
 .day-todo-row.checked .day-todo-text {
@@ -1928,7 +1640,7 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
 .day-todo-x {
   width: 24px; height: 24px; border-radius: 50%;
   border: 0; background: transparent; color: var(--text-muted);
-  cursor: pointer; font-size: 16px; line-height: 1; padding: 0;
+  cursor: pointer; font-size: 17.5px; line-height: 1; padding: 0;
   display: inline-flex; align-items: center; justify-content: center;
   transition: color 0.15s, background 0.15s;
   flex-shrink: 0;
@@ -1943,14 +1655,14 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
   flex: 1; min-width: 0; padding: 9px 11px;
   border-radius: 10px; border: 1px solid var(--border);
   background: var(--bg-input); color: var(--text);
-  font-family: inherit; font-size: 14px; outline: none;
+  font-family: inherit; font-size: 15px; outline: none;
   transition: font-size 0.15s ease, border-color 0.2s ease;
 }
-.day-todo-add input:focus { font-size: 11px; border-color: var(--espresso); }
+.day-todo-add input:focus { font-size: 12px; border-color: var(--espresso); }
 .day-todo-add button {
   width: 36px; height: 36px; border-radius: 10px;
   border: 0; background: var(--espresso); color: #fff;
-  cursor: pointer; font-size: 18px; line-height: 1;
+  cursor: pointer; font-size: 19.5px; line-height: 1;
   display: inline-flex; align-items: center; justify-content: center;
   transition: transform 0.12s ease;
 }
@@ -1960,11 +1672,11 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
   width: 100%; min-height: 130px; resize: vertical;
   padding: 10px 12px; border-radius: 10px;
   border: 1px solid var(--border); background: var(--bg-input);
-  color: var(--text); font-family: inherit; font-size: 14px;
+  color: var(--text); font-family: inherit; font-size: 15px;
   outline: none; line-height: 1.5;
   transition: border-color 0.15s, font-size 0.15s ease;
 }
-.day-notes-text:focus { border-color: var(--espresso); font-size: 11px; }
+.day-notes-text:focus { border-color: var(--espresso); font-size: 12px; }
 @media (prefers-reduced-motion: reduce) {
   .day-todo-add input, .day-notes-text { transition: none; }
 }
@@ -1975,18 +1687,12 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
   padding: 11px; border-radius: var(--radius-sm);
   background: var(--bg-input); border: 1px solid var(--border-soft);
 }
-.brain-dump-text { font-size: 14px; color: var(--text); white-space: pre-wrap; }
+.brain-dump-text { font-size: 15px; color: var(--text); white-space: pre-wrap; }
 .brain-dump-actions { display: grid; grid-template-columns: repeat(2, 1fr) 30px; gap: 6px; margin-top: 10px; }
 .brain-dump-actions .cat-btn { padding: 7px 6px; }
-.brain-dump-empty { font-size: 13px; color: var(--text-muted); padding: 8px 0; }
+.brain-dump-empty { font-size: 14px; color: var(--text-muted); padding: 8px 0; }
 
 /* ── Plan Banner ── */
-.plan-banner {
-  background: var(--espresso-light); border-radius: var(--radius-sm);
-  padding: 12px 14px; margin-bottom: 14px; border-left: 3px solid var(--espresso);
-}
-.plan-banner-title { font-size: 11px; font-weight: 600; color: var(--espresso); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
-.plan-banner-item { font-size: 13px; color: var(--text); padding: 2px 0; }
 
 /* ── Supabase Sync Indicator ── */
 
@@ -2000,7 +1706,7 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
 .settings-panel.open { transform: translateX(0); }
 .settings-back {
   display: flex; align-items: center; gap: 6px; background: none; border: none;
-  color: var(--espresso); font-size: 14px; font-weight: 500; cursor: pointer;
+  color: var(--espresso); font-size: 15px; font-weight: 500; cursor: pointer;
   margin-bottom: 20px;
 }
 .settings-back svg { width: 18px; height: 18px; }
@@ -2016,9 +1722,9 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
 }
 .collapse-header.open { border-radius: var(--radius) var(--radius) 0 0; border-bottom-color: transparent; }
 .collapse-header-left { display: flex; align-items: center; gap: 10px; }
-.collapse-title { font-family: var(--font-display); font-size: 16px; color: var(--espresso); }
+.collapse-title { font-family: var(--font-display); font-size: 17.5px; color: var(--espresso); }
 .collapse-title-sticker { --sticker-size: 28px; opacity: 0.95; flex-shrink: 0; }
-.collapse-sub { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+.collapse-sub { font-size: 13px; color: var(--text-muted); margin-top: 1px; }
 .collapse-chevron { width: 18px; height: 18px; color: var(--text-muted); transition: transform 0.25s ease; flex-shrink: 0; }
 .collapse-header.open .collapse-chevron { transform: rotate(180deg); }
 .collapse-body {
@@ -2031,28 +1737,25 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
 
 @media (max-width: 400px) {
   :root { --page-pad: 16px; }
-  .page-greeting { font-size: 18px; }
+  .page-greeting { font-size: 19.5px; }
   .month-cell { padding: 4px; }
-  .money-tab { font-size: 13px; padding: 10px 6px; }
+  .money-tab { font-size: 14px; padding: 10px 6px; }
 }
 
 /* ── iPad optimization ── */
 @media (min-width: 700px) {
   :root { --page-pad: 32px; --nav-h: 72px; }
   .tab-page { max-width: 680px; }
-  .page-greeting { font-size: 28px; }
-  .page-date { font-size: 16px; }
+  .page-greeting { font-size: 30px; }
+  .page-date { font-size: 17.5px; }
   .card { padding: 22px; }
-  .card-title { font-size: 18px; }
-  .hub-nav-btn { min-height: 50px; }
-  .hub-nav-btn svg { width: 24px; height: 24px; }
-  .hub-nav-sticker { width: 34px; height: 34px; }
+  .card-title { font-size: 19.5px; }
   .sticky-grid { grid-template-columns: repeat(3, 1fr); }
   .sticky-note { min-height: 140px; padding: 16px; }
-  .sticky-note textarea { font-size: 14px; }
+  .sticky-note textarea { font-size: 15px; }
   .bill-row { padding: 10px 0; }
-  .bill-name { font-size: 14px; }
-  .bill-amount { font-size: 14px; }
+  .bill-name { font-size: 15px; }
+  .bill-amount { font-size: 15px; }
   .toggle-row { padding: 14px 0; }
   .month-cell { padding: 8px; }
 }
@@ -2072,7 +1775,7 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
 }
 .month-cell .month-date {
   position: relative; align-self: flex-start;
-  font-size: 11px; font-weight: 700; color: var(--text); line-height: 1;
+  font-size: 12px; font-weight: 700; color: var(--text); line-height: 1;
   padding: 1px 2px;
 }
 .month-cell .month-icons {
@@ -2083,6 +1786,7 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
 .month-cell .month-icons .month-day-sticker { --sticker-size: 24px; opacity: 1; }
 .month-cell .month-icons[data-count="2"] .month-day-sticker { --sticker-size: 18px; }
 .month-cell .month-icons[data-count="3"] .month-day-sticker { --sticker-size: 15px; }
+.month-cell .month-icons[data-count="4"] .month-day-sticker { --sticker-size: 13px; }
 .month-cell.past { opacity: 0.4; }
 .month-cell.past .month-date::after {
   content: ''; position: absolute; inset: -3px -3px;
@@ -2103,7 +1807,7 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
 }
 .cal-actions .cal-action-btn .theme-sticker { --sticker-size: 28px; }
 .cal-action-label {
-  font-size: 12px; font-weight: 700; color: var(--espresso);
+  font-size: 13px; font-weight: 700; color: var(--espresso);
   line-height: 1.1; text-align: center;
 }
 
@@ -2111,7 +1815,7 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
 .wg-day.past { opacity: 0.6; }
 .wg-daycol { gap: 1px; }
 .wg-off {
-  font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;
+  font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;
   color: var(--success); background: var(--success-light);
   border-radius: 999px; padding: 1px 6px; margin-top: 3px;
 }
@@ -2123,37 +1827,36 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
   -webkit-tap-highlight-color: transparent;
 }
 .wg-item .wg-time { display: flex; flex-direction: column; min-width: 54px; line-height: 1.15; }
-.wg-item .wg-time small { font-size: 9.5px; font-weight: 600; opacity: 0.85; }
+.wg-item .wg-time small { font-size: 10.5px; font-weight: 600; opacity: 0.85; }
 .wg-icon { --sticker-size: 22px; }
 .wg-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .wg-detail {
-  font-size: 11px; color: var(--text-muted); line-height: 1.3;
+  font-size: 12px; color: var(--text-muted); line-height: 1.3;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .wg-meals {
   display: flex; flex-wrap: wrap; gap: 12px;
   margin-top: 2px; padding-top: 5px; border-top: 1px dashed var(--border-soft);
 }
-.wg-meal { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; color: var(--text-secondary); }
+.wg-meal { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; color: var(--text-secondary); }
 .wg-meal-icon { --sticker-size: 18px; }
 
 /* ── Today: color-coded to-do groups, the time list, notes ── */
-.today-todo-count { font-size: 12px; font-weight: 700; color: var(--text-muted); }
 .todo-group {
   border-left: 4px solid var(--group-color, var(--nude));
   padding: 2px 0 2px 10px; margin-top: 12px;
 }
 .todo-group-label {
-  font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em;
+  font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em;
   color: var(--text-secondary); margin-bottom: 2px;
 }
 .todo-row .todo-icon { --sticker-size: 20px; }
 .todo-row.checked .todo-icon, .todo-row.checked .mop-icon { opacity: 0.45; }
-.todo-meta { font-size: 11px; color: var(--text-muted); flex-shrink: 0; }
+.todo-meta { font-size: 12px; color: var(--text-muted); flex-shrink: 0; }
 .todo-group .day-todo-add { margin-top: 4px; }
 .today-add-btn {
   border: 1px solid var(--border); background: var(--bg-input); color: var(--espresso);
-  border-radius: 999px; padding: 5px 12px; font-size: 12px; font-weight: 700; cursor: pointer;
+  border-radius: 999px; padding: 5px 12px; font-size: 13px; font-weight: 700; cursor: pointer;
 }
 .today-times .card-title-row { margin-bottom: 8px; }
 .time-row {
@@ -2165,21 +1868,21 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
 .time-row:last-child { border-bottom: none; }
 .time-row-time {
   flex: 0 0 60px; display: flex; flex-direction: column; line-height: 1.2;
-  font-size: 12px; font-weight: 800; color: var(--espresso);
+  font-size: 13px; font-weight: 800; color: var(--espresso);
 }
-.time-row-time small { font-size: 10px; font-weight: 600; color: var(--text-muted); }
+.time-row-time small { font-size: 11px; font-weight: 600; color: var(--text-muted); }
 .time-row-icon { --sticker-size: 26px; }
 .time-row-inline-icon { --sticker-size: 20px; }
 .time-row-main { flex: 1; min-width: 0; }
 .time-row-title {
   display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
-  font-size: 14px; font-weight: 700; color: var(--text);
+  font-size: 15px; font-weight: 700; color: var(--text);
 }
-.time-row-detail { font-size: 11.5px; color: var(--text-muted); margin-top: 2px; }
+.time-row-detail { font-size: 12.5px; color: var(--text-muted); margin-top: 2px; }
 .time-row.past { opacity: 0.5; }
 .time-row.now { background: var(--espresso-light); border-radius: 0 10px 10px 0; }
 .time-row-now {
-  font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;
+  font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;
   color: #fff; background: var(--espresso); border-radius: 999px; padding: 2px 7px;
 }
 .time-row.anytime { border-left-color: var(--pal-pink-strong); }
@@ -2190,44 +1893,60 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
 
 /* ── Routines ── */
 .routine-auto-hint { margin: 6px 0 2px; }
+.school-classes { display: flex; flex-direction: column; gap: 6px; margin: 4px 0 14px; }
+.school-class-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border-soft); }
+.school-class-name { color: var(--espresso); }
+.school-class-end { width: auto; margin: 0; padding: 6px 12px; font-size: 13px; }
+.routine-edit-btn { margin-top: 10px; }
+.routine-editor { display: flex; flex-direction: column; gap: 10px; padding-top: 6px; }
+.routine-editor-start { display: flex; align-items: center; gap: 10px; }
+.routine-editor-start .modal-input { max-width: 150px; }
+.routine-editor-row {
+  display: grid; grid-template-columns: 1fr 72px 32px; gap: 6px; align-items: center;
+  padding-bottom: 10px; border-bottom: 1px solid var(--border-soft);
+}
+.routine-editor-detail { grid-column: 1 / -1; }
+.routine-editor-actions { display: flex; gap: 8px; }
+.routine-editor-actions > * { flex: 1; margin: 0; }
+.routine-reset-link { background: none; border: none; color: var(--text-muted); text-decoration: underline; cursor: pointer; align-self: center; font-size: 13px; }
 .routine-link-btn {
   flex-shrink: 0; border: 1px solid var(--border); background: var(--bg-input);
   color: var(--espresso); border-radius: 999px; padding: 5px 10px;
-  font-size: 11px; font-weight: 700; cursor: pointer;
+  font-size: 12px; font-weight: 700; cursor: pointer;
 }
 .meal-prep-row { padding: 10px 0; border-bottom: 1px solid var(--border-soft); }
-.meal-prep-label { font-size: 14px; font-weight: 700; color: var(--espresso); margin-bottom: 6px; }
+.meal-prep-label { font-size: 15px; font-weight: 700; color: var(--espresso); margin-bottom: 6px; }
 .meal-prep-controls { display: grid; grid-template-columns: 1.3fr 1fr; gap: 8px; }
 .meal-prep-when {
   display: inline-block; margin-top: 8px; border: none;
   background: var(--pal-green); color: var(--espresso);
-  border-radius: 999px; padding: 4px 10px; font-size: 12px; font-weight: 700; cursor: pointer;
+  border-radius: 999px; padding: 4px 10px; font-size: 13px; font-weight: 700; cursor: pointer;
 }
 .meal-prep-when.warn { background: var(--danger-light); color: var(--danger); cursor: default; }
 .meal-prep-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .meal-prep-actions .modal-submit, .meal-prep-actions .add-btn { margin: 0; }
 .meal-prep-actions .add-btn { border-style: solid; }
 .school-list { margin-top: 4px; }
-.school-done summary { cursor: pointer; font-size: 12px; font-weight: 700; color: var(--text-muted); padding: 8px 0; }
+.school-done summary { cursor: pointer; font-size: 13px; font-weight: 700; color: var(--text-muted); padding: 8px 0; }
 .school-add {
   display: grid; gap: 8px; padding: 12px;
   border: 1.5px dashed var(--border); border-radius: var(--radius-sm);
 }
-.school-add-title { font-size: 13px; font-weight: 800; color: var(--espresso); }
+.school-add-title { font-size: 14px; font-weight: 800; color: var(--espresso); }
 .school-add-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.school-add .modal-submit { margin: 0; padding: 9px; font-size: 13px; }
+.school-add .modal-submit { margin: 0; padding: 9px; font-size: 14px; }
 .due-soon-link.plan { border-style: dashed; background: transparent; }
 .reset-journal .text-area { resize: vertical; }
 .reset-last { margin-top: 10px; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--bg-input); }
 .reset-last-title {
-  font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;
+  font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;
   color: var(--text-secondary); margin-bottom: 4px;
 }
-.reset-last-text { font-size: 13px; color: var(--text); white-space: pre-wrap; }
-.entry-stamp { font-size: 10.5px; font-weight: 600; color: var(--text-muted); margin-top: 6px; }
+.reset-last-text { font-size: 14px; color: var(--text); white-space: pre-wrap; }
+.entry-stamp { font-size: 11.5px; font-weight: 600; color: var(--text-muted); margin-top: 6px; }
 
 /* ── Notes ── */
-.notes-heading { font-family: var(--font-display); font-size: 15px; color: var(--espresso); margin: 0 0 10px; }
+.notes-heading { font-family: var(--font-display); font-size: 16px; color: var(--espresso); margin: 0 0 10px; }
 .sticky-note { display: flex; flex-direction: column; }
 .sticky-text { padding-top: 8px; white-space: pre-wrap; flex: 1; min-height: 60px; }
 .sticky-note .sticky-stamp { color: rgba(58,47,40,0.6); padding-right: 30px; margin-top: 8px; }
@@ -2238,17 +1957,17 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
 .chore-row { padding: 10px 0; border-bottom: 1px solid var(--border-soft); }
 .chore-row:last-of-type { border-bottom: none; margin-bottom: 4px; }
 .chore-row-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-.chore-title { font-size: 14px; font-weight: 700; color: var(--text); }
+.chore-title { font-size: 15px; font-weight: 700; color: var(--text); }
 .chore-row.done .chore-title { color: var(--text-muted); text-decoration: line-through; }
-.chore-when { margin-left: auto; font-size: 11px; font-weight: 600; color: var(--text-muted); text-align: right; }
+.chore-when { margin-left: auto; font-size: 12px; font-weight: 600; color: var(--text-muted); text-align: right; }
 .chore-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
 .chore-day-btn {
   display: flex; flex-direction: column; align-items: center; gap: 1px;
   padding: 6px 0; border-radius: 10px; cursor: pointer;
   border: 1px solid var(--border-soft); background: var(--bg-input);
-  font-size: 9.5px; font-weight: 700; color: var(--text-muted);
+  font-size: 10.5px; font-weight: 700; color: var(--text-muted);
 }
-.chore-day-btn b { font-size: 13px; color: var(--text); }
+.chore-day-btn b { font-size: 14px; color: var(--text); }
 .chore-day-btn:disabled { opacity: 0.35; cursor: default; }
 .chore-day-btn.off { background: var(--success-light); }
 .chore-day-btn.active { background: var(--espresso); border-color: var(--espresso); color: #fff; }
@@ -2265,6 +1984,9 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
 </style>
 </head>
 <body>
+<script>if (localStorage.getItem('device-nav-side') === 'left') document.body.classList.add('nav-left');</script>
+<div class="loading-screen" id="loading-screen" aria-hidden="true"><img src="Assets/images/loading-cat.gif" alt=""></div>
+<script>/* Never leave the cat up if start-up hits an error. */ setTimeout(() => document.getElementById('loading-screen')?.classList.add('done'), 6000);</script>
 
 <div class="celebrate-overlay" id="celebrate-overlay" aria-hidden="true" onclick="dismissCelebrate()">
   <div class="celebrate-lottie-wrap">
@@ -2287,21 +2009,11 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
 </div>
 
 <div class="app" id="app">
-  <div class="beans-bg-decor" aria-hidden="true">
-    <span class="bean b1"></span><span class="bean b2 light"></span><span class="bean b3 dark"></span>
-    <span class="bean b4"></span><span class="bean b5"></span><span class="bean b6 light"></span>
-    <span class="bean b7 dark"></span><span class="bean b8"></span><span class="bean b9 light"></span>
-    <span class="bean b10"></span><span class="bean b11"></span><span class="bean b12 light"></span>
-    <span class="bean b13"></span><span class="bean b14 dark"></span><span class="bean b15"></span>
-    <span class="bean b16 light"></span><span class="bean b17"></span><span class="bean b18 dark"></span>
-    <span class="bean b19 light"></span><span class="bean b20"></span>
-  </div>
   <div class="book" id="book">
     <div class="tab-page active" id="page-home"></div>
     <div class="tab-page" id="page-routines"></div>
     <div class="tab-page" id="page-grocery"></div>
     <div class="tab-page" id="page-calendar"></div>
-    <div class="tab-page" id="page-focus"></div>
     <div class="tab-page" id="page-money"></div>
     <div class="tab-page" id="page-health"></div>
     <div class="tab-page" id="page-notes"></div>
@@ -2526,6 +2238,11 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
         <input type="time" class="modal-input" id="ev-end">
       </div>
     </div>
+    <div class="modal-field" id="ev-commute-wrap">
+      <div class="field-label">Commute (minutes)</div>
+      <input type="number" class="modal-input" id="ev-commute" min="0" step="5" inputmode="numeric" placeholder="0">
+      <div class="field-hint">It shows on the calendar at the time to leave, getting you there 10 minutes early.</div>
+    </div>
     <div class="modal-field">
       <div class="field-label">Type</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;">
@@ -2716,11 +2433,19 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
     Back
   </button>
-  <h2 style="font-family:var(--font-display);font-size:22px;color:var(--espresso);margin-bottom:20px;">Settings</h2>
+  <h2 style="font-family:var(--font-display);font-size:24px;color:var(--espresso);margin-bottom:20px;">Settings</h2>
+
+  <div class="card">
+    <div class="card-title" style="margin-bottom:8px;">Navigation bar</div>
+    <div style="display:flex;gap:8px;">
+      <button class="cat-btn" id="nav-side-bottom" style="flex:1" onclick="setNavSide('bottom')">Bottom</button>
+      <button class="cat-btn" id="nav-side-left" style="flex:1" onclick="setNavSide('left')">Left side</button>
+    </div>
+  </div>
 
   <div class="card">
     <div class="card-title" style="margin-bottom:8px;">Supabase Sync</div>
-    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;">Connect to Supabase to sync across devices. See setup instructions below.</p>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">Connect to Supabase to sync across devices. See setup instructions below.</p>
     <div class="modal-field">
       <div class="field-label">Supabase URL</div>
       <input type="url" class="text-input" id="sb-url" placeholder="https://xxxxx.supabase.co">
@@ -2733,12 +2458,12 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
       <button class="modal-submit" style="flex:1" onclick="connectSupabase()">Connect</button>
       <button class="add-btn" style="flex:1;margin:0;border-style:solid;" onclick="disconnectSupabase()">Disconnect</button>
     </div>
-    <div id="sb-status" style="font-size:12px;margin-top:10px;color:var(--text-muted);"></div>
+    <div id="sb-status" style="font-size:13px;margin-top:10px;color:var(--text-muted);"></div>
   </div>
 
   <div class="card">
     <div class="card-title" style="margin-bottom:8px;">Supabase Setup Guide</div>
-    <ol style="font-size:13px;color:var(--text-secondary);padding-left:18px;line-height:1.8;">
+    <ol style="font-size:14px;color:var(--text-secondary);padding-left:18px;line-height:1.8;">
       <li>Go to <strong>supabase.com</strong> and create an account / sign in</li>
       <li>Click <strong>New Project</strong>, name it anything, set a password</li>
       <li>Once created, go to <strong>SQL Editor</strong> (left sidebar)</li>
@@ -2749,7 +2474,7 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
     </ol>
     <div style="margin-top:12px;">
       <div class="field-label">SQL to run in Supabase SQL Editor:</div>
-      <pre style="font-size:11px;background:var(--bg-input);padding:12px;border-radius:8px;overflow-x:auto;color:var(--text);line-height:1.6;white-space:pre-wrap;">-- Grounded Planner sync table
+      <pre style="font-size:12px;background:var(--bg-input);padding:12px;border-radius:8px;overflow-x:auto;color:var(--text);line-height:1.6;white-space:pre-wrap;">-- Grounded Planner sync table
 -- Stores every planner localStorage bucket as one JSON row.
 -- Work and academic schedules live in gnd-events.
 -- updated_at is the cross-device source of truth.
@@ -2913,7 +2638,7 @@ SELECT 'Grounded planner sync table is ready' AS status;</pre>
 
 /* Routine steps in order, with how long each one gets. The routine block's
    length on the schedule is the sum of these minutes. */
-const MORNING_ITEMS = [
+const DEFAULT_MORNING_ITEMS = [
   { key: 'breakfast', label: 'Breakfast', minutes: 10 },
   { key: 'venlafaxine', label: 'Medicine', minutes: 5, detail: 'Venlafaxine 150mg + 37.5mg · Multivitamin' },
   { key: 'stretch', label: 'Stretch', minutes: 10 },
@@ -2922,7 +2647,7 @@ const MORNING_ITEMS = [
   { key: 'makeBed', label: 'Make the bed', minutes: 5 },
 ];
 
-const EVENING_ITEMS = [
+const DEFAULT_EVENING_ITEMS = [
   { key: 'dinner', label: 'Dinner', minutes: 20 },
   { key: 'shower', label: 'Shower', minutes: 20 },
   { key: 'washFace', label: 'Wash face', minutes: 5, detail: 'Benzoyl Peroxide wash + Clindamycin · Minoxidil' },
@@ -2930,6 +2655,31 @@ const EVENING_ITEMS = [
   { key: 'planTomorrow', label: 'Plan tomorrow', minutes: 10, detail: 'Any to-dos, any bills to plan for' },
   { key: 'sleepBy11', label: 'Sleep by 11 PM', detail: 'At the latest' },
 ];
+/* Routine steps and start times can be edited on the Routines page; the
+   lists above are the starting point until then. */
+let MORNING_ITEMS = DEFAULT_MORNING_ITEMS;
+let EVENING_ITEMS = DEFAULT_EVENING_ITEMS;
+let MORNING_ROUTINE_START = 5 * 60;
+let EVENING_ROUTINE_START = 22 * 60;
+function getRoutineSetup() {
+  const saved = ls('gnd-routine-setup', null) || {};
+  const pick = (type, defItems, defStart) => ({
+    start: /^\d{2}:\d{2}$/.test(saved[type]?.start || '') ? saved[type].start : defStart,
+    items: Array.isArray(saved[type]?.items) ? saved[type].items : defItems.map(i => ({ ...i })),
+  });
+  return { morning: pick('morning', DEFAULT_MORNING_ITEMS, '05:00'), evening: pick('evening', DEFAULT_EVENING_ITEMS, '22:00') };
+}
+function loadRoutineSetup() {
+  const setup = getRoutineSetup();
+  MORNING_ITEMS = setup.morning.items;
+  EVENING_ITEMS = setup.evening.items;
+  MORNING_ROUTINE_START = timeToMinutes(setup.morning.start);
+  EVENING_ROUTINE_START = timeToMinutes(setup.evening.start);
+}
+function saveRoutineSetup(setup) {
+  lsSave('gnd-routine-setup', setup);
+  loadRoutineSetup();
+}
 function routineMinutes(items) { return items.reduce((sum, i) => sum + (i.minutes || 0), 0); }
 
 const MEDS = {
@@ -3150,7 +2900,6 @@ const RETIRED_CLEANING_TASK_IDS = ['meal-prep', 'room-reset'];
 const USUAL_DAYS_OFF = [4, 6];
 
 
-
 /* ── Cozy sticker icons inspired by the uploaded planner art ── */
 const THEME_ICONS = {
   bicep: `<svg viewBox="0 0 512 512" fill="none"><path fill="#FFD3B6" d="M472 362.5c-6.9-25.8-29.8-48.2-65-58.1c-26.4-7.4-74.2-17.3-118.6-5.5c-26.9 7.1-54.7 23.9-78.1 39.4V335c0-5.7.2-24.7.9-36.4c.4-12.5.8-25.3 1.6-38c.5-12.9 1.5-25.6 2.6-38.2c.8-12.8 2.9-24.6 4.4-36.5c1.9-10.9 5.4-21.5 9.2-31.3c12.8 8.1 30.9 14 53.8 14c30.6 0 45.1-9.4 51.2-16.3c3-3.4 8.2-9.8 3.8-21.9c-4.2-11.3-10.2-9.3-10.2-13.6c0-5.7 2.2-5.5 11-10c20-10.1 17.9-27.4 17.8-43.7c.1-1.2.1-2.3.1-3.5c0-32.8-31.9-59.4-71.1-59.4c-.8 0-1.6 0-2.4.1l-.2-.3c-32.8 0-53.6 9.7-66.1 24.2c-.6.4-1.1.8-1.7 1.3c-1.6 1.6-3.3 3.2-5.1 5c-6.7 6.8-16.8 17.7-20.8 24.6c-5.8 8-11.8 16.9-17.4 26.2c-6.4 9.4-11.8 19.5-18.5 30c-6.6 10.5-12.3 21.9-19.2 33.4c-12.5 23.3-26.7 48-38.9 73.7C83 244.1 71.2 270.3 62.2 296c-4.5 12.9-8.4 25.6-11.7 37.9c-3.1 12.6-6.5 24.1-7.9 35.9c-.2 1.5-.4 3-.5 4.5c-7.8 49.9-8.6 106.5-1.7 115.2c7.9 10.1 29.3 13.1 49.5 11.7c13.8-.9 77.9 10.5 140.5 10.5c3.6.1 7.2.2 10.9.2c47.9.2 100.9-3.3 132.2-17.2c91.6-40.5 113.2-77 98.5-132.2z"/><path fill="#EDC0A2" d="M302.4 434.1c-2.1 0-4.2-.1-6.4-.2c-27.9-1.7-53.4-14.1-71.9-35c-3.4-3.8-3.1-9.7.8-13.1c3.8-3.4 9.7-3.1 13.1.8c15.2 17.2 36.2 27.4 59.1 28.7c22.9 1.4 45-6.3 62.1-21.5c3.8-3.4 9.7-3.1 13.1.8c3.4 3.8 3.1 9.7-.8 13.1c-19.2 17.1-43.5 26.4-69.1 26.4z"/></svg>`,
@@ -3160,7 +2909,6 @@ const THEME_ICONS = {
   money: `<svg viewBox="0 -196 1416 1416" fill="none"><path d="M55.351 290.041h1038.391c18.82 0 33.211 14.391 33.211 33.211v645.397c0 18.819-14.391 33.21-33.211 33.21H55.351c-18.819 0-33.21-14.391-33.21-33.21V323.252c0-17.713 14.391-33.211 33.21-33.211z" fill="#9DBE87"/><path d="M954.257 902.227H194.837c0-52.03-43.174-95.204-95.204-95.204V472.7c52.03 0 95.204-43.174 95.204-95.204h759.42c0 52.03 43.175 95.204 95.205 95.204v334.322c-53.137 0-95.205 43.174-95.205 95.204z" fill="#D6F0C5"/><path d="M576.761 790.417c-35.425 0-73.064-13.284-99.632-47.602c-7.75-9.963-5.535-23.247 3.321-30.997c9.963-7.749 23.247-5.535 30.997 3.321c26.568 34.318 67.528 35.425 94.097 26.569c22.14-7.75 35.424-22.141 35.424-37.639c0-14.391-34.317-24.354-64.207-33.21c-46.495-14.392-105.168-30.997-105.168-86.349c0-26.568 16.606-50.923 45.388-65.314c35.425-17.713 95.205-24.355 151.663 16.605c9.963 7.749 12.177 21.034 4.428 30.997c-7.749 9.963-21.034 12.177-30.997 4.428c-37.639-27.676-79.706-26.569-105.168-13.284c-13.284 6.642-22.14 16.605-22.14 26.568c0 21.034 30.996 30.997 73.063 44.281c45.388 13.284 95.205 28.783 95.205 75.278c0 34.318-25.462 65.315-65.315 79.706c-11.07 3.321-26.568 6.642-40.96 6.642z" fill="#131313"/><path d="M574.547 549.085c-12.177 0-22.14-9.963-22.14-22.14v-48.71c0-12.177 9.963-22.14 22.14-22.14s22.14 9.963 22.14 22.14v48.71c0 13.284-9.963 22.14-22.14 22.14z" fill="#131313"/><path d="M574.547 832.484c-12.177 0-22.14-9.963-22.14-22.14v-36.532c0-12.177 9.963-22.14 22.14-22.14s22.14 9.963 22.14 22.14v36.532c0 12.177-9.963 22.14-22.14 22.14z" fill="#131313"/><circle cx="285.613" cy="653.146" r="40.96" fill="#AECD99"/><circle cx="865.695" cy="653.146" r="40.96" fill="#AECD99"/></svg>`,
   bill: `<svg viewBox="0 0 1024 1024" fill="none"><path d="M853.333333 874.666667H170.666667c-46.933333 0-85.333333-38.4-85.333334-85.333334V343.466667c0-27.733333 12.8-53.333333 36.266667-70.4L512 0l390.4 273.066667c23.466667 14.933333 36.266667 42.666667 36.266667 70.4V789.333333c0 46.933333-38.4 85.333333-85.333334 85.333334z" fill="#78909C"/><path d="M298.666667 21.333333h426.666666v661.333334H298.666667z" fill="#AED581"/><path d="M277.333333 0v704h469.333334V0H277.333333z m426.666667 661.333333H320V42.666667h384v618.666666z" fill="#558B2F"/><path d="M725.333333 64c0 36.266667-6.4 64-42.666666 64s-64-27.733333-64-64 27.733333-42.666667 64-42.666667 42.666667 6.4 42.666666 42.666667zM341.333333 21.333333c36.266667 0 64 6.4 64 42.666667s-27.733333 64-64 64-42.666667-27.733333-42.666666-64 6.4-42.666667 42.666666-42.666667z" fill="#558B2F"/><path d="M512 170.666667m-42.666667 0a42.666667 42.666667 0 1 0 85.333334 0 42.666667 42.666667 0 1 0-85.333334 0Z" fill="#558B2F"/><path d="M512 426.666667m-128 0a128 128 0 1 0 256 0 128 128 0 1 0-256 0Z" fill="#558B2F"/><path d="M853.333333 874.666667H170.666667c-46.933333 0-85.333333-38.4-85.333334-85.333334V362.666667l426.666667 277.333333 426.666667-277.333333v426.666666c0 46.933333-38.4 85.333333-85.333334 85.333334z" fill="#CFD8DC"/></svg>`,
   academic: `<svg viewBox="0 0 512 512" fill="none"><rect y="8.198" fill="#CFDCE5" width="370.957" height="495.607"/><path fill="#4EBFED" d="M432.203 93.909l39.898-85.711 39.898 85.711v385.139c0 13.673-11.083 24.756-24.756 24.756h-30.286c-13.673 0-24.756-11.083-24.756-24.756V93.909z"/><path fill="#FF6F52" d="M511.996 438.44v40.606c0 13.671-11.086 24.757-24.757 24.757h-30.287c-13.671 0-24.744-11.086-24.744-24.757V438.44h79.788z"/><rect x="473.027" y="93.909" fill="#97E1F7" width="14.845" height="344.529"/><path fill="#3BA4BC" d="M432.203 479.048c0 13.673 11.083 24.756 24.756 24.756h7.55c-6.855 0-12.414-11.083-12.414-24.756V93.909l20.007-85.711-39.898 85.711v385.139z"/><polygon fill="#FCD577" points="511.996 93.91 432.208 93.91 472.096 8.195"/><path fill="#E25749" d="M464.512 503.802h-7.559c-13.671 0-24.744-11.086-24.744-24.757V438.44h19.882v40.606c0 13.671 5.567 24.756 12.421 24.756z"/><polygon fill="#EAC36E" points="452.09 93.91 432.208 93.91 472.096 8.195"/><rect x="432.199" y="429.156" fill="#FCD577" width="79.801" height="18.558"/><rect x="76.918" y="72.858" fill="#415E72" width="217.12" height="18.558"/><rect x="268.279" y="168.287" fill="#415E72" width="56.291" height="18.558"/><rect x="46.393" y="168.287" fill="#415E72" width="209.511" height="18.558"/><rect x="46.393" y="264.395" fill="#415E72" width="278.177" height="18.558"/><rect x="121.681" y="216.341" fill="#415E72" width="202.892" height="18.558"/><rect x="46.393" y="216.341" fill="#415E72" width="62.912" height="18.558"/><rect x="46.393" y="408.556" fill="#415E72" width="278.177" height="18.558"/><rect x="244.154" y="360.502" fill="#415E72" width="80.416" height="18.558"/><rect x="46.393" y="360.502" fill="#415E72" width="185.385" height="18.558"/></svg>`,
-  beans: `<svg viewBox="0 0 24 24" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M5.30798 10.1076C5.32119 9.93003 5.14351 9.80257 4.98917 9.89135C3.42339 10.792 2.84061 13.1129 3.46896 15.458C4.11514 17.8696 5.8216 19.4816 7.6834 19.3662C7.81555 19.3581 7.90693 19.2352 7.91347 19.1029C7.92892 18.7907 8.03031 18.446 8.06948 18.1558C8.17453 17.3776 7.97932 16.5981 7.52015 15.9624L5.91538 13.7403C5.39972 13.0263 5.15514 12.1621 5.22041 11.2847L5.30798 10.1076ZM9.70431 18.9966C9.71317 19.0126 9.73457 19.0043 9.75136 18.9968C11.516 18.2141 12.0948 15.7956 11.4326 13.3241C10.7969 10.9515 9.1362 9.35299 7.30865 9.41158C7.15177 9.41661 7.05238 9.58264 7.06451 9.73912C7.10073 10.2065 6.93151 10.8241 6.90173 11.2245C6.84832 11.9424 7.04843 12.6494 7.47034 13.2336L9.0751 15.4557C9.63631 16.2328 9.8749 17.1854 9.7465 18.1366C9.65887 18.7857 9.68126 18.9547 9.70431 18.9966Z" fill="#744A30" stroke="#2F2118"/><path fill-rule="evenodd" clip-rule="evenodd" d="M17.0946 5.01096C17.1948 4.86379 17.1047 4.66457 16.9266 4.66429C15.1203 4.66139 13.4551 6.37999 12.8268 8.725C12.1806 11.1366 12.8524 13.3859 14.5225 14.2169C14.641 14.2759 14.7816 14.2152 14.8534 14.1039C15.0229 13.8412 15.283 13.5934 15.462 13.3617C15.9421 12.7403 16.1628 11.9676 16.083 11.1874L15.8043 8.4607C15.7147 7.58452 15.935 6.71379 16.4302 5.98655L17.0946 5.01096ZM16.4575 14.9072C16.4571 14.9256 16.4798 14.929 16.4981 14.931C18.4177 15.1354 20.1282 13.3303 20.7904 10.8589C21.4262 8.48629 20.7872 6.27157 19.1752 5.40854C19.0369 5.33446 18.8678 5.42854 18.8 5.57013C18.5977 5.99296 18.1424 6.4432 17.9164 6.77508C17.5112 7.37009 17.331 8.0825 17.4042 8.79938L17.683 11.5261C17.7805 12.4797 17.5108 13.424 16.924 14.1835C16.5235 14.7019 16.4584 14.8594 16.4575 14.9072Z" fill="#744A30" stroke="#2F2118"/></svg>`,
 };
 
 THEME_ICONS.shot = `<svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill="#CCD6DD" d="M27.071 9.929a.999.999 0 0 1-.707-1.707S35.166.054 35.556.444c.391.391-7.778 9.192-7.778 9.192a.997.997 0 0 1-.707.293z"/><path fill="#ADD3E0" d="M28.839 11.404a1.5 1.5 0 0 1-2.121 0l-2.121-2.121a1.5 1.5 0 0 1 0-2.122C25.182 6.575 28.414 5.414 29 6l1 1c.586.585-.575 3.818-1.161 4.404z"/><path fill="#C1E1EA" d="M17.464 25.606a2 2 0 0 1-2.828 0l-4.243-4.242a2 2 0 0 1 0-2.829l12.021-12.02a2 2 0 0 1 2.828 0l4.243 4.243a2 2 0 0 1 0 2.829L17.464 25.606z"/><path fill="#D2ECF3" d="M10.394 21.364a2 2 0 0 1 0-2.829l12.02-12.02a2 2 0 0 1 2.828 0L10.394 21.364z"/><path fill="#CCD6DD" d="M7.272 32.971L3.03 28.728l11.777-11.777l4.243 4.241z"/><path fill="#99AAB5" d="M7.747 35.324a1.5 1.5 0 0 1-2.122 0l-4.95-4.95a1.5 1.5 0 0 1 2.122-2.121l4.95 4.95a1.5 1.5 0 0 1 0 2.121zm10.071-7.243a1.5 1.5 0 0 1-2.121 0l-7.778-7.777a1.501 1.501 0 0 1 2.122-2.122l7.778 7.778a1.5 1.5 0 0 1-.001 2.121z"/><path fill="#292F33" d="M14.322 14.607l-1.042 1.042l.04.04l7.035 7.035l1.042-1.042z"/><path fill="#66757F" d="M14.322 14.607l-1.042 1.042l.04.04l1.374 1.374l1.042-1.042zm8.291 3.333a.736.736 0 0 0 0 1.042l.742.742l1.042-1.042l-.742-.742a.736.736 0 0 0-1.042 0zm1.875-1.875a.736.736 0 0 0 0 1.042l.742.742l1.042-1.042l-.742-.742a.736.736 0 0 0-1.042 0zm2.917-1.875a.736.736 0 1 0-1.042 1.042l.742.742l1.042-1.042l-.742-.742z"/></svg>`;
@@ -3208,12 +2956,6 @@ function themePageHeader(title, subtitle, icons = []) {
     ${icons.length ? `<div class="theme-header-icons">${icons.map((name, idx) => themeIcon(name, idx % 2 ? 'small' : 'medium')).join('')}</div>` : ''}
   </div>`;
 }
-
-function themeDivider() {
-  return `<div class="theme-divider">${themeIcon('beans', 'beans-divider-sticker')}${themeIcon('beans', 'beans-divider-sticker beans-flip')}${themeIcon('beans', 'beans-divider-sticker')}</div>`;
-}
-
-
 
 
 const ICONS = {
@@ -3946,6 +3688,11 @@ function getAccounts() {
     lsSeed('gnd-accounts', accounts);
     lsSeed('gnd-accounts-seeded', true);
   }
+  // Huntington is no longer used.
+  if (Array.isArray(accounts) && accounts.some(a => /huntington/i.test(a?.name || ''))) {
+    accounts = accounts.filter(a => !/huntington/i.test(a?.name || ''));
+    saveAccounts(accounts);
+  }
   return accounts;
 }
 function saveAccounts(a) {
@@ -4067,11 +3814,6 @@ function recalcGambling() {
 }
 
 
-function accountStartingBalance(acctId) {
-  const acct = getAccounts().find(a => a.id === acctId);
-  return acct ? Number(acct.startingBalance || 0) : 0;
-}
-
 function transactionDate(t) {
   return dateFromKey(t.date || todayKey());
 }
@@ -4104,23 +3846,9 @@ function billPaysAccountId(bill, accounts = getAccounts()) {
 }
 
 
-function upcomingCreditCardCreditsForAccount(acctId, monthDate = getBillMonthDate(), accounts = getAccounts()) {
-  const paid = getBillsPaid(monthDate);
-  let total = 0;
-  BILLS.forEach(b => {
-    if (billPaysAccountId(b, accounts) !== acctId) return;
-    if (paid[b.key]) return;
-    total += Number(b.amount || 0);
-  });
-  return total;
-}
-
 /* Current balance is a manually-set number. Bills marked paid, income
    received, and logged transactions are informational only — they no longer
    move this value. Update it yourself after you actually pay everything. */
-function accountCurrentBalance(acctId) {
-  return accountStartingBalance(acctId);
-}
 
 
 function getTimeGreeting() {
@@ -4150,10 +3878,6 @@ function pencilBtn(label, action, cls = 'inline-edit-btn') {
   return `<button class="${cls}" type="button" title="${attr(label)}" aria-label="${attr(label)}" onclick="${action};event.stopPropagation();">${ICONS.pencil}</button>`;
 }
 
-
-function colorById(id) {
-  return ACCOUNT_COLORS.find(c => c.id === id) || ACCOUNT_COLORS[0];
-}
 
 function formatMoney(n) {
   const num = Number(n || 0);
@@ -4187,7 +3911,6 @@ let currentTab = 'home';
 /* The planner reads like a book: Home is the open index page, and every
    section is a page you turn to. Order decides which way a page turns. */
 const BOOK_SECTIONS = [
-  { tab: 'focus', label: 'Today', img: 'Assets/images/today.svg', color: 'var(--pal-pink-strong)' },
   { tab: 'calendar', label: 'Calendar', img: 'Assets/images/calendar.svg', color: 'var(--pal-blue-strong)' },
   { tab: 'routines', label: 'Routines', img: 'Assets/images/routines.svg', color: 'var(--pal-purple-strong)' },
   { tab: 'health', label: 'Health', img: 'Assets/images/health.svg', color: 'var(--pal-yellow-strong)' },
@@ -4216,7 +3939,8 @@ function switchTab(t) {
 }
 
 function render(t) {
-  const R = { home: renderHome, routines: renderRoutines, grocery: renderGrocery, calendar: renderCalendar, focus: renderFocus, money: renderMoney, health: renderHealth, notes: renderNotes };
+  loadRoutineSetup();
+  const R = { home: renderHome, routines: renderRoutines, grocery: renderGrocery, calendar: renderCalendar, money: renderMoney, health: renderHealth, notes: renderNotes };
   if (R[t]) R[t]();
 }
 
@@ -4625,25 +4349,70 @@ function billBelongsOnPaychecksTab(bill) {
 
 /* Home is the open page of the book: the routine times at a glance and
    one button for every section. Nothing else lives here. */
+/* Home: the day at a glance. What to do when stays open at the top; the
+   to-do list, bills due this week and notes fold up like the Routines page. */
+const HOME_SECTIONS_KEY = 'device-home-open';
+function getHomeOpen() {
+  try { return { todo: true, bills: true, notes: true, ...JSON.parse(localStorage.getItem(HOME_SECTIONS_KEY) || '{}') }; }
+  catch (e) { return { todo: true, bills: true, notes: true }; }
+}
+function toggleHomeSection(id) {
+  const open = getHomeOpen();
+  open[id] = !open[id];
+  localStorage.setItem(HOME_SECTIONS_KEY, JSON.stringify(open));
+  const sec = document.querySelector(`.home-section[data-id="${id}"]`);
+  if (sec) {
+    sec.querySelector('.collapse-header').classList.toggle('open', open[id]);
+    sec.querySelector('.collapse-body').classList.toggle('open', open[id]);
+  }
+}
+function homeSection(id, title, sub, content, icon = '') {
+  const isOpen = getHomeOpen()[id];
+  return `<div class="collapse-section theme-card home-section" data-id="${id}">
+    <div class="collapse-header ${isOpen ? 'open' : ''}" onclick="toggleHomeSection('${id}')">
+      <div class="collapse-header-left"><div><div class="collapse-title-row">${icon ? themeIcon(icon, 'collapse-title-sticker') : ''}<div class="collapse-title">${title}</div></div>${sub ? `<div class="collapse-sub">${sub}</div>` : ''}</div></div>
+      <svg class="collapse-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="collapse-body ${isOpen ? 'open' : ''}">${content}</div>
+  </div>`;
+}
+
 function renderHome() {
+  const dk = todayKey();
+  const todo = buildTodayTodoBody(dk);
+  const bills = buildWeekBillsBody();
   let html = `<div class="home-index-head">
     <div class="home-index-title">${esc(getTimeGreeting())}</div>
     <div class="page-date">${esc(formatDate())}</div>
   </div>`;
-  html += buildRoutineTimesBanner();
-  html += buildNextShiftCard();
-  html += buildHomeHubNav();
-  html += themeDivider();
+  html += buildTodayTimeList(dk);
+  html += homeSection('todo', 'To do', `${todo.done}/${todo.total} done`, todo.html, 'todayTab');
+  html += homeSection('bills', 'Bills this week', bills.sub, bills.html, 'moneyTab');
+  html += homeSection('notes', 'Notes', '', buildTodayNotesCard(dk), 'notesTab');
   document.getElementById('page-home').innerHTML = html;
 }
 
-function buildHomeHubNav() {
-  return `<div class="hub-nav home-index" aria-label="Planner sections">
-    ${BOOK_SECTIONS.map(section => `<button class="hub-nav-btn book-index-btn" data-tab="${section.tab}" type="button" style="--tab-color:${section.color}" onclick="switchTab('${section.tab}')">
-      ${bookSectionIcon(section, 'hub-nav-sticker')}
-      <span class="book-index-label">${esc(section.label)}</span>
-    </button>`).join('')}
-  </div>`;
+/* Necessities and Other bills due in the next 7 days (today included).
+   Subscriptions, variable expenses and card payments stay off this list. */
+const HOME_BILL_CATEGORIES = new Set(['Necessities', 'Other']);
+function buildWeekBillsBody() {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const rows = [];
+  for (let i = 0; i < 7; i++) {
+    const date = addDays(today, i);
+    BILLS.filter(b => HOME_BILL_CATEGORIES.has(b.category) && billOccursOnDate(b, date)).forEach(b => {
+      rows.push({ b, date, paid: !!getBillsPaid(date)[b.key] });
+    });
+  }
+  const left = rows.filter(r => !r.paid).reduce((sum, r) => sum + Number(r.b.amount || 0), 0);
+  const sub = rows.length ? `${formatMoney(left)} still to pay` : '';
+  if (!rows.length) return { sub, html: `<div class="day-panel-empty">No bills due this week.</div>` };
+  const html = rows.map(({ b, date, paid }) => todoRowHtml({
+    title: b.name, done: paid,
+    meta: `${isSameLocalDay(date, today) ? 'Today' : DAY_NAMES[date.getDay()]} · ${formatMoney(b.amount)}`,
+    toggle: `toggleBill('${attr(b.key)}','${localDateKey(date)}');renderActivePage()`,
+  })).join('');
+  return { sub, html };
 }
 
 function renderCalendar() {
@@ -4651,7 +4420,6 @@ function renderCalendar() {
   html += buildCalendarActions();
   html += buildScheduleSection();
   html += buildMonthCalendar();
-  html += themeDivider();
   document.getElementById('page-calendar').innerHTML = html;
 }
 
@@ -4668,25 +4436,6 @@ function buildCalendarActions() {
   return `<div class="card cal-actions">
     <div class="cal-action-row">${actions.map(a => `<button class="cal-action-btn" type="button" onclick="${a.onclick}">${themeIcon(a.icon)}<span class="cal-action-label">${esc(a.label)}</span></button>`).join('')}</div>
   </div>`;
-}
-
-/* Today: a to-do list that fills itself from the routines, then the day
-   as a plain "what to do when" list, then notes. */
-function renderFocus() {
-  const dk = todayKey();
-  const plan = ls(`gnd-${dk}-plan`, null);
-
-  let html = themePageHeader('Today', formatDate(), ['todayTab']);
-
-  if (plan && Array.isArray(plan.priorities) && plan.priorities.some(p => String(p || '').trim())) {
-    html += `<div class="plan-banner"><div class="plan-banner-title">Today's Plan</div>${plan.priorities.filter(p => String(p || '').trim()).map(p => `<div class="plan-banner-item">&#8226; ${esc(p)}</div>`).join('')}</div>`;
-  }
-
-  html += buildTodayTodoCard(dk);
-  html += buildTodayTimeList(dk);
-  html += buildTodayNotesCard(dk);
-  html += themeDivider();
-  document.getElementById('page-focus').innerHTML = html;
 }
 
 /* To-do groups, each with its own color. Routine steps, school blocks,
@@ -4773,7 +4522,7 @@ function todoRowHtml(row) {
   </div>`;
 }
 
-function buildTodayTodoCard(dateKey) {
+function buildTodayTodoBody(dateKey) {
   const groups = getTodayTodoGroups(dateKey);
   const mine = getTodosForDate(dateKey).map(t => ({
     title: t.title, done: !!t.done,
@@ -4783,8 +4532,7 @@ function buildTodayTodoCard(dateKey) {
   const all = groups.flatMap(g => g.rows).concat(mine);
   const done = all.filter(r => r.done).length;
 
-  let html = `<div class="card theme-card today-todo-card">
-    <div class="card-title-row"><div class="card-title">To do</div><span class="today-todo-count">${done}/${all.length} done</span></div>`;
+  let html = `<div class="today-todo-card">`;
   groups.forEach(g => {
     html += `<div class="todo-group" style="--group-color:${TODO_GROUPS[g.key].color}">
       <div class="todo-group-label">${esc(TODO_GROUPS[g.key].label)}</div>
@@ -4800,7 +4548,7 @@ function buildTodayTodoCard(dateKey) {
       </form>
     </div>
   </div>`;
-  return html;
+  return { html, done, total: all.length };
 }
 
 /* Which icon a schedule block gets in lists (Today, This Week). */
@@ -4853,8 +4601,7 @@ function buildTodayTimeList(dateKey) {
 
 function buildTodayNotesCard(dateKey) {
   const note = getNotesForDate(dateKey);
-  return `<div class="day-panel today-notes">
-    <div class="day-panel-title">Notes</div>
+  return `<div class="today-notes">
     <textarea class="day-notes-text" id="today-notes-text" placeholder="Anything on your mind today…"
       onblur="saveNotesForDate('${attr(dateKey)}',this.value)">${esc(note)}</textarea>
     <button class="add-btn today-sticky-btn" type="button" onclick="saveTodayNoteAsSticky('${attr(dateKey)}', this)">Save as a sticky note</button>
@@ -4891,7 +4638,6 @@ function renderNotes() {
   html += `<button class="sticky-add" onclick="addSticky()" aria-label="New sticky note">+</button>`;
   html += `</div></div>`;
   html += buildBrainstormCard();
-  html += themeDivider();
   document.getElementById('page-notes').innerHTML = html;
 }
 
@@ -4946,53 +4692,16 @@ function buildMonthCalendar() {
   return html;
 }
 
-/* The month only marks work, school and appointments — everything else
-   lives in the week view and the day popup. */
+/* The month only marks work, school, appointments and paydays — everything
+   else lives in the week view and the day popup. */
 function monthIconsForDate(dateKey, events = getEvents()) {
   const dayEvents = getEventsForDateFromList(dateKey, events);
   const out = [];
   if (dayEvents.some(e => e.type === 'work')) out.push('work');
   if (dayEvents.some(e => e.type === 'academic')) out.push('academic');
   if (dayEvents.some(e => e.type !== 'work' && e.type !== 'academic')) out.push('calendarTab');
+  if (incomeOccurrencesForDate(dateFromKey(dateKey)).length) out.push('moneyTab');
   return out;
-}
-
-/* Home: the next work shift, or nothing at all when none is coming up. */
-function buildNextShiftCard() {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const todayMin = nowMinutes();
-  const events = getEvents();
-  let best = null;
-  for (let i = 0; i < 60; i++) {
-    const d = addDays(today, i);
-    const dk = localDateKey(d);
-    const workEvents = getEventsForDateFromList(dk, events)
-      .filter(e => e.type === 'work' && e.start)
-      .map(e => ({ ...e, _start: timeToMinutes(e.start), _end: timeToMinutes(e.end || e.start) }))
-      .sort((a, b) => a._start - b._start);
-    const next = i === 0
-      ? workEvents.find(e => e._end > todayMin || e._start >= todayMin)
-      : workEvents[0];
-    if (!next) continue;
-    best = { date: d, dateKey: dk, event: next };
-    break;
-  }
-  if (!best) return '';
-  const dayLabel = best.dateKey === todayKey()
-    ? 'Today'
-    : best.dateKey === localDateKey(addDays(today, 1))
-      ? 'Tomorrow'
-      : best.date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
-  const e = best.event;
-  const timeLabel = e.end && e.end !== e.start ? `${formatTime(e.start)} – ${formatTime(e.end)}` : formatTime(e.start);
-  return `<button class="next-shift-card" type="button" onclick="openDayModal('${best.dateKey}')">
-    ${themeIcon('work', 'next-shift-sticker')}
-    <div class="next-shift-text">
-      <div class="next-shift-title">Next work shift</div>
-      <div class="next-shift-sub">${esc(dayLabel)} · ${esc(timeLabel)}</div>
-    </div>
-  </button>`;
 }
 
 function nowMinutes() {
@@ -5001,13 +4710,9 @@ function nowMinutes() {
 }
 
 
-
-
-/* Morning routine starts at 5:00 AM (4:00 AM on early-shift days — see
-   adaptMorningRoutineBlockForDate). Evening routine starts at 10:00 PM
-   every day so sleep lands by 11. Each block lasts as long as its steps. */
-const MORNING_ROUTINE_START = 5 * 60;
-const EVENING_ROUTINE_START = 22 * 60;
+/* Morning routine starts at its set time (4:00 AM on early-shift days — see
+   adaptMorningRoutineBlockForDate). Evening routine starts at its set time
+   every day. Each block lasts as long as its steps. */
 
 function getBaseScheduleBlocks(dayOfWeek, dateKey = null) {
   return [
@@ -5233,35 +4938,7 @@ const WEEK_GLANCE_HIDDEN_BLOCKS = ['sleep', 'evening', 'morning'];
 /* Routine anchors at the top of Home: morning routine on the left (today's
    until it's over, then tomorrow's — auto-adjusted for that day's shift)
    and tonight's evening routine on the right. */
-function routineTimeSpan(block) {
-  if (!block || !block.time) return '—';
-  return block.end && block.end !== block.time
-    ? `${formatTime(block.time)} – ${formatTime(block.end)}`
-    : formatTime(block.time);
-}
 
-function buildRoutineTimesBanner() {
-  const todayK = todayKey();
-  const tomorrowK = localDateKey(addDays(new Date(), 1));
-  const evening = getScheduleBlocksForDate(todayK).find(b => b.blockKey === 'evening');
-  const todayMorning = getMorningRoutineBlockForDate(todayK);
-  const morningOver = !todayMorning || timeToMinutes(todayMorning.end || todayMorning.time) <= nowMinutes();
-  const morning = morningOver ? getMorningRoutineBlockForDate(tomorrowK) : todayMorning;
-  const morningNote = morning && morning.routineAdjust ? ' · early shift' : '';
-  return `<div class="routine-times">
-    <button class="routine-time-item" type="button" onclick="switchTab('routines')">
-      <span class="routine-time-when">${morningOver ? 'Tomorrow' : 'This morning'}</span>
-      <span class="routine-time-label">Morning routine${morningNote}</span>
-      <span class="routine-time-val">${esc(routineTimeSpan(morning))}</span>
-    </button>
-    <div class="routine-time-divider" aria-hidden="true"></div>
-    <button class="routine-time-item" type="button" onclick="switchTab('routines')">
-      <span class="routine-time-when">Tonight</span>
-      <span class="routine-time-label">Evening routine</span>
-      <span class="routine-time-val">${esc(routineTimeSpan(evening))}</span>
-    </button>
-  </div>`;
-}
 
 /* This Week (top of the Calendar page): each day's time blocks with their
    icons and details, plus that day's lunch and dinner. The routines that
@@ -5350,6 +5027,7 @@ function weekMealsHtml(date, settings = getMealSettings()) {
    Blocks are positioned with percentages so nothing scrolls horizontally or
    vertically. Overlapping blocks split the lane into side-by-side columns. */
 
+const APPOINTMENT_EARLY_MINUTES = 10;
 function getScheduleBlocksForDate(dateKey, events = getEvents()) {
   const viewDate = dateFromKey(dateKey);
   const dayOfWeek = viewDate.getDay();
@@ -5359,7 +5037,16 @@ function getScheduleBlocksForDate(dateKey, events = getEvents()) {
   });
 
   getEventsForDateFromList(dateKey, events).forEach(ev => {
-    blocks.push({ id: ev.id, source: 'event', time: ev.start, end: ev.end || ev.start, title: ev.title, type: ev.type, detail: ev.detail, date: ev.date, recurring: ev.recurring, recurDays: ev.recurDays });
+    const block = { id: ev.id, source: 'event', time: ev.start, end: ev.end || ev.start, title: ev.title, type: ev.type, detail: ev.detail, date: ev.date, recurring: ev.recurring, recurDays: ev.recurDays };
+    // Appointments with a commute start when it's time to leave, so you
+    // arrive 10 minutes early.
+    const commute = Number(ev.commute) || 0;
+    if (commute > 0 && ev.start) {
+      const leave = Math.max(0, timeToMinutes(ev.start) - commute - APPOINTMENT_EARLY_MINUTES);
+      block.time = minutesToClock(leave);
+      block.detail = [`Leave by ${formatTime(block.time)} · appointment at ${formatTime(ev.start)}`, ev.detail].filter(Boolean).join(' · ');
+    }
+    blocks.push(block);
   });
 
   getMealTimeBlocksForDate(dateKey, blocks.find(b => b.blockKey === 'morning')).forEach(b => blocks.push(b));
@@ -5536,7 +5223,7 @@ function buildAllDayStrip(allDayBlocks) {
 function buildTimelineHtml(dateKey, allowEdit = true, opts = {}) {
   let blocks = getScheduleBlocksForDate(dateKey);
   if (opts.hideCleaning) blocks = blocks.filter(b => b.source !== 'cleaning');
-  if (blocks.length === 0) return `<div class="timeline"><div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px;">Nothing scheduled</div></div>`;
+  if (blocks.length === 0) return `<div class="timeline"><div style="text-align:center;padding:20px;color:var(--text-muted);font-size:14px;">Nothing scheduled</div></div>`;
 
   const allDayBlocks = blocks.filter(b => b.allDay);
   const timedBlocks = blocks.filter(b => !b.allDay);
@@ -5713,7 +5400,6 @@ function renderDayModal(dateKey) {
     </div>
   </div>
   ${buildDayMoneyHtml(dateKey)}
-  ${themeDivider('puppy', 'puppy')}
   <div class="day-modal-actions">
     <button class="add-btn" onclick="rebalanceAcademicBlocksNow(true)" style="border-style:solid;margin:0;">Rebalance Academic Blocks</button>
     <button class="modal-submit" onclick="closeDayModal();openEventModal('${dateKey}')">Add Event</button>
@@ -5771,8 +5457,8 @@ function buildDayNotesHtml(dateKey) {
 function refreshDayModalIfOpen() {
   const modal = document.getElementById('day-modal');
   if (modal?.classList.contains('open') && modal.dataset.dateKey) renderDayModal(modal.dataset.dateKey);
-  // Today shows to-dos and notes for today, so it redraws too.
-  if (currentTab === 'focus') renderFocus();
+  // Home shows today's to-dos and notes, so it redraws too.
+  if (currentTab === 'home') renderHome();
 }
 
 
@@ -6408,13 +6094,15 @@ function renderRoutines() {
   let html = themePageHeader('Routines', 'Just do the next thing.', ['routinesTab']);
 
   html += buildCollapseSection('morning', 'Morning Routine', morningRoutineSub(mDone, morningItems.length, morningBlock), routineOpenState.morning,
-    `<div class="edit-hint routine-auto-hint">Starts at 5:00 AM, or 4:00 AM when a shift starts before 7.</div>` +
-    ring(mDone, morningItems.length) + buildRoutineChecklist('morning', morningItems, morn, morningBlock),
+    (routineEditing.morning ? buildRoutineEditor('morning') :
+    `<div class="edit-hint routine-auto-hint">Starts at ${formatTime(minutesToClock(MORNING_ROUTINE_START))}, or 4:00 AM when a shift starts before 7.</div>` +
+    ring(mDone, morningItems.length) + buildRoutineChecklist('morning', morningItems, morn, morningBlock) + routineEditButton('morning')),
     'morning'
   );
 
   html += buildCollapseSection('evening', 'Evening Routine', `${eDone}/${EVENING_ITEMS.length} done · ${routineTimeRangeLabel(eveningBlock)}`, routineOpenState.evening,
-    ring(eDone, EVENING_ITEMS.length) + buildRoutineChecklist('evening', EVENING_ITEMS, eve, eveningBlock),
+    (routineEditing.evening ? buildRoutineEditor('evening') :
+    ring(eDone, EVENING_ITEMS.length) + buildRoutineChecklist('evening', EVENING_ITEMS, eve, eveningBlock) + routineEditButton('evening')),
     'moon'
   );
 
@@ -6429,8 +6117,68 @@ function renderRoutines() {
 
   html += buildCollapseSection('reset', 'Weekly Reset', weeklyResetSub(), routineOpenState.reset, buildWeeklyResetContent(), 'notesTab');
 
-  html += themeDivider();
   document.getElementById('page-routines').innerHTML = html;
+}
+
+/* ── Editing a routine: start time, and each step's name, minutes and note ── */
+const routineEditing = { morning: false, evening: false };
+function routineEditButton(type) {
+  return `<button class="add-btn routine-edit-btn" type="button" onclick="setRoutineEditing('${type}', true)">Edit steps &amp; time</button>`;
+}
+function setRoutineEditing(type, on) {
+  routineEditing[type] = on;
+  renderRoutines();
+}
+function buildRoutineEditor(type) {
+  const r = getRoutineSetup()[type];
+  return `<div class="routine-editor">
+    <label class="routine-editor-start"><span class="field-label">Starts at</span>
+      <input type="time" class="modal-input" value="${attr(r.start)}" onchange="updateRoutineStart('${type}', this.value)"></label>
+    ${r.items.map((item, i) => `<div class="routine-editor-row">
+      <input type="text" class="modal-input" value="${attr(item.label)}" placeholder="Step" aria-label="Step name" onchange="updateRoutineStep('${type}', ${i}, 'label', this.value)">
+      <input type="number" class="modal-input routine-editor-min" value="${item.minutes || ''}" min="0" step="1" inputmode="numeric" placeholder="min" aria-label="Minutes" onchange="updateRoutineStep('${type}', ${i}, 'minutes', this.value)">
+      <button class="day-todo-x" type="button" title="Remove step" aria-label="Remove ${attr(item.label)}" onclick="removeRoutineStep('${type}', ${i})">&times;</button>
+      <input type="text" class="modal-input routine-editor-detail" value="${attr(item.detail || '')}" placeholder="Note (optional)" aria-label="Note" onchange="updateRoutineStep('${type}', ${i}, 'detail', this.value)">
+    </div>`).join('')}
+    <div class="routine-editor-actions">
+      <button class="add-btn" type="button" onclick="addRoutineStep('${type}')">+ Add step</button>
+      <button class="modal-submit" type="button" onclick="setRoutineEditing('${type}', false)">Done</button>
+    </div>
+    <button class="routine-reset-link" type="button" onclick="resetRoutineSetup('${type}')">Reset to the original steps</button>
+  </div>`;
+}
+function editRoutineSetup(type, fn) {
+  const setup = getRoutineSetup();
+  fn(setup[type]);
+  saveRoutineSetup(setup);
+  renderRoutines();
+}
+function updateRoutineStart(type, value) {
+  if (!/^\d{2}:\d{2}$/.test(value)) return;
+  editRoutineSetup(type, r => { r.start = value; });
+}
+function updateRoutineStep(type, i, field, value) {
+  editRoutineSetup(type, r => {
+    if (!r.items[i]) return;
+    if (field === 'minutes') r.items[i].minutes = Math.max(0, parseInt(value, 10) || 0);
+    else if (field === 'label') r.items[i].label = value.trim() || r.items[i].label;
+    else r.items[i].detail = value.trim();
+  });
+}
+function addRoutineStep(type) {
+  editRoutineSetup(type, r => { r.items.push({ key: 'step-' + Date.now(), label: 'New step', minutes: 5 }); });
+}
+function removeRoutineStep(type, i) {
+  editRoutineSetup(type, r => { r.items.splice(i, 1); });
+}
+function resetRoutineSetup(type) {
+  if (!confirm('Put this routine back to its original steps and start time?')) return;
+  const setup = getRoutineSetup();
+  setup[type] = type === 'morning'
+    ? { start: '05:00', items: DEFAULT_MORNING_ITEMS.map(i => ({ ...i })) }
+    : { start: '22:00', items: DEFAULT_EVENING_ITEMS.map(i => ({ ...i })) };
+  saveRoutineSetup(setup);
+  renderRoutines();
 }
 
 /* Checklist with each step's clock time and length, counted from the
@@ -6569,7 +6317,6 @@ function renderGrocery() {
     ${rows}
     <div class="edit-hint grocery-note">Prices are estimated on the high side, so there's room if things cost more. Checks clear each Monday.</div>
   </div>`;
-  html += themeDivider();
   document.getElementById('page-grocery').innerHTML = html;
 }
 
@@ -6641,7 +6388,16 @@ function buildSchoolContent() {
     </div>`;
   };
 
-  let html = open.length
+  const enrolled = [...new Set(all.map(a => normalizeAcademicClassName(a.className)))].filter(Boolean).sort();
+  let html = enrolled.length ? `<div class="school-classes">
+    <div class="school-add-title">Your classes</div>
+    ${enrolled.map(c => {
+      const left = open.filter(a => normalizeAcademicClassName(a.className) === c).length;
+      return `<div class="school-class-row"><div><div class="school-class-name">${esc(c)}</div><div class="due-soon-date">${left ? `${left} open` : 'All caught up'}</div></div>
+        <button class="add-btn school-class-end" type="button" onclick="finishAcademicClass(${jsArg(c)})">Class is over</button></div>`;
+    }).join('')}
+  </div>` : '';
+  html += open.length
     ? `<div class="due-soon-list school-list">${open.map(row).join('')}</div>`
     : `<div class="day-panel-empty">No open assignments. Add one below or import a syllabus.</div>`;
   if (done.length) {
@@ -6663,6 +6419,18 @@ function buildSchoolContent() {
     </form>
     <button class="add-btn" type="button" style="margin:10px 0 0;" onclick="openSyllabusImportModal()">Import a syllabus</button>`;
   return html;
+}
+
+/* A class has ended: drop all of its assignments and their planned work
+   blocks, so only the classes you're still in stay on the list. */
+function finishAcademicClass(className) {
+  const all = getAcademicAssignments();
+  const gone = all.filter(a => a && normalizeAcademicClassName(a.className) === className);
+  if (!confirm(`Remove ${className} and its ${gone.length} assignment${gone.length === 1 ? '' : 's'}? Its planned work blocks come off the calendar too.`)) return;
+  const goneIds = new Set(gone.map(a => a.id));
+  saveAcademicAssignments(all.filter(a => !gone.includes(a)));
+  saveEvents(getEvents().filter(e => !(e.type === 'academic' && (goneIds.has(e.academicAssignmentId) || (e.academicClass && academicClassKey(e.academicClass) === academicClassKey(className))))));
+  renderActivePage();
 }
 
 function addSchoolTask(form) {
@@ -6935,7 +6703,6 @@ function toggleRoutine(type, key) {
 }
 
 
-
 let editingTodoIndex = null;
 
 
@@ -6983,65 +6750,6 @@ function getDiscoverAccount(accounts = getAccounts()) {
 function getDiscoverAccountId(accounts = getAccounts()) {
   return getDiscoverAccount(accounts)?.id || null;
 }
-
-function isDiscoverAccountId(accountId, accounts = getAccounts()) {
-  return !!accountId && getDiscoverAccountId(accounts) === accountId;
-}
-
-
-/* Bill-hub = the checking account bills come out of (default: any account
-   named "First Financial"). Funder = the checking account that funds the
-   bill hub (default: any account named "Huntington"). Both can be forced
-   with acct.role = 'bill-hub' | 'funder'. */
-function isBillHubAccount(acct) {
-  if (!acct) return false;
-  if (acct.role === 'bill-hub') return true;
-  return moneyNameKey(acct.name).includes('first financial');
-}
-function isFunderAccount(acct) {
-  if (!acct) return false;
-  if (acct.role === 'funder') return true;
-  return moneyNameKey(acct.name).includes('huntington');
-}
-function getBillHubAccount(accounts = getAccounts()) {
-  return accounts.find(isBillHubAccount) || null;
-}
-
-/* Any account that isn't Discover and has a Credit Line set (or a gas
-   reserve already set) is treated as a gas-reserve card — the panel shows
-   there regardless of what the account is named. */
-function isGasReserveCard(acct, accounts = getAccounts()) {
-  if (!acct) return false;
-  if (isDiscoverAccountId(acct.id, accounts)) return false;
-  return Number(acct.creditLimit || 0) > 0 || Number(acct.gasReserve || 0) > 0;
-}
-
-function billFolderKey(bill, accounts = getAccounts(), map = getBillAccounts()) {
-  if (map[bill.key]) return map[bill.key];
-  const source = bill.source || 'Unassigned';
-  const matched = accounts.find(a => a.name.toLowerCase() === source.toLowerCase());
-  return matched ? `acct:${matched.id}` : `source:${source}`;
-}
-
-
-
-function billOccurrencesForMonth(monthDate = getBillMonthDate()) {
-  const y = monthDate.getFullYear();
-  const m = monthDate.getMonth();
-  const daysInMonth = new Date(y, m + 1, 0).getDate();
-  const accounts = getAccounts();
-  const map = getBillAccounts();
-  const out = [];
-  for (let day = 1; day <= daysInMonth; day++) {
-    const date = new Date(y, m, day);
-    BILLS.filter(b => billOccursOnDate(b, date)).forEach(b => {
-      out.push({ bill: b, date, dateKey: localDateKey(date), folderKey: billFolderKey(b, accounts, map) });
-    });
-  }
-  return out.sort((a, b) => a.date - b.date || a.bill.name.localeCompare(b.bill.name));
-}
-
-
 
 
 function clampMonthDate(monthDate, day) {
@@ -7108,14 +6816,6 @@ function incomeOccurrencesForDate(date) {
 }
 
 
-
-
-
-
-
-
-
-
 function getIncomeSources() {
   const accts = getAccounts();
   const defaultAcct = accts[0]?.id || '';
@@ -7164,186 +6864,15 @@ function removeIncomeSource(id) {
 }
 
 
-
-
-
-
-
-
-
-
-
 let moneySubTab = 'bills';
-let moneyAcctOpen = null;
-let budgetProjectionOpen = false;
-let budgetProjectionAcctId = null;
 
 /* Project a single account's income vs bills for a given month. Numbers
    ignore paid/received flags — this is a forward-looking plan, so all
    scheduled bills and expected income count. Whenever a paycheck-instance
    override exists (bill amount, bill skip, paycheck amount, or extras),
    the projection reflects the budgeted number instead of the raw one. */
-function projectionForAccountMonth(accountId, monthDate) {
-  const folderKey = `acct:${accountId}`;
-  const planMonthKey = paycheckPlanKey(monthDate);
-  const plan = getPaycheckPlan(monthDate);
-  const acctPaychecks = incomeOccurrencesForMonth(accountId, monthDate);
-  const instances = {};
-  acctPaychecks.forEach(p => { instances[p.id] = getPaycheckInstance(p.id, monthDate); });
-  const isDiscover = isDiscoverAccountId(accountId);
 
-  // Income: honor per-paycheck amount overrides. Discover has no direct income.
-  let income = 0;
-  if (!isDiscover) {
-    acctPaychecks.forEach(p => {
-      const inst = instances[p.id];
-      const amt = inst.amountOverride !== null ? inst.amountOverride : Number(p.amount || 0);
-      income += amt;
-    });
-  }
 
-  // Bills: for a funder account (Huntington), the outflow is the transfer
-  // to First Financial — every paycheck-tab bill for the month, no matter
-  // what folder tag it currently carries. Huntington never pays a bill
-  // directly under this model. For any other account, bills = its own
-  // folder-assigned bills (existing behavior).
-  const acctForRole = getAccounts().find(a => a.id === accountId);
-  const isFunder = isFunderAccount(acctForRole) && !!getBillHubAccount();
-  const billSourceBills = isFunder ? BILLS.filter(billBelongsOnPaychecksTab) : BILLS;
-  let bills = 0;
-  billSourceBills.forEach(b => {
-    const dates = billOccurrenceDatesInMonth(b, monthDate);
-    dates.forEach((d, index) => {
-      if (!isFunder) {
-        const occFolderKey = billFolderKey(b);
-        if (occFolderKey !== folderKey) return;
-      }
-      const occId = billOccId(b.key, monthDate, index);
-      const assignedPaycheckId = plan.assignments[occId];
-      let amt = Number(b.amount || 0);
-      if (assignedPaycheckId) {
-        const inst = getPaycheckInstance(assignedPaycheckId, monthDate);
-        const ov = inst.billOverrides[b.key] || {};
-        if (ov.skip) return;
-        if (ov.amount !== undefined) amt = Number(ov.amount);
-      }
-      bills += amt;
-    });
-  });
-
-  // Extras attached to this account's paychecks add to outflow.
-  let extras = 0;
-  acctPaychecks.forEach(p => {
-    instances[p.id].extras.forEach(e => {
-      if (e.skip) return;
-      extras += Number(e.amount || 0);
-    });
-  });
-  bills += extras;
-
-  // Credit-card payments flowing INTO this account (e.g. from checking to
-  // Discover) count as inflow on the receiving side.
-  const accounts = getAccounts();
-  const paid = getBillsPaid(monthDate);
-  let ccCredits = 0;
-  BILLS.forEach(b => {
-    if (billPaysAccountId(b, accounts) !== accountId) return;
-    if (paid[b.key]) return;
-    ccCredits += Number(b.amount || 0);
-  });
-
-  return { income, bills, ccCredits, net: income - bills + ccCredits };
-}
-
-function buildBudgetProjectionSection() {
-  // Bill-hub balance is intentionally hidden — user doesn't need to see it.
-  const accounts = getAccounts().filter(a => !isBillHubAccount(a));
-  if (!accounts.length) return '';
-  if (!budgetProjectionAcctId || !accounts.some(a => a.id === budgetProjectionAcctId)) {
-    budgetProjectionAcctId = accounts[0].id;
-  }
-  const acct = accounts.find(a => a.id === budgetProjectionAcctId);
-  const startBalance = Number(acct.startingBalance || 0);
-  const startMonth = getBillMonthDate();
-  // Project far enough to reach the end of next calendar year so budgeting
-  // through Dec of next year is always visible.
-  const today = new Date();
-  const monthsToNextYearEnd = ((today.getFullYear() + 1) - startMonth.getFullYear()) * 12
-    + (11 - startMonth.getMonth()) + 1;
-  const monthCount = Math.max(12, monthsToNextYearEnd);
-  const rows = [];
-  let running = startBalance;
-  let totalIncome = 0, totalBills = 0, totalCredits = 0;
-  for (let i = 0; i < monthCount; i++) {
-    const d = new Date(startMonth.getFullYear(), startMonth.getMonth() + i, 1);
-    const p = projectionForAccountMonth(acct.id, d);
-    running += p.net;
-    totalIncome += p.income;
-    totalBills += p.bills;
-    totalCredits += p.ccCredits;
-    rows.push({ date: d, ...p, end: running });
-  }
-  const netTotal = totalIncome - totalBills + totalCredits;
-  const endAll = startBalance + netTotal;
-  const chevron = `<svg class="collapse-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>`;
-  const acctOptions = accounts.map(a => `<option value="${attr(a.id)}" ${a.id === acct.id ? 'selected' : ''}>${esc(a.name)}</option>`).join('');
-  const monthFmt = d => d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
-
-  const isFunderView = isFunderAccount(acct) && !!getBillHubAccount();
-  const outLabel = isFunderView ? '− To FF' : '− Bills';
-  const funderHint = isFunderView
-    ? ` <strong>${esc(acct.name)}</strong> never pays bills directly — the "To FF" column is the total transferred to First Financial each month, so End Balance = what stays in ${esc(acct.name)} after funding.`
-    : '';
-  let body = `<div class="budget-projection-controls">
-    <label class="field-label" for="budget-proj-acct">Account</label>
-    <select id="budget-proj-acct" class="text-input" onchange="setBudgetProjectionAcct(this.value)">${acctOptions}</select>
-    <div class="field-hint">Projection reaches through Dec ${today.getFullYear() + 1}. Amounts reflect paycheck-instance overrides (bill amounts, skips, paycheck amounts, extras) — the more you budget on the Paychecks tab, the more accurate the numbers become.${funderHint}</div>
-  </div>
-  <div class="budget-proj-table">
-    <div class="budget-proj-head">
-      <span>Month</span><span>+ Income</span><span>${outLabel}</span><span>Net</span><span>End Balance</span>
-    </div>`;
-  rows.forEach(r => {
-    const netClass = r.net < 0 ? 'neg' : r.net > 0 ? 'pos' : '';
-    const endClass = r.end < 0 ? 'negative' : '';
-    body += `<div class="budget-proj-row">
-      <span>${esc(monthFmt(r.date))}</span>
-      <span class="pos">${formatMoney(r.income + r.ccCredits)}</span>
-      <span class="neg">${formatMoney(r.bills)}</span>
-      <span class="${netClass}">${r.net < 0 ? '-' : r.net > 0 ? '+' : ''}${formatMoney(Math.abs(r.net))}</span>
-      <span class="${endClass}"><strong>${formatMoney(r.end)}</strong></span>
-    </div>`;
-  });
-  const netAllClass = netTotal < 0 ? 'neg' : netTotal > 0 ? 'pos' : '';
-  const endAllClass = endAll < 0 ? 'negative' : '';
-  body += `<div class="budget-proj-row total">
-    <span>${monthCount}-mo total</span>
-    <span class="pos">${formatMoney(totalIncome + totalCredits)}</span>
-    <span class="neg">${formatMoney(totalBills)}</span>
-    <span class="${netAllClass}">${netTotal < 0 ? '-' : netTotal > 0 ? '+' : ''}${formatMoney(Math.abs(netTotal))}</span>
-    <span class="${endAllClass}"><strong>${formatMoney(endAll)}</strong></span>
-  </div>
-  </div>`;
-
-  const endLabel = monthFmt(rows[rows.length - 1].date);
-  const subtitle = `Starting ${formatMoney(startBalance)} → ${formatMoney(endAll)} by ${endLabel}`;
-  return `<div class="acct-card theme-card ${budgetProjectionOpen ? 'open' : ''}" style="margin-top:14px;">
-    <div class="acct-card-header" onclick="budgetProjectionOpen=!budgetProjectionOpen;renderMoney()">
-      <div class="acct-card-dot" style="background:var(--pal-green)"></div>
-      <div class="acct-card-info">
-        <div class="acct-card-name">Budget Projection</div>
-        <div class="acct-card-bal">${esc(subtitle)}</div>
-      </div>
-      ${chevron}
-    </div>
-    <div class="acct-card-body">${body}</div>
-  </div>`;
-}
-
-function setBudgetProjectionAcct(id) {
-  budgetProjectionAcctId = id;
-  renderMoney();
-}
 let moneyIncomeOpen = null;
 let billCatOpen = { Necessities: true, 'Credit Card Payments': false, Subscriptions: false, Variable: false, Other: false };
 let paycheckCardOpen = {}; // paycheckId -> bool
@@ -7357,8 +6886,6 @@ function renderMoney() {
 
   let html = themePageHeader('Money', 'Know where it goes.', ['money']);
 
-  // The Accounts tab (and the retired "Log" tab) are hidden for now;
-  // renderMoneyAccounts() is kept so it can come back later.
   if (!['bills', 'paychecks', 'income'].includes(moneySubTab)) moneySubTab = 'bills';
 
   html += `<div class="money-tabs">
@@ -7371,250 +6898,18 @@ function renderMoney() {
   else if (moneySubTab === 'paychecks') html += renderMoneyPaychecks();
   else if (moneySubTab === 'income') html += renderMoneyIncome();
 
-  html += themeDivider('money', 'puppy');
-
   document.getElementById('page-money').innerHTML = html;
 }
 
-function accountBalanceBreakdown(acctId) {
-  const billMonth = getBillMonthDate();
-  const current = accountCurrentBalance(acctId);
-  const folderKey = `acct:${acctId}`;
-  const paid = getBillsPaid(billMonth);
-
-  let upcomingExpenses = 0;
-  billOccurrencesForMonth().forEach(occ => {
-    if (occ.folderKey !== folderKey) return;
-    if (occ.bill.category === 'Variable') {
-      const spent = getSpentAgainstVariableBill(occ.bill.key, billMonth);
-      const remaining = Math.max(0, Number(occ.bill.amount || 0) - spent);
-      upcomingExpenses += remaining;
-    } else if (!paid[occ.bill.key]) {
-      upcomingExpenses += Number(occ.bill.amount || 0);
-    }
-  });
-
-  let upcomingIncome = 0;
-  incomeOccurrencesForMonth(acctId, billMonth).forEach(occ => {
-    if (!occ.received) upcomingIncome += Number(occ.amount || 0);
-  });
-
-  // Credit-card payment bills targeting this account add to projected balance.
-  const ccCreditsThisMonth = upcomingCreditCardCreditsForAccount(acctId, billMonth);
-  upcomingIncome += ccCreditsThisMonth;
-
-  const today = todayKey();
-  const monthY = billMonth.getFullYear();
-  const monthM = billMonth.getMonth();
-  getTransactions().forEach(t => {
-    if (t.accountId !== acctId) return;
-    if (!t.date || t.date <= today) return;
-    const d = transactionDate(t);
-    if (d.getFullYear() !== monthY || d.getMonth() !== monthM) return;
-    const amt = Number(t.amount || 0);
-    if (amt < 0) upcomingExpenses += Math.abs(amt);
-    else upcomingIncome += amt;
-  });
-
-  const projected = current - upcomingExpenses + upcomingIncome;
-  return { current, upcomingExpenses, upcomingIncome, projected };
-}
 
 /* Discover reserve = every recurring bill charged to the Discover card each
    month. The user pays with cash-substitute income going into other accounts,
    so the Discover balance must always keep enough headroom to cover subs. */
-function discoverMonthlyReserve() {
-  const bills = (typeof BILLS !== 'undefined' ? BILLS : getBillsList());
-  return bills.reduce((sum, b) => sum + (billIsDiscoverSourced(b) ? Number(b.amount || 0) : 0), 0);
-}
-function discoverSafeSpendInfo(account) {
-  const acct = account || getDiscoverAccount();
-  if (!acct) return null;
-  const limit = Math.max(0, Number(acct.creditLimit || 0));
-  const reserve = discoverMonthlyReserve();
-  const safeCeiling = Math.max(0, limit - reserve);
-  const current = accountCurrentBalance(acct.id);
-  const availableNow = Math.max(0, limit - current);
-  const freeAfterReserve = availableNow - reserve;
-  const underwater = freeAfterReserve < 0;
-  return {
-    account: acct, limit, reserve, safeCeiling,
-    current, availableNow, freeAfterReserve, underwater
-  };
-}
 
-function renderMoneyAccounts() {
-  const accounts = getAccounts();
-  const chevron = `<svg class="collapse-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>`;
-  const billMonth = getBillMonthDate();
-  const billMonthName = billMonth.toLocaleDateString('en-US', { month: 'long' });
-  let html = '';
-
-  if (!accounts.length) {
-    html += `<div class="card theme-card" style="text-align:center;padding:24px;">${themeIcon('money', 'theme-corner')}<div style="font-size:14px;color:var(--text-muted);margin-bottom:12px;">No accounts yet. Add one to start tracking.</div></div>`;
-  }
-
-  accounts.forEach((acct, i) => {
-    const b = accountBalanceBreakdown(acct.id);
-    const isOpen = moneyAcctOpen === acct.id;
-    const color = colorById(acct.color || ACCOUNT_COLORS[0].id);
-    const isDiscover = isDiscoverAccountId(acct.id);
-    const isGasCard = isGasReserveCard(acct);
-    const isBillHub = isBillHubAccount(acct);
-    const discInfo = isDiscover ? discoverSafeSpendInfo(acct) : null;
-    const gasInfo = isGasCard ? cardGasReserveInfo(acct) : null;
-    const blur = isBillHub ? ' blur-money' : '';
-    const balSub = isBillHub
-      ? `Bills funnel through here · balance hidden`
-      : `Now · After ${esc(billMonthName)} bills ${formatMoney(b.projected)}`;
-    html += `<div class="acct-card theme-card ${isOpen?'open':''}">
-      <div class="acct-card-header" onclick="moneyAcctOpen=moneyAcctOpen==='${acct.id}'?null:'${acct.id}';renderMoney()">
-        <div class="acct-card-dot" style="background:${color.bg}"></div>
-        <div class="acct-card-info">
-          <div class="acct-card-name">${esc(acct.name)}</div>
-          <div class="acct-card-bal">${balSub}</div>
-        </div>
-        <div class="acct-card-amount${blur} ${b.current < 0 ? 'negative' : ''}">${formatMoney(b.current)}</div>
-        ${chevron}
-      </div>
-      <div class="acct-card-body">
-        ${isDiscover ? buildDiscoverSafeSpendPanel(discInfo) : ''}
-        ${isGasCard ? buildCardGasReservePanel(gasInfo) : ''}
-        <div class="balance-breakdown">
-          <div class="balance-breakdown-row">
-            <span>Current Balance</span>
-            <span class="${blur} ${b.current < 0 ? 'negative' : ''}">${formatMoney(b.current)}</span>
-          </div>
-          <div class="balance-breakdown-row">
-            <span>Upcoming Expenses (${esc(billMonthName)})</span>
-            <span class="neg${blur}">-${formatMoney(b.upcomingExpenses)}</span>
-          </div>
-          <div class="balance-breakdown-row">
-            <span>Upcoming Income (${esc(billMonthName)})</span>
-            <span class="pos${blur}">+${formatMoney(b.upcomingIncome)}</span>
-          </div>
-          <div class="balance-breakdown-row total ${b.projected < 0 ? 'negative' : ''}">
-            <span>Remaining After Bills</span>
-            <span class="${blur}">${formatMoney(b.projected)}</span>
-          </div>
-        </div>
-        <div class="acct-edit-row">
-          <div class="field-label">Account Name</div>
-          <input type="text" class="text-input" value="${attr(acct.name)}" onchange="updateAccountField('${acct.id}','name',this.value)">
-        </div>
-        <div class="acct-edit-row">
-          <div class="field-label">Current Balance</div>
-          <div class="field-hint">Enter what's actually in the account. It stays put — marking bills paid or logging transactions won't change this. Update it yourself after you pay everything.</div>
-          <input type="number" class="text-input" step="0.01" inputmode="decimal" value="${Number(acct.startingBalance || 0)}" onchange="updateAccountField('${acct.id}','startingBalance',this.value)">
-        </div>
-        <div class="acct-edit-row">
-          <div class="field-label">Credit Line ${isDiscover ? '' : '<span style="color:var(--text-muted);font-weight:400;">(leave 0 if this isn\'t a credit card)</span>'}</div>
-          <div class="field-hint">Your total available credit. Used to calculate how much you can spend without eating into the ${isDiscover ? 'monthly subscription' : 'gas'} reserve.</div>
-          <input type="number" class="text-input" step="0.01" inputmode="decimal" value="${Number(acct.creditLimit || 0)}" placeholder="${isDiscover ? 'e.g. 800' : 'e.g. 1000'}" onchange="updateAccountField('${acct.id}','creditLimit',this.value)">
-        </div>
-        ${!isDiscover ? `<div class="acct-edit-row">
-          <div class="field-label">Gas Reserve (per month)</div>
-          <div class="field-hint">How much room to keep free on this card so you can always fill up. Set it to your typical monthly gas spend — the balance can climb to Credit Line − Gas Reserve before you're in the danger zone. Set to 0 if you don't want a reserve on this account.</div>
-          <input type="number" class="text-input" step="0.01" inputmode="decimal" value="${Number(acct.gasReserve || 0)}" placeholder="e.g. 80" onchange="updateAccountField('${acct.id}','gasReserve',this.value)">
-        </div>` : ''}
-        <div class="acct-edit-row">
-          <div class="field-label">Color</div>
-          <div class="color-dot-row">${ACCOUNT_COLORS.map(c => `<button class="color-dot ${acct.color===c.id?'active':''}" style="background:${c.bg};border-color:${acct.color===c.id?'var(--espresso)':'transparent'}" onclick="updateAccountField('${acct.id}','color','${c.id}')" type="button"></button>`).join('')}</div>
-        </div>
-        <button class="modal-danger" style="margin-top:4px;" onclick="deleteAccountDirect('${acct.id}')">Delete Account</button>
-      </div>
-    </div>`;
-  });
-
-  html += `<button class="add-btn" onclick="openAcctModal()">+ Add Account</button>`;
-  html += buildBudgetProjectionSection();
-  return html;
-}
-
-function updateAccountField(id, field, value) {
-  const accts = getAccounts();
-  const acct = accts.find(a => a.id === id);
-  if (!acct) return;
-  if (field === 'startingBalance') acct.startingBalance = parseFloat(value) || 0;
-  else if (field === 'creditLimit') acct.creditLimit = Math.max(0, parseFloat(value) || 0);
-  else if (field === 'gasReserve') acct.gasReserve = Math.max(0, parseFloat(value) || 0);
-  else acct[field] = value;
-  saveAccounts(accts);
-  renderMoney();
-}
 
 /* Gas-reserve info for any non-Discover credit card. The idea: never let
    the balance climb high enough that you don't have room left for gas.
    Set the reserve to your typical monthly gas spend. */
-function cardGasReserveInfo(account) {
-  if (!account) return null;
-  const limit = Math.max(0, Number(account.creditLimit || 0));
-  const reserve = Math.max(0, Number(account.gasReserve || 0));
-  const safeCeiling = Math.max(0, limit - reserve);
-  const current = accountCurrentBalance(account.id);
-  const availableNow = Math.max(0, limit - current);
-  const freeAfterReserve = availableNow - reserve;
-  const underwater = freeAfterReserve < 0;
-  return {
-    account, limit, reserve, safeCeiling,
-    current, availableNow, freeAfterReserve, underwater
-  };
-}
-
-function buildCardGasReservePanel(info) {
-  if (!info) return '';
-  const { account, limit, reserve, safeCeiling, current, availableNow, freeAfterReserve, underwater } = info;
-  const status = limit <= 0
-    ? { tone: 'muted', msg: 'Set the Credit Line below to unlock the gas-reserve math.' }
-    : reserve <= 0
-      ? { tone: 'muted', msg: 'Set a Gas Reserve below (your typical monthly gas spend) and this card will warn you before the balance eats into it.' }
-      : underwater
-        ? { tone: 'danger', msg: `You are ${formatMoney(Math.abs(freeAfterReserve))} into your gas reserve — pay some down before spending more so you can always cover gas.` }
-        : { tone: 'ok', msg: `Keep the balance at or below ${formatMoney(safeCeiling)} and you'll always have ${formatMoney(reserve)} free for gas. Right now you have ${formatMoney(freeAfterReserve)} beyond that.` };
-  return `<div class="discover-safe-panel ${status.tone}">
-    <div class="discover-safe-title">${esc(account.name)} gas-reserve</div>
-    <div class="discover-safe-msg">${esc(status.msg)}</div>
-    <div class="discover-safe-grid">
-      <div><div class="discover-safe-label">Credit line</div><div class="discover-safe-val">${formatMoney(limit)}</div></div>
-      <div><div class="discover-safe-label">Gas reserve / mo</div><div class="discover-safe-val">${formatMoney(reserve)}</div></div>
-      <div><div class="discover-safe-label">Safe ceiling</div><div class="discover-safe-val">${formatMoney(safeCeiling)}</div></div>
-      <div><div class="discover-safe-label">Currently available</div><div class="discover-safe-val">${formatMoney(availableNow)}</div></div>
-      <div class="discover-safe-free ${status.tone}"><div class="discover-safe-label">Free after reserve</div><div class="discover-safe-val">${formatMoney(freeAfterReserve)}</div></div>
-    </div>
-  </div>`;
-}
-
-function buildDiscoverSafeSpendPanel(info) {
-  if (!info) return '';
-  const { limit, reserve, safeCeiling, current, availableNow, freeAfterReserve, underwater } = info;
-  const status = limit <= 0
-    ? { tone: 'muted', msg: 'Set a credit line below to unlock the safe-spending math.' }
-    : underwater
-      ? { tone: 'danger', msg: `You are $${Math.abs(freeAfterReserve).toFixed(2)} into your subscription reserve — pay some down before spending more.` }
-      : { tone: 'ok', msg: `You have ${formatMoney(freeAfterReserve)} free to spend without touching next month's subs.` };
-  return `<div class="discover-safe-panel ${status.tone}">
-    <div class="discover-safe-title">Discover safe-spend</div>
-    <div class="discover-safe-msg">${esc(status.msg)}</div>
-    <div class="discover-safe-grid">
-      <div><div class="discover-safe-label">Credit line</div><div class="discover-safe-val">${formatMoney(limit)}</div></div>
-      <div><div class="discover-safe-label">Recurring subs / mo</div><div class="discover-safe-val">${formatMoney(reserve)}</div></div>
-      <div><div class="discover-safe-label">Safe ceiling</div><div class="discover-safe-val">${formatMoney(safeCeiling)}</div></div>
-      <div><div class="discover-safe-label">Currently available</div><div class="discover-safe-val">${formatMoney(availableNow)}</div></div>
-      <div class="discover-safe-free ${status.tone}"><div class="discover-safe-label">Free after reserve</div><div class="discover-safe-val">${formatMoney(freeAfterReserve)}</div></div>
-    </div>
-  </div>`;
-}
-
-function deleteAccountDirect(id) {
-  if (!confirm('Delete this account and its transactions?')) return;
-  const accts = getAccounts().filter(a => a.id !== id);
-  const txs = getTransactions().filter(t => t.accountId !== id);
-  saveAccounts(accts);
-  if (!accts.length) lsSave('gnd-accounts-user-cleared', true);
-  saveTransactions(txs);
-  if (moneyAcctOpen === id) moneyAcctOpen = null;
-  renderMoney();
-}
 
 
 const BILL_CARD_SECTIONS = [
@@ -7633,12 +6928,21 @@ function renderMoneyBills() {
   const paid = getBillsPaid(billMonth);
   const totalAll = bills.reduce((s, b) => s + b.amount, 0);
   const paidCount = bills.filter(b => paid[b.key]).length;
+  const paidTotal = bills.filter(b => paid[b.key]).reduce((s, b) => s + b.amount, 0);
+  // Which paycheck each unpaid bill is scheduled on, for the "Scheduled" tag.
+  const paychecksById = {};
+  incomeOccurrencesForMonth(null, billMonth).forEach(p => { paychecksById[p.id] = p; });
+  const scheduledOn = b => {
+    const a = findOccurrenceAssignment(billOccId(b.key, billMonth, 0));
+    const p = a && paychecksById[a.paycheckId];
+    return p ? p.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+  };
 
   let html = `<div class="bill-month-nav">
     <button class="tiny-nav-btn" onclick="moveBillMonth(-1)" ${billMonthOffset===0?'disabled':''}>${arrowIcon('left')}</button>
     <div>
       <div class="bill-month-label">${billMonthName}</div>
-      <div class="bill-month-sub">${formatMoney(totalAll)} total · ${paidCount}/${bills.length} paid</div>
+      <div class="bill-month-sub">${formatMoney(paidTotal)} paid · ${formatMoney(totalAll - paidTotal)} to go · ${paidCount}/${bills.length} paid</div>
     </div>
     <button class="tiny-nav-btn" onclick="moveBillMonth(1)" ${billMonthOffset===MAX_BILL_MONTH_OFFSET?'disabled':''}>${arrowIcon('right')}</button>
   </div>`;
@@ -7661,7 +6965,7 @@ function renderMoneyBills() {
       <div class="bill-cat-body">`;
 
     if (!catBills.length) {
-      html += `<div style="font-size:13px;color:var(--text-muted);padding:12px 0;">No bills in this category.</div>`;
+      html += `<div style="font-size:14px;color:var(--text-muted);padding:12px 0;">No bills in this category.</div>`;
     }
 
     catBills.forEach(b => {
@@ -7707,7 +7011,9 @@ function renderMoneyBills() {
         const occDates = billOccurrenceDatesInMonth(b, billMonth);
         const anchorDate = occDates[0] || new Date(billMonth.getFullYear(), billMonth.getMonth(), Math.min(b.day, 28));
         const dateKey = localDateKey(anchorDate);
-        const freqTag = isBiweekly ? `<span class="bill-freq-tag">Biweekly</span>` : '';
+        const sched = isPaid ? '' : scheduledOn(b);
+        const freqTag = (isBiweekly ? `<span class="bill-freq-tag">Biweekly</span>` : '')
+          + (isPaid ? `<span class="bill-paid-tag">Paid</span>` : sched ? `<span class="bill-sched-tag">Scheduled · ${esc(sched)} paycheck</span>` : '');
         const dueLine = isBiweekly
           ? (occDates.length
               ? `Biweekly · ${occDates.map(d => formatShortDate(d)).join(', ')}`
@@ -7716,7 +7022,7 @@ function renderMoneyBills() {
         html += `<div class="bill-row ${isPaid ? 'paid' : ''}${dragClass}" data-bill-key="${attr(b.key)}" style="padding:10px 0;"${dragAttrs}>
           <button class="bill-check" onclick="toggleBill('${b.key}','${dateKey}')"><svg viewBox="0 0 12 12"><polyline points="2.5 6 5 8.5 9.5 3.5"/></svg></button>
           <div class="bill-edit-info" style="flex:1;min-width:0;${isPaid ? 'opacity:0.5;' : ''}">
-            <div class="bill-edit-name" style="${isPaid ? 'text-decoration:line-through;' : ''}">${esc(b.name)} ${freqTag}</div>
+            <div class="bill-edit-name"><span style="${isPaid ? 'text-decoration:line-through;' : ''}">${esc(b.name)}</span> ${freqTag}</div>
             <div class="bill-edit-detail">${dueLine}${b.note ? ' · ' + esc(b.note) : ''}${b.source ? ' · ' + esc(b.source) : ''}</div>
           </div>
           <div class="bill-edit-right">
@@ -7772,125 +7078,109 @@ function renderMoneyBills() {
     html += `</div></div>`;
   });
 
-  html += buildFirstFinancialSection(billMonth);
+  html += buildCheckingSection(billMonth);
 
   return html;
 }
 
-/* Sent-flag storage — one bool per paycheck per month tracking whether
-   the transfer from Huntington → First Financial has been completed. */
-function ffSentKey(monthDate) {
-  return `gnd-ff-sent-${monthDate.getFullYear()}-${monthDate.getMonth()}`;
+/* ── One "paid" state for bills ──
+   A bill checked off on the Paychecks tab is checked off on the Bills tab
+   too (and the other way round): both read the month's bills-paid map,
+   keyed by the month the bill is due in. */
+function isBillPaidOn(billKey, date) { return !!getBillsPaid(date)[billKey]; }
+function setBillPaid(billKey, date, isPaid) {
+  const p = getBillsPaid(date);
+  if (isPaid) p[billKey] = true; else delete p[billKey];
+  saveBillsPaid(p, date);
 }
-function getFfSent(monthDate) { return ls(ffSentKey(monthDate), {}); }
-function saveFfSent(map, monthDate) { lsSave(ffSentKey(monthDate), map); }
-function toggleFfPaycheckSent(paycheckId) {
-  const monthDate = getBillMonthDate();
-  const map = getFfSent(monthDate);
-  if (map[paycheckId]) delete map[paycheckId];
-  else map[paycheckId] = true;
-  saveFfSent(map, monthDate);
+/* Older paycheck-only "paid" ticks move over to the shared map once. */
+function migratePaycheckPaidFlag(paycheckId, o, instance, monthDate) {
+  const ov = instance.billOverrides[o.billKey];
+  if (!ov?.paid) return;
+  setBillPaid(o.billKey, o.date, true);
+  overrideBillOnPaycheck(paycheckId, o.billKey, { paid: false }, monthDate);
+  delete ov.paid;
+}
+function togglePaycheckBillPaid(billKey, dateKey, isPaid) {
+  setBillPaid(billKey, dateFromKey(dateKey), isPaid);
   renderMoney();
 }
 
-/* First Financial funding view: bills grouped by the paycheck they're
-   assigned to, so for each paycheck you see the amount to move from
-   Huntington → First Financial to cover its bills. Unassigned bills
-   (still due this month but not tied to a paycheck) get their own
-   bucket at the bottom so nothing goes missing. The numbers come from
-   firstFinancialPlan(). */
-function firstFinancialPlan(billMonth) {
+/* Checking account: for each paycheck, the bills it covers and how much
+   still needs to be in checking to pay the ones not yet paid. */
+function checkingPlan(billMonth) {
   const eligible = BILLS.filter(billBelongsOnPaychecksTab);
   const plan = getPaycheckPlan(billMonth);
   const paychecks = incomeOccurrencesForMonth(null, billMonth).slice().sort((a, b) => a.date - b.date);
   const instances = {};
   paychecks.forEach(p => { instances[p.id] = getPaycheckInstance(p.id, billMonth); });
 
-  const nextMonth = nextMonthDate(billMonth);
   const allOccs = paycheckOccurrencesForMonth(eligible, billMonth, false)
-    .concat(paycheckOccurrencesForMonth(eligible, nextMonth, true));
-
+    .concat(paycheckOccurrencesForMonth(eligible, nextMonthDate(billMonth), true));
   const buckets = {};
   paychecks.forEach(p => { buckets[p.id] = []; });
   const unassigned = [];
-
   allOccs.forEach(o => {
     const explicit = plan.assignments[o.occId];
-    if (explicit && buckets[explicit] !== undefined) {
-      buckets[explicit].push(o);
-      return;
-    }
+    if (explicit && buckets[explicit] !== undefined) { buckets[explicit].push(o); return; }
     if (findOccurrenceAssignment(o.occId)) return;
     if (!o.fromNextMonth) unassigned.push(o);
   });
 
-  // Effective amount for a bill occurrence honoring any paycheck override.
-  const occAmount = (o, paycheckId) => {
-    if (paycheckId && instances[paycheckId]) {
-      const ov = instances[paycheckId].billOverrides[o.billKey] || {};
-      if (ov.skip) return null;
-      if (ov.amount !== undefined) return Number(ov.amount);
-    }
-    return Number(o.bill?.amount || 0);
-  };
-
   const perPaycheck = paychecks.map(p => {
     const inst = instances[p.id];
-    let total = 0;
     const items = [];
     buckets[p.id].forEach(o => {
-      const amt = occAmount(o, p.id);
-      if (amt === null) return;
-      total += amt;
-      items.push({ name: o.bill.name, amount: amt, fromNextMonth: o.fromNextMonth, date: o.date });
+      migratePaycheckPaidFlag(p.id, o, inst, billMonth);
+      const ov = inst.billOverrides[o.billKey] || {};
+      if (ov.skip) return;
+      const amount = ov.amount !== undefined ? Number(ov.amount) : Number(o.bill?.amount || 0);
+      items.push({ name: o.bill.name, amount, date: o.date, fromNextMonth: o.fromNextMonth, billKey: o.billKey, paid: isBillPaidOn(o.billKey, o.date) });
     });
     inst.extras.forEach(e => {
       if (e.skip) return;
-      const amt = Number(e.amount || 0);
-      total += amt;
-      items.push({ name: e.name || 'Extra', amount: amt, extra: true });
+      items.push({ name: e.name || 'Other', amount: Number(e.amount || 0), extra: true, extraId: e.id, paid: !!e.paid });
     });
-    return { paycheck: p, total, items };
+    const needed = items.filter(it => !it.paid).reduce((sum, it) => sum + it.amount, 0);
+    const total = items.reduce((sum, it) => sum + it.amount, 0);
+    return { paycheck: p, items, needed, total, allPaid: items.length > 0 && needed === 0 && items.every(it => it.paid) };
   });
-
-  let unassignedTotal = 0;
-  const unassignedItems = [];
-  unassigned.forEach(o => {
-    const amt = Number(o.bill?.amount || 0);
-    unassignedTotal += amt;
-    unassignedItems.push({ name: o.bill.name, amount: amt, date: o.date });
-  });
-
-  const sent = getFfSent(billMonth);
-  const monthlyTotal = perPaycheck.reduce((s, p) => s + p.total, 0) + unassignedTotal;
-  const remaining = perPaycheck.reduce((s, p) => s + (sent[p.paycheck.id] ? 0 : p.total), 0) + unassignedTotal;
-  return { paychecks, perPaycheck, unassignedItems, unassignedTotal, sent, monthlyTotal, remaining };
+  const unassignedItems = unassigned.map(o => ({ name: o.bill.name, amount: Number(o.bill?.amount || 0), date: o.date, paid: isBillPaidOn(o.billKey, o.date) }));
+  return { paychecks, perPaycheck, unassignedItems };
 }
 
-function buildFirstFinancialSection(billMonth) {
+/* Mark a whole paycheck paid: every bill on it gets checked off (and
+   un-checked again if it was already all paid). */
+function togglePaycheckAllPaid(paycheckId) {
+  const billMonth = getBillMonthDate();
+  const row = checkingPlan(billMonth).perPaycheck.find(r => r.paycheck.id === paycheckId);
+  if (!row) return;
+  const makePaid = !row.allPaid;
+  row.items.forEach(it => {
+    if (it.extra) updatePaycheckExtra(paycheckId, it.extraId, { paid: makePaid });
+    else setBillPaid(it.billKey, it.date, makePaid);
+  });
+  renderMoney();
+}
+
+function buildCheckingSection(billMonth) {
   const chevron = `<svg class="collapse-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>`;
-  const openKey = '@first-financial';
+  const openKey = '@checking';
   const isOpen = billCatOpen[openKey] !== false;
   const monthName = billMonth.toLocaleDateString('en-US', { month: 'long' });
-  const { paychecks, perPaycheck, unassignedItems, unassignedTotal, sent, monthlyTotal, remaining } = firstFinancialPlan(billMonth);
+  const { paychecks, perPaycheck, unassignedItems } = checkingPlan(billMonth);
+  const itemRow = it => {
+    const when = it.extra ? 'other' : it.fromNextMonth ? 'early' : it.date ? it.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+    return `<div class="ff-item ${it.paid ? 'paid' : ''}"><span>${esc(it.name)}${when ? ' · ' + esc(when) : ''}</span><span>${formatMoney(it.amount)}</span></div>`;
+  };
 
-  let body = `<div class="ff-header">
-    <div class="ff-tagline">Fund from <strong>Huntington</strong> → <strong>First Financial</strong> so bills clear on time.</div>
-    <div class="ff-month-total">
-      <span>${esc(monthName)} still to transfer</span>
-      <strong>${formatMoney(remaining)}${remaining < monthlyTotal ? ` <span style="color:var(--text-muted);font-weight:600;font-size:11px;">of ${formatMoney(monthlyTotal)}</span>` : ''}</strong>
-    </div>
-  </div>`;
-
+  let body = '';
   if (!paychecks.length) {
     body += `<div class="ff-empty">No paychecks scheduled for ${esc(monthName)}. Add an income source on the Income tab to break this down by paycheck.</div>`;
   }
-
-  perPaycheck.forEach(({ paycheck, total, items }) => {
+  perPaycheck.forEach(({ paycheck, items, needed, allPaid }) => {
     const dateLabel = paycheck.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-    const isSent = !!sent[paycheck.id];
-    const btnLabel = isSent ? '✓ Sent' : 'Mark sent';
-    body += `<div class="ff-paycheck-card ${isSent ? 'ff-sent' : ''}">
+    body += `<div class="ff-paycheck-card ${allPaid ? 'ff-sent' : ''}">
       <div class="ff-paycheck-head">
         <div>
           <div class="ff-paycheck-name">${esc(paycheck.label)}</div>
@@ -7898,54 +7188,31 @@ function buildFirstFinancialSection(billMonth) {
         </div>
         <div class="ff-paycheck-head-right">
           <div class="ff-paycheck-total">
-            <div class="ff-paycheck-total-label">Send</div>
-            <div class="ff-paycheck-total-amt">${formatMoney(total)}</div>
+            <div class="ff-paycheck-total-label">${allPaid ? 'All paid' : 'Need in checking'}</div>
+            <div class="ff-paycheck-total-amt">${formatMoney(needed)}</div>
           </div>
-          <button type="button" class="ff-sent-btn ${isSent ? 'on' : ''}" onclick="toggleFfPaycheckSent('${attr(paycheck.id)}')">${btnLabel}</button>
-        </div>
-      </div>`;
-    if (!items.length) {
-      body += `<div class="ff-item-empty">No bills assigned to this paycheck yet. Drag some over on the Paychecks tab.</div>`;
-    } else {
-      body += `<div class="ff-item-list">`;
-      items.forEach(it => {
-        const suffix = it.extra ? ' · extra' : it.fromNextMonth ? ' · early' : it.date ? ' · ' + it.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
-        body += `<div class="ff-item"><span>${esc(it.name)}${esc(suffix)}</span><span>${formatMoney(it.amount)}</span></div>`;
-      });
-      body += `</div>`;
-    }
-    body += `</div>`;
-  });
-
-  if (unassignedItems.length) {
-    body += `<div class="ff-paycheck-card ff-unassigned">
-      <div class="ff-paycheck-head">
-        <div>
-          <div class="ff-paycheck-name">Unassigned bills</div>
-          <div class="ff-paycheck-date">Not tied to a paycheck yet</div>
-        </div>
-        <div class="ff-paycheck-total">
-          <div class="ff-paycheck-total-label">Cover</div>
-          <div class="ff-paycheck-total-amt">${formatMoney(unassignedTotal)}</div>
+          ${items.length ? `<button type="button" class="ff-sent-btn ${allPaid ? 'on' : ''}" onclick="togglePaycheckAllPaid('${attr(paycheck.id)}')">${allPaid ? '✓ Paid' : 'Mark paid'}</button>` : ''}
         </div>
       </div>
-      <div class="ff-item-list">`;
-    unassignedItems.forEach(it => {
-      const dateStr = it.date ? it.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
-      body += `<div class="ff-item"><span>${esc(it.name)}${dateStr ? ' · ' + esc(dateStr) : ''}</span><span>${formatMoney(it.amount)}</span></div>`;
-    });
-    body += `</div></div>`;
+      ${items.length ? `<div class="ff-item-list">${items.map(itemRow).join('')}</div>` : `<div class="ff-item-empty">No bills on this paycheck yet. Add some on the Paychecks tab.</div>`}
+    </div>`;
+  });
+  if (unassignedItems.length) {
+    const left = unassignedItems.filter(it => !it.paid).reduce((sum, it) => sum + it.amount, 0);
+    body += `<div class="ff-paycheck-card ff-unassigned">
+      <div class="ff-paycheck-head">
+        <div><div class="ff-paycheck-name">Not on a paycheck</div><div class="ff-paycheck-date">Due this month</div></div>
+        <div class="ff-paycheck-total"><div class="ff-paycheck-total-label">Need in checking</div><div class="ff-paycheck-total-amt">${formatMoney(left)}</div></div>
+      </div>
+      <div class="ff-item-list">${unassignedItems.map(itemRow).join('')}</div>
+    </div>`;
   }
-
-  const sentCount = perPaycheck.filter(p => sent[p.paycheck.id]).length;
-  const headerSub = paychecks.length
-    ? `${formatMoney(remaining)} still to transfer · ${sentCount}/${perPaycheck.length} paycheck${perPaycheck.length===1?'':'s'} sent`
-    : `${formatMoney(monthlyTotal)} to transfer this month`;
-  return `<div class="bill-cat-section bill-card-section ff-section ${isOpen ? 'open' : ''}" data-card="First Financial">
+  const stillNeeded = perPaycheck.reduce((sum, r) => sum + r.needed, 0) + unassignedItems.filter(it => !it.paid).reduce((sum, it) => sum + it.amount, 0);
+  return `<div class="bill-cat-section bill-card-section ff-section ${isOpen ? 'open' : ''}" data-card="checking">
     <div class="bill-cat-header theme-row-card" onclick="billCatOpen['${openKey}']=!billCatOpen['${openKey}'];renderMoney()">
       <div class="bill-cat-left">
-        <div class="bill-cat-name">First Financial</div>
-        <div class="bill-cat-sub">${headerSub}</div>
+        <div class="bill-cat-name">Checking account</div>
+        <div class="bill-cat-sub">${formatMoney(stillNeeded)} still needed for ${esc(monthName)}</div>
       </div>
       ${chevron}
     </div>
@@ -8127,7 +7394,7 @@ function renderMoneyPaychecks() {
 
   if (!paychecks.length) {
     html += `<div class="card theme-card" style="text-align:center;padding:24px;">${themeIcon('money', 'theme-corner')}
-      <div style="font-size:14px;color:var(--text-muted);margin-bottom:12px;">No paychecks for this month yet.</div>
+      <div style="font-size:15px;color:var(--text-muted);margin-bottom:12px;">No paychecks for this month yet.</div>
       <button class="modal-submit" onclick="moneySubTab='income';renderMoney()">Add Income Source</button>
     </div>`;
     return html;
@@ -8198,7 +7465,8 @@ function renderMoneyPaychecks() {
     // Assigned bills
     assigned.slice().sort((a, b) => a.date - b.date).forEach(o => {
       const b = o.bill; if (!b) return;
-      const ov = instance.billOverrides[b.key] || {};
+      migratePaycheckPaidFlag(p.id, o, instance, monthDate);
+      const ov = { ...(instance.billOverrides[b.key] || {}), paid: isBillPaidOn(b.key, o.date) };
       const displayAmt = ov.amount !== undefined ? Number(ov.amount) : Number(b.amount || 0);
       const rowClasses = [
         'paycheck-row-item',
@@ -8225,7 +7493,7 @@ function renderMoneyPaychecks() {
       html += `<div class="${rowClasses}" data-row-kind="bill" data-bill-key="${attr(b.key)}" data-occ-id="${attr(o.occId)}" data-paycheck-id="${attr(p.id)}">
         <div class="paycheck-row-head">
           <label class="paycheck-row-check" title="Mark paid from this paycheck">
-            <input type="checkbox" ${ov.paid ? 'checked' : ''} onchange="overrideBillOnPaycheck('${attr(p.id)}','${attr(b.key)}',{paid:this.checked});renderMoney()">
+            <input type="checkbox" ${ov.paid ? 'checked' : ''} onchange="togglePaycheckBillPaid('${attr(b.key)}','${localDateKey(o.date)}',this.checked)">
           </label>
           <div class="paycheck-row-info">
             <div class="paycheck-row-name">${esc(b.name)}${o.fromNextMonth ? ` <span class="paycheck-bill-chip-tag">${esc(nextMonthShort)}</span>` : ''}</div>
@@ -8506,7 +7774,7 @@ function renderMoneyIncome() {
   let html = '';
 
   if (!sources.length) {
-    html += `<div class="card" style="text-align:center;padding:24px;"><div style="font-size:14px;color:var(--text-muted);margin-bottom:12px;">No income sources yet. Add one to start tracking.</div></div>`;
+    html += `<div class="card" style="text-align:center;padding:24px;"><div style="font-size:15px;color:var(--text-muted);margin-bottom:12px;">No income sources yet. Add one to start tracking.</div></div>`;
   }
 
   sources.forEach((src, i) => {
@@ -8564,14 +7832,14 @@ function renderMoneyIncome() {
 
   if (totalMonthly > 0) {
     html += `<div class="card theme-card" style="margin-top:14px;">${themeIcon('money', 'theme-corner')}<div class="card-title">Estimated Monthly Total</div>
-      <div style="font-family:var(--font-display);font-size:24px;color:var(--espresso);font-weight:800;">${formatMoney(totalMonthly)}</div></div>`;
+      <div style="font-family:var(--font-display);font-size:26px;color:var(--espresso);font-weight:800;">${formatMoney(totalMonthly)}</div></div>`;
   }
 
   const paydays = incomeOccurrencesForMonth(null, billMonth);
   if (paydays.length) {
     html += `<div class="card theme-card" style="margin-top:14px;">${themeIcon('money', 'theme-corner bottom-right')}
       <div class="card-title">Paydays in ${billMonthName}</div>
-      <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">Check off money after it lands.</div>`;
+      <div style="font-size:13px;color:var(--text-muted);margin-bottom:8px;">Check off money after it lands.</div>`;
     paydays.forEach(occ => {
       html += `<div class="bill-row ${occ.received ? 'paid' : ''}">
         <button class="bill-check" onclick="toggleIncomeReceived('${occ.id}','${occ.dateKey}')"><svg viewBox="0 0 12 12"><polyline points="2.5 6 5 8.5 9.5 3.5"/></svg></button>
@@ -8722,18 +7990,6 @@ function renderAccountColorPicker() {
   document.getElementById('acct-color-row').innerHTML = ACCOUNT_COLORS.map(c => `<button class="color-dot ${acctColor===c.id?'active':''}" style="background:${c.bg};border-color:${acctColor===c.id?'var(--espresso)':'transparent'}" title="${attr(c.label)}" onclick="acctColor='${c.id}';renderAccountColorPicker()" type="button"></button>`).join('');
 }
 
-function openAcctModal(id = null) {
-  editingAcctId = id;
-  const acct = id ? getAccounts().find(a => a.id === id) : null;
-  acctColor = acct?.color || ACCOUNT_COLORS[getAccounts().length % ACCOUNT_COLORS.length].id;
-  document.getElementById('acct-modal-title').textContent = acct ? 'Edit Account' : 'Add Account';
-  document.getElementById('acct-save-btn').textContent = acct ? 'Save Account' : 'Add Account';
-  document.getElementById('acct-delete-btn').style.display = acct ? '' : 'none';
-  document.getElementById('acct-name').value = acct?.name || '';
-  document.getElementById('acct-balance').value = acct?.startingBalance ?? '';
-  renderAccountColorPicker();
-  document.getElementById('acct-modal').classList.add('open');
-}
 
 function saveAcct() {
   const name = document.getElementById('acct-name').value.trim();
@@ -8858,7 +8114,6 @@ function daysSinceLastPurchase(billKey) {
 }
 
 
-
 function saveSavingsGoal() {
   const name = document.getElementById('save-name').value.trim();
   const target = parseFloat(document.getElementById('save-target').value) || 0;
@@ -8872,8 +8127,6 @@ function saveSavingsGoal() {
 }
 
 
-
-
 /* ═══════════════════════ HEALTH ═══════════════════════ */
 
 function renderHealth() {
@@ -8885,12 +8138,9 @@ function renderHealth() {
 
   html += buildMealPlan(h);
   html += buildGroceryList(h);
-  html += themeDivider('puppy', 'puppy');
 
   html += buildMedCard('Morning Meds', MEDS.morning, h);
   html += buildMedCard('Evening Meds', MEDS.evening, h);
-
-  html += themeDivider('puppy', 'puppy');
 
   document.getElementById('page-health').innerHTML = html;
 }
@@ -8990,7 +8240,7 @@ function buildMealPlan(h) {
 
     html += `<div class="collapse-section" style="margin-bottom:8px;">
       <div class="collapse-header ${isOpen?'open':''}" onclick="toggleMealDay('${day}')" style="padding:10px 14px;">
-        <div><div class="collapse-title-row"><div class="collapse-title" style="font-size:14px;">${MEAL_DAY_LABELS[day]}</div>${themeIcon(d.lunch === 'beef' ? 'beef' : 'chicken', 'meal-day-icon')}${themeIcon(d.dinner === 'beef' ? 'beef' : 'chicken', 'meal-day-icon')}</div>
+        <div><div class="collapse-title-row"><div class="collapse-title" style="font-size:15px;">${MEAL_DAY_LABELS[day]}</div>${themeIcon(d.lunch === 'beef' ? 'beef' : 'chicken', 'meal-day-icon')}${themeIcon(d.dinner === 'beef' ? 'beef' : 'chicken', 'meal-day-icon')}</div>
         <div class="collapse-sub">${esc(bOpt.label)} · ${esc(lOpt.label)} · ${esc(dOpt.label)} · ${Math.round(cals)} cal</div></div>
         ${chevron}
       </div>
@@ -8998,7 +8248,7 @@ function buildMealPlan(h) {
         ${mealDayChoiceRow('Breakfast', day, 'breakfast', d.breakfast, MEAL_OPTIONS.breakfast)}
         ${mealDayChoiceRow('Lunch', day, 'lunch', d.lunch, MEAL_OPTIONS.entree)}
         ${mealDayChoiceRow('Dinner', day, 'dinner', d.dinner, MEAL_OPTIONS.entree)}
-        <div style="font-size:12px;color:var(--text-muted);margin-top:8px;">
+        <div style="font-size:13px;color:var(--text-muted);margin-top:8px;">
           <div><strong>B:</strong> ${esc(bOpt.summary(s))}</div>
           <div><strong>L:</strong> ${esc(lOpt.summary(s))}</div>
           <div><strong>D:</strong> ${esc(dOpt.summary(s))}</div>
@@ -9101,8 +8351,6 @@ function formatGroceryQty(qty, unit) {
 }
 
 
-
-
 let editingMealIndex = null;
 
 
@@ -9169,6 +8417,7 @@ function openEventModal(dateKey, eventId = '', customKey = '') {
   document.getElementById('ev-date').value = existingEvent?.date || dateKey || todayKey();
   document.getElementById('ev-start').value = existingEvent?.start || existingCustom?.time || '';
   document.getElementById('ev-end').value = existingEvent?.end || existingCustom?.end || '';
+  document.getElementById('ev-commute').value = existingEvent?.commute || '';
   document.querySelectorAll('#event-modal [data-evtype]').forEach(b => b.classList.toggle('active', b.dataset.evtype === evType));
 
   let daysHtml = '';
@@ -9177,6 +8426,7 @@ function openEventModal(dateKey, eventId = '', customKey = '') {
   });
   document.getElementById('ev-days-grid').innerHTML = daysHtml;
   document.getElementById('ev-recurring-wrap').style.display = evType === 'work' ? 'block' : 'none';
+  document.getElementById('ev-commute-wrap').style.display = evType === 'appointment' && !evEditingCustomKey ? 'block' : 'none';
 
   const deleteBtn = document.getElementById('ev-delete');
   deleteBtn.style.display = editing ? '' : 'none';
@@ -9189,6 +8439,7 @@ function setEvType(btn) {
   evType = btn.dataset.evtype;
   document.querySelectorAll('#event-modal [data-evtype]').forEach(b => b.classList.toggle('active', b.dataset.evtype === evType));
   document.getElementById('ev-recurring-wrap').style.display = evType === 'work' ? 'block' : 'none';
+  document.getElementById('ev-commute-wrap').style.display = evType === 'appointment' && !evEditingCustomKey ? 'block' : 'none';
 }
 
 function toggleRecurDay(i, btn) {
@@ -9220,6 +8471,8 @@ function saveEvent() {
   const events = getEvents();
   const previousEvent = evEditingId ? events.find(e => e.id === evEditingId) : null;
   const ev = { id: evEditingId || 'ev' + Date.now(), title, detail, date, start, end, type: evType };
+  const commute = parseInt(document.getElementById('ev-commute').value, 10);
+  if (evType === 'appointment' && commute > 0) ev.commute = commute;
   if (evType === 'work' && evRecurDays.length > 0) {
     ev.recurring = true;
     ev.recurDays = evRecurDays;
@@ -9272,7 +8525,21 @@ function openSettings() {
     document.getElementById('sb-key').value = cfg.key || '';
     document.getElementById('sb-status').innerHTML = sbClient ? '<span style="color:var(--success)">Connected</span>' : '';
   }
+  updateNavSideButtons();
   document.getElementById('settings-panel').classList.add('open');
+}
+
+/* Where the section bar sits: along the bottom (default) or down the left. */
+function getNavSide() { return localStorage.getItem('device-nav-side') === 'left' ? 'left' : 'bottom'; }
+function setNavSide(side) {
+  localStorage.setItem('device-nav-side', side);
+  document.body.classList.toggle('nav-left', side === 'left');
+  updateNavSideButtons();
+}
+function updateNavSideButtons() {
+  const side = getNavSide();
+  document.getElementById('nav-side-bottom')?.classList.toggle('active', side === 'bottom');
+  document.getElementById('nav-side-left')?.classList.toggle('active', side === 'left');
 }
 
 function closeSettings() {
@@ -9307,6 +8574,17 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
+/* The cat plays through once (the gif loops every ~1.5s), then fades out. */
+const LOADING_SCREEN_MIN_MS = 1470;
+function hideLoadingScreen() {
+  const el = document.getElementById('loading-screen');
+  if (!el) return;
+  setTimeout(() => {
+    el.classList.add('done');
+    setTimeout(() => el.remove(), 300);
+  }, Math.max(0, LOADING_SCREEN_MIN_MS - performance.now()));
+}
+
 /* ═══════════════════════ INIT ═══════════════════════ */
 
 (function init() {
@@ -9318,7 +8596,9 @@ document.addEventListener('visibilitychange', () => {
   switchTab('home');
   demoteDefaultSeedDirtyFlags();
   initSupabase();
+  hideLoadingScreen();
 })();
+
 </script>
 </body>
 </html>
