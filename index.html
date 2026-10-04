@@ -134,6 +134,11 @@ body {
   line-height: 1.55; font-size: 17.5px;
 }
 input, textarea, select, button { font-family: inherit; font-size: inherit; touch-action: manipulation; }
+/* Everything shows in capitals so the small-caps font reads evenly. It's
+   only the look: what you type is saved exactly as typed. Sync settings
+   (URL, key, setup SQL) keep their real case. */
+body, input, textarea, select, button { text-transform: uppercase; }
+#settings-panel input, #settings-panel pre { text-transform: none; }
 button:focus-visible,
 input:focus-visible,
 textarea:focus-visible,
@@ -356,9 +361,9 @@ body { background: var(--bg); }
   .book-tab::before { top: 0; left: 20%; right: 20%; height: 3px; border-radius: 0 0 3px 3px; }
   .book-tab-sticker { width: 24px; height: 24px; }
   .book-tab-label { font-size: 13px; }
-  .app { padding-bottom: calc(var(--phone-tabs-h) + var(--safe-bottom)); }
+  .app { padding-bottom: calc(var(--phone-tabs-h) + var(--care-dock-h) + var(--safe-bottom)); }
   .water-tab { display: none; }
-  body .cleaning-picker-sheet { bottom: calc(var(--phone-tabs-h) + var(--safe-bottom) + 10px); }
+  body .cleaning-picker-sheet { bottom: calc(var(--phone-tabs-h) + var(--care-dock-h) + var(--safe-bottom) + 10px); }
 }
 
 @media (min-width: 800px) {
@@ -1176,7 +1181,7 @@ body.paycheck-dragging .paycheck-pool-row {
 .timeline-block.mid .timeline-block-detail { display: none; }
 /* Short blocks: just the title on one line (the time is on the ruler). */
 .timeline-block.compact { padding-top: 4px; padding-bottom: 4px; display: flex; align-items: center; }
-.timeline-block.compact .timeline-block-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.timeline-block.compact .timeline-block-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; font-size: 11.5px; letter-spacing: -0.2px; }
 .timeline-block.compact .timeline-block-time,
 .timeline-block.compact .timeline-block-detail { display: none; }
 .timeline-block .inline-edit-btn {
@@ -2090,6 +2095,285 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
 .meal-choice-btn { display: inline-flex; align-items: center; gap: 5px; }
 .meal-choice-icon { --sticker-size: 16px; }
 .meal-day-icon { --sticker-size: 18px; }
+
+/* ══ Gentle tools: Bare Minimum Day + Hard Day (Home), Dopamine Menu,
+   Thought Reset + Daily Journal (Notes). ══ */
+/* Bare Minimum Day, Hard Day and Dopamine Menu buttons: cards under the
+   section buttons on wide screens, a row just above the bottom bar on
+   phones. Text only until their icons are picked. */
+:root { --care-dock-h: 54px; }
+.care-tab-sub { font-size: 11.5px; color: var(--text-muted); line-height: 1.2; font-variant-numeric: tabular-nums; }
+.care-dock { display: none; }
+@media (min-width: 800px) {
+  .book-tab.care-tab { padding: 12px 8px 10px; gap: 3px; }
+  .book-tab.care-tab .book-tab-label {
+    font-size: 14px; line-height: 1.15; text-align: center;
+    white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere;
+  }
+  .book-tab.care-tab.lead { margin-top: 8px; }
+  .book-tab.care-tab.on { background: var(--success-light); }
+}
+@media (max-width: 799px) {
+  .book-tab.care-tab { display: none; }
+  .care-dock {
+    position: fixed; left: 0; right: 0; z-index: 189;
+    bottom: calc(var(--phone-tabs-h) + var(--safe-bottom)); height: var(--care-dock-h);
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding: 7px 8px;
+    background: var(--bg); border-top: 1px solid var(--border-soft);
+  }
+}
+.care-dock-btn {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; min-width: 0;
+  padding: 2px 4px; border-radius: 12px; cursor: pointer; -webkit-tap-highlight-color: transparent;
+  border: 1px solid var(--border-soft); border-top: 3px solid var(--tab-color, var(--nude));
+  background: var(--bg-card); color: var(--espresso); box-shadow: var(--shadow-sm);
+  font-family: var(--font-display); font-size: 13px; line-height: 1.1; text-align: center;
+}
+.care-dock-btn > span { max-width: 100%; overflow-wrap: anywhere; }
+.care-dock-btn small { font-family: var(--font-body); font-size: 10.5px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.care-dock-btn.on { background: var(--success-light); }
+.care-dock-btn:active { transform: scale(0.97); }
+/* Bare Minimum checklist */
+.bmd-card { border-top: 4px solid var(--pal-green-strong); }
+.bmd-count { font-size: 13px; font-weight: 700; color: var(--text-muted); flex-shrink: 0; }
+.bmd-sub { font-size: 13.5px; color: var(--text-secondary); margin-bottom: 2px; }
+.care-subhead {
+  font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text-secondary); margin: 14px 0 4px;
+}
+.care-muted { font-size: 12.5px; color: var(--text-muted); margin-top: 8px; overflow-wrap: anywhere; }
+.care-hint { font-size: 12.5px; color: var(--text-muted); line-height: 1.35; }
+.care-empty { font-size: 13.5px; color: var(--text-muted); padding: 4px 0; }
+/* Hard Day sheet */
+.care-sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 4px; }
+.care-sheet-head .modal-title { margin-bottom: 0; }
+.care-intro { font-size: 14.5px; color: var(--text-secondary); margin-bottom: 6px; }
+.care-section { padding: 14px 0 12px; border-top: 1px solid var(--border-soft); }
+.care-section-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 8px; min-width: 0; }
+.care-section-head > div { min-width: 0; }
+.care-section-title { font-family: var(--font-display); font-size: 17px; color: var(--espresso); line-height: 1.25; }
+.care-list { list-style: none; display: grid; gap: 6px; }
+.care-list li {
+  padding: 8px 12px; border-radius: var(--radius-sm); background: var(--bg-input);
+  font-size: 15px; color: var(--text); overflow-wrap: anywhere;
+}
+.care-list.soft li { background: transparent; border: 1px dashed var(--border); color: var(--text-secondary); }
+/* Editing a list: one input per item, then an add row */
+.care-editor { display: grid; gap: 6px; }
+.care-editor-row { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.care-editor-row .modal-input { flex: 1; min-width: 0; padding: 8px 10px; }
+.care-cost-btn {
+  width: 34px; height: 34px; flex-shrink: 0; border-radius: 10px; cursor: pointer;
+  border: 1px dashed var(--border); background: transparent; color: var(--text-muted); font-weight: 800;
+}
+.care-cost-btn.on { border-style: solid; border-color: var(--pal-green-strong); background: var(--pal-green); color: #3A2F28; }
+.care-editor .day-todo-add { margin-top: 2px; }
+/* Reach out */
+.care-people { display: grid; gap: 6px; }
+.care-person {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0;
+  padding: 10px 12px; border-radius: var(--radius-sm); background: var(--bg-input);
+  color: var(--text); text-decoration: none; -webkit-tap-highlight-color: transparent;
+}
+.care-person b { font-size: 15.5px; font-weight: 700; min-width: 0; overflow-wrap: anywhere; }
+.care-person span { font-size: 13px; color: var(--espresso); font-weight: 700; flex-shrink: 0; }
+.care-person-edit { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 30px; gap: 6px; align-items: center; }
+.care-person-edit .modal-input { padding: 8px 10px; min-width: 0; }
+.care-person-add { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 36px; gap: 6px; margin-top: 4px; }
+.care-person-add .modal-input { padding: 8px 10px; min-width: 0; }
+.care-person-add button {
+  width: 36px; height: 36px; border-radius: 10px; border: 0; background: var(--espresso); color: #fff;
+  font-size: 19.5px; line-height: 1; cursor: pointer; align-self: center;
+}
+.care-msg { display: block; margin-top: 10px; }
+.care-msg .text-area { margin-top: 4px; }
+/* Grounding */
+.care-choice { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.care-choice .cat-btn { padding: 10px 8px; border-radius: var(--radius-sm); font-size: 14.5px; }
+.ground-panel { margin-top: 10px; padding: 16px 12px; border-radius: var(--radius); background: var(--bg-input); text-align: center; }
+.ground-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 12px; }
+.ground-actions .routine-link-btn { padding: 7px 16px; font-size: 13.5px; }
+.breath-box {
+  position: relative; width: 160px; height: 160px; margin: 8px auto 6px;
+  border: 3px solid var(--border); border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+}
+.breath-box.p0 { border-top-color: var(--pal-blue-strong); }
+.breath-box.p1 { border-right-color: var(--pal-blue-strong); }
+.breath-box.p2 { border-bottom-color: var(--pal-blue-strong); }
+.breath-box.p3 { border-left-color: var(--pal-blue-strong); }
+.breath-fill {
+  position: absolute; inset: 18px; border-radius: 12px; background: var(--pal-blue); opacity: 0.5;
+  transform: scale(0.45); transition: transform 4s linear;
+}
+.breath-box.p0 .breath-fill, .breath-box.p1 .breath-fill { transform: scale(1); }
+.breath-dot {
+  position: absolute; left: 0; top: 0; width: 16px; height: 16px; margin: -9.5px 0 0 -9.5px;
+  border-radius: 50%; background: var(--pal-blue-strong); box-shadow: 0 0 0 3px var(--bg-input);
+  transition: left 4s linear, top 4s linear;
+}
+.breath-box.p0 .breath-dot { left: 100%; top: 0; }
+.breath-box.p1 .breath-dot { left: 100%; top: 100%; }
+.breath-box.p2 .breath-dot { left: 0; top: 100%; }
+.breath-box.p3 .breath-dot { left: 0; top: 0; }
+.breath-text { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; }
+.breath-phase { font-family: var(--font-display); font-size: 20px; color: var(--text); line-height: 1.2; }
+.breath-count { font-size: 34px; font-weight: 800; color: var(--text); line-height: 1.1; min-height: 37px; font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: reduce) {
+  .breath-fill, .breath-dot { transition: none; }
+  .breath-dot { display: none; }
+  .breath-fill { transform: scale(0.75) !important; }
+}
+.senses-progress { font-size: 12px; font-weight: 700; color: var(--text-muted); }
+.senses-num { font-family: var(--font-display); font-size: 46px; color: var(--espresso); line-height: 1.1; }
+.senses-prompt { font-size: 16px; color: var(--text); margin: 2px 0 12px; }
+.senses-dots { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 8px; }
+.senses-dot {
+  width: 36px; height: 36px; border-radius: 50%; padding: 0; cursor: pointer;
+  border: 2px dashed var(--border); background: var(--bg-card);
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.senses-dot svg { width: 16px; height: 16px; stroke: #3A2F28; stroke-width: 2.5; opacity: 0; }
+.senses-dot.on { border-style: solid; border-color: var(--pal-blue-strong); background: var(--pal-blue); }
+.senses-dot.on svg { opacity: 1; }
+.care-on-note { padding: 12px 14px; border-radius: var(--radius-sm); background: var(--success-light); color: var(--text); font-size: 14.5px; }
+.care-bmd-btn { margin-top: 0; }
+/* Crisis lines: plain and calm */
+.crisis-box { margin-top: 6px; padding: 14px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--bg-input); }
+.crisis-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+.crisis-line { padding: 10px 0 2px; }
+.crisis-line + .crisis-line { border-top: 1px solid var(--border-soft); margin-top: 8px; }
+.crisis-name { font-size: 15px; font-weight: 700; color: var(--text); }
+.crisis-how { font-size: 13.5px; color: var(--text-secondary); margin: 2px 0 8px; }
+.crisis-links { display: flex; flex-wrap: wrap; gap: 6px; }
+.crisis-links a {
+  display: inline-block; padding: 7px 14px; border-radius: 999px; max-width: 100%; overflow-wrap: anywhere;
+  border: 1px solid var(--border); background: var(--bg-card); color: var(--text);
+  font-size: 14px; font-weight: 700; text-decoration: none;
+}
+/* A quiet message along the bottom (the dessert timer uses it) */
+.care-toast {
+  position: fixed; left: 50%; bottom: calc(var(--safe-bottom) + 20px); z-index: 9990;
+  width: min(440px, calc(100vw - 32px)); transform: translate(-50%, 16px);
+  display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+  border-radius: var(--radius); background: var(--bg-card); color: var(--text);
+  border: 1px solid var(--border); box-shadow: var(--shadow-md); font-size: 15px; line-height: 1.4;
+  opacity: 0; visibility: hidden; transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s;
+}
+.care-toast > span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.care-toast.show { opacity: 1; visibility: visible; transform: translate(-50%, 0); }
+@media (max-width: 799px) { .care-toast { bottom: calc(var(--phone-tabs-h) + var(--care-dock-h) + var(--safe-bottom) + 10px); } }
+@media (prefers-reduced-motion: reduce) { .care-toast { transition: opacity 0.2s ease, visibility 0.2s; } }
+/* Notes: collapsible sections under Brainstorm */
+.notes-care-intro { font-size: 14px; color: var(--text-secondary); margin: 6px 0 12px; }
+.notes-care-section .collapse-header:focus-visible { outline: 2px solid var(--icon-pink); outline-offset: 2px; }
+/* Dopamine Menu */
+.dm-pick { display: grid; gap: 8px; margin-bottom: 6px; }
+.dm-pick .modal-submit { margin-top: 0; }
+.dm-pick-result { padding: 12px 14px; border-radius: var(--radius-sm); background: var(--pal-yellow); color: #3A2F28; overflow-wrap: anywhere; }
+.dm-pick-result small { display: block; font-size: 11.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.7; }
+.dm-pick-result .routine-link-btn { margin-top: 8px; }
+.dm-course { padding: 12px 0 10px; border-top: 1px solid var(--border-soft); }
+.dm-items { display: flex; flex-wrap: wrap; gap: 6px; }
+.dm-item {
+  display: inline-flex; align-items: center; gap: 6px; max-width: 100%;
+  padding: 6px 12px; border-radius: 999px; background: var(--bg-input); border: 1px solid var(--border-soft);
+  font-size: 14.5px; color: var(--text); overflow-wrap: anywhere;
+}
+.dm-cost {
+  display: inline-block; flex-shrink: 0; padding: 0 7px; border-radius: 999px;
+  background: var(--pal-green-strong); color: #3A2F28; font-size: 11.5px; font-weight: 800; line-height: 1.6;
+}
+.dm-dessert-row {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 10px;
+  padding: 6px 0; border-bottom: 1px solid var(--border-soft);
+}
+.dm-dessert-row:last-child { border-bottom: none; }
+.dm-dessert-side { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.dm-timer { font-size: 14px; font-weight: 800; color: var(--espresso); font-variant-numeric: tabular-nums; }
+/* Thought Reset + Daily Journal forms */
+.tr-form { display: grid; gap: 16px; }
+.tr-step { min-width: 0; }
+.tr-step-label { font-size: 14.5px; font-weight: 700; color: var(--espresso); margin-bottom: 6px; }
+.tr-step .care-section-head { margin-bottom: 0; align-items: center; }
+.tr-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.tr-chip {
+  max-width: 100%; padding: 5px 11px; border-radius: 999px; text-align: left; cursor: pointer;
+  border: 1px dashed var(--border); background: transparent; color: var(--text-secondary); font-size: 13.5px;
+}
+.tr-chip:active { background: var(--espresso-light); }
+.tr-traps { display: grid; gap: 6px; }
+.tr-trap {
+  display: block; width: 100%; text-align: left; padding: 9px 12px; cursor: pointer;
+  border-radius: var(--radius-sm); border: 1.5px solid var(--border-soft); background: var(--bg-input); color: var(--text);
+}
+.tr-trap b { display: block; font-size: 14.5px; }
+.tr-trap span { display: block; font-size: 12.5px; color: var(--text-muted); line-height: 1.35; }
+.tr-trap.active { border-color: var(--espresso); background: var(--espresso-light); }
+.care-scale { display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 4px; }
+.care-scale button {
+  min-height: 38px; padding: 0; border-radius: 10px; cursor: pointer;
+  border: 1px solid var(--border); background: var(--bg-input); color: var(--text-secondary); font-size: 14.5px; font-weight: 700;
+}
+.care-scale button.active { background: var(--espresso); border-color: var(--espresso); color: #fff; }
+.care-scale-ends { display: flex; justify-content: space-between; gap: 10px; margin-top: 3px; font-size: 11.5px; color: var(--text-muted); }
+.care-form-actions .modal-submit { margin-top: 0; }
+.care-saved { font-size: 13.5px; color: var(--success); margin-top: 6px; }
+.care-history { display: grid; gap: 8px; }
+.care-entry { border-radius: var(--radius-sm); background: var(--bg-input); border: 1px solid var(--border-soft); min-width: 0; }
+.care-entry summary { list-style: none; cursor: pointer; padding: 10px 12px; display: flex; flex-direction: column; gap: 3px; }
+.care-entry summary::-webkit-details-marker { display: none; }
+.care-entry .entry-stamp { margin-top: 0; }
+.care-entry-title {
+  font-size: 14.5px; color: var(--text); overflow-wrap: anywhere; white-space: pre-wrap;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.care-entry[open] .care-entry-title { display: block; -webkit-line-clamp: unset; overflow: visible; }
+.care-entry-body { padding: 0 12px 12px; display: grid; gap: 8px; }
+.care-kv b { display: block; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); }
+.care-kv p { font-size: 14px; color: var(--text); white-space: pre-wrap; overflow-wrap: anywhere; }
+.care-entry-del {
+  justify-self: start; padding: 5px 12px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--danger); background: var(--danger-light); color: var(--danger); font-size: 13px; font-weight: 700;
+}
+.care-badges { display: flex; flex-wrap: wrap; gap: 6px; }
+.care-badge {
+  font-size: 12px; font-weight: 700; padding: 1px 8px; border-radius: 999px;
+  background: var(--bg-card); border: 1px solid var(--border-soft); color: var(--text-secondary);
+}
+.care-more { margin: 8px 0 0; }
+.dj-form { display: grid; gap: 10px; }
+.dj-form .tr-step-label { margin-bottom: 4px; }
+.dj-prompt { padding: 12px 14px; border-radius: var(--radius-sm); background: var(--pal-purple); color: #3A2F28; overflow-wrap: anywhere; }
+.dj-prompt small { display: block; font-size: 11.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.7; }
+.dj-prompt p { font-size: 16px; margin-top: 2px; }
+.dj-prompt-row { display: flex; justify-content: flex-end; margin-top: -4px; }
+/* Weekly Reset (Sundays): Bare Minimum days + this week's journal */
+.reset-care { display: grid; gap: 10px; margin: 12px 0 2px; }
+.reset-care > * { min-width: 0; }
+.reset-week-entry .reset-last-text, .reset-week-entry .care-hint { overflow-wrap: anywhere; }
+.reset-bmd-line { font-size: 14px; color: var(--text); padding: 9px 12px; border-radius: var(--radius-sm); background: var(--success-light); }
+.reset-care .reset-last { margin-top: 0; }
+.reset-week-entry { padding: 8px 0; min-width: 0; }
+.reset-week-entry + .reset-week-entry { border-top: 1px solid var(--border-soft); }
+.reset-week-entry-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-bottom: 2px; }
+.reset-week-entry-head .entry-stamp { margin-top: 0; }
+.reset-week-entry .care-hint { margin-bottom: 2px; }
+#page-home.bmd-on .home-section[data-id="bills"] { display: none; }
+/* Icons on the gentle tools */
+.bmd-item-icon { --sticker-size: 26px; width: 26px; height: 26px; flex-shrink: 0; }
+.bmd-water { display: inline-flex; justify-content: center; }
+.bmd-water svg { width: 15px; height: 26px; }
+.check-item.checked .bmd-item-icon { opacity: 0.45; }
+.care-title-icon { --sticker-size: 24px; margin-right: 6px; vertical-align: -5px; display: inline-block; }
+.care-sheet-title { display: flex; align-items: center; gap: 8px; }
+.care-sheet-icon { --sticker-size: 30px; }
+.care-btn-icon { --sticker-size: 20px; display: inline-block; vertical-align: -5px; margin-right: 6px; }
+.care-timer-icon { --sticker-size: 20px; }
+.care-dock-label { display: inline-flex; align-items: center; justify-content: center; gap: 4px; max-width: 100%; min-width: 0; }
+.care-dock-label > span { min-width: 0; overflow-wrap: anywhere; }
+.care-dock-icon { --sticker-size: 20px; flex-shrink: 0; }
+@media (min-width: 800px) { .book-tab.care-tab .care-tab-icon { width: 36px; height: 36px; } }
 </style>
 </head>
 <body>
@@ -2127,6 +2411,7 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
     <div class="tab-page" id="page-notes"></div>
   </div>
   <nav class="book-tabs" id="book-tabs" aria-label="Planner sections"></nav>
+  <div class="care-dock" id="care-dock" role="group" aria-label="Gentle tools"></div>
 </div>
 
 <!-- Income Add Modal -->
@@ -2386,6 +2671,22 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
     <button class="modal-submit" onclick="document.getElementById('chores-modal').classList.remove('open')">Done</button>
   </div>
 </div>
+<!-- Hard Day sheet (Home) — filled in by renderHardDay() -->
+<div class="modal-overlay" id="hard-day-modal">
+  <div class="modal-sheet hard-day-sheet" role="dialog" aria-modal="true" aria-labelledby="hard-day-title">
+    <div class="modal-handle"></div>
+    <div id="hard-day-body"></div>
+  </div>
+</div>
+<!-- Dopamine Menu sheet (side button) — filled in by renderDopamine() -->
+<div class="modal-overlay" id="dopamine-modal">
+  <div class="modal-sheet" role="dialog" aria-modal="true" aria-labelledby="dopamine-title">
+    <div class="modal-handle"></div>
+    <div id="dopamine-body"></div>
+  </div>
+</div>
+<!-- Quiet message along the bottom (dessert timer) -->
+<div class="care-toast" id="care-toast" role="status" aria-live="polite"></div>
 
 <!-- (Bill Account Modal removed - replaced by bill-edit-modal) -->
 </div>
@@ -2892,6 +3193,22 @@ const IMG_ICONS = {
   trash: 'Assets/images/trash.svg',
   mop: 'Assets/images/cleaning-mop.svg',
   syringe: 'Assets/images/syringe.svg',
+  // Gentle tools (Bare Minimum Day, Hard Day, Dopamine Menu, Notes)
+  bareMinimum: 'Assets/images/bare-minimum.png',
+  hardDay: 'Assets/images/hard-day.png',
+  thoughtReset: 'Assets/images/thought-reset.png',
+  dailyJournal: 'Assets/images/daily-journal.png',
+  shower: 'Assets/images/shower.png',
+  brushTeeth: 'Assets/images/brush-teeth.png',
+  washFace: 'Assets/images/wash-face.png',
+  appetizers: 'Assets/images/appetizers.png',
+  mains: 'Assets/images/mains.png',
+  sides: 'Assets/images/sides.png',
+  desserts: 'Assets/images/desserts.png',
+  timer: 'Assets/images/timer.png',
+  boxBreathing: 'Assets/images/box-breathing.png',
+  careHelps: 'Assets/images/things-that-help.png',
+  careEasy: 'Assets/images/go-easy.png',
 };
 
 function themeIcon(name, cls = '') {
@@ -3962,8 +4279,14 @@ function updateBookTabs() {
     water = `<button class="book-tab water-tab" type="button" style="--tab-color:#7CB8F0" onclick="chgWater(1)" title="Add one glass of water" aria-label="Water: ${w.water} of 8 glasses. Add one glass">
       <span class="water-tab-bottle">${waterBottleSvg(w.frac)}</span><span class="book-tab-label">${w.water}/8 water</span></button>`;
   }
-  nav.innerHTML = `<div class="nav-group nav-group-a">${tabs.slice(0, half).map(tabHtml).join('')}</div>`
-    + `<div class="nav-group nav-group-b">${tabs.slice(half).map(tabHtml).join('')}${water}</div>`;
+  // Bare Minimum Day + Hard Day under the left stack, Dopamine Menu under
+  // the right one; on phones the same three sit in a row above the bar.
+  const care = careNavItems();
+  nav.innerHTML = `<div class="nav-group nav-group-a">${tabs.slice(0, half).map(tabHtml).join('')}${careTabHtml(care[0], true)}${careTabHtml(care[1])}</div>`
+    + `<div class="nav-group nav-group-b">${tabs.slice(half).map(tabHtml).join('')}${water}${careTabHtml(care[2], true)}</div>`;
+  const dock = document.getElementById('care-dock');
+  if (dock) dock.innerHTML = care.map(careDockBtnHtml).join('');
+  if (care[0].on) bareMinimumShownOn = todayKey();
 }
 
 /* ═══════════════════════ HOME / TODAY ═══════════════════════ */
@@ -4492,6 +4815,7 @@ function renderHome() {
     <div class="home-index-title">${esc(getTimeGreeting())}</div>
     <div class="page-date">${esc(formatDate())}</div>
   </div>`;
+  html += buildHomeCareTop(dk);
   html += buildHomeWater();
   html += buildTodayTimeList(dk);
   html += homeSection('todo', 'To do', `${todo.done}/${todo.total} done`, todo.html, 'todayTab');
@@ -4499,6 +4823,7 @@ function renderHome() {
   html += homeSection('week', 'This week', '', buildScheduleSection(), 'calendarTab');
   html += homeSection('notes', 'Notes', '', buildTodayNotesCard(dk), 'notesTab');
   document.getElementById('page-home').innerHTML = html;
+  afterHomeRenderCare();
 }
 
 /* Water reminder on Home: a slim bar on phones; on wide screens the same
@@ -4620,6 +4945,7 @@ function getTodayTodoGroups(dateKey) {
   groups.push({ key: 'evening', rows: EVENING_ITEMS.map(i => ({
     title: i.label, done: !!eve[i.key], toggle: `toggleRoutine('evening','${i.key}')`, meta: i.minutes ? `${i.minutes} min` : '',
   })) });
+  if (bareMinimumHidesOn(dateKey)) trimTodoGroupsForBareMinimum(groups);
   return groups.filter(g => g.rows.length);
 }
 
@@ -4692,6 +5018,7 @@ function blockIconName(b) {
 /* The day as a simple list: what to be doing, at what time. */
 function buildTodayTimeList(dateKey) {
   const blocks = getScheduleBlocksForDate(dateKey);
+  if (bareMinimumHidesOn(dateKey)) trimBlocksForBareMinimum(blocks);
   const anyTime = blocks.filter(b => b.allDay);
   const timed = blocks.filter(b => !b.allDay && b.time);
   const now = dateKey === todayKey() ? nowMinutes() : -1;
@@ -4906,6 +5233,8 @@ function saveTodayNoteAsSticky(dateKey, btn) {
 function renderNotes() {
   const notes = getStickyNotes();
   let html = themePageHeader('Notes', 'Sticky notes and brainstorms.', ['notesTab']);
+  html += buildNotesCareSections();
+  html += buildBrainstormCard();
   html += `<div class="sticky-section"><div class="notes-heading">Sticky notes</div><div class="sticky-grid">`;
   notes.forEach((n, i) => {
     html += `<div class="sticky-note" style="background:${n.color}">
@@ -4917,7 +5246,6 @@ function renderNotes() {
   });
   html += `<button class="sticky-add" onclick="addSticky()" aria-label="New sticky note">+</button>`;
   html += `</div></div>`;
-  html += buildBrainstormCard();
   document.getElementById('page-notes').innerHTML = html;
 }
 
@@ -5240,6 +5568,7 @@ function buildScheduleSection() {
     const blocks = getScheduleBlocksForDate(dk, events)
       .filter(b => b.source !== 'mealtime')
       .filter(b => !(b.blockKey && WEEK_GLANCE_HIDDEN_BLOCKS.includes(b.blockKey)) || (b.blockKey === 'morning' && b.routineAdjust));
+    if (bareMinimumHidesOn(dk)) trimBlocksForBareMinimum(blocks);
     const off = !blocks.some(b => b.type === 'work') && USUAL_DAYS_OFF.includes(d.getDay());
     const items = blocks.map(b => weekItemHtml(b, dk)).join('') || `<div class="wg-empty">Clear day</div>`;
 
@@ -6817,6 +7146,7 @@ function buildWeeklyResetContent() {
       <div class="check-box">${checkSvg()}</div>
       <div style="flex:1"><div class="check-label">Reload and prep meds for the week</div><div class="check-detail">Fill the pill organizer · check there's enough for Friday's shot</div></div>
     </div>
+    ${buildWeeklyResetCareExtras()}
     <div class="reset-journal">
       <div class="check-label" style="margin:10px 0 6px;">How did the week go?</div>
       <textarea class="text-area" id="weekly-journal" rows="5" placeholder="What went okay, what was hard, what to carry into next week…" onblur="saveWeeklyJournal(this.value)">${esc(r.journal)}</textarea>
@@ -9018,6 +9348,1082 @@ function hideLoadingScreen() {
     el.classList.add('done');
     setTimeout(() => el.remove(), 300);
   }, Math.max(0, LOADING_SCREEN_MIN_MS - performance.now()));
+}
+
+/* ═══════════════════════ GENTLE TOOLS ═══════════════════════
+   Bare Minimum Day and the Hard Day card (Home); the Dopamine Menu,
+   Thought Reset and Daily Journal (Notes); two extra lines in the Sunday
+   Weekly Reset. All of it is new. The rest of the app calls in through a
+   few small hooks, and with Bare Minimum Day off nothing else changes. */
+
+function careId() { return `c-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`; }
+
+/* ── Editable lists ──
+   Hard Day "Things that help" and "Go easy on", the Thought Reset
+   starters, and the four Dopamine Menu courses. Each item is
+   { id, text, cost } — cost (the "$" tag) only shows on the menu.
+   The starting lists are only defaults; everything is edited in the app. */
+const CARE_LISTS = {
+  helps: { key: 'gnd-hardday-helps', seed: ['Get outside', 'Go to the gym', 'Shower, bath, or nap', 'Read, journal, or watch a movie', 'Go out for coffee or a sweet treat'] },
+  easy: { key: 'gnd-hardday-go-easy', seed: ['Doomscrolling', 'Isolating', 'Skipping meals'] },
+  starters: { key: 'gnd-thought-starters', seed: ["I'm behind on everything", "I'm not doing enough", 'I always mess this up', "Everyone's disappointed in me", "I'll never get it together"] },
+  appetizers: { key: 'gnd-dopamine-appetizers', seed: ['Step outside for 5 minutes', 'Play a favorite song', 'Stretch', 'Make a coffee', 'Text a friend'] },
+  mains: { key: 'gnd-dopamine-mains', seed: ['Gym', 'Read', 'Watch a movie', ['Go out for coffee', true], 'Take a bath', 'Walk somewhere'] },
+  sides: { key: 'gnd-dopamine-sides', seed: ['Podcast', 'Music playlist', 'A show in the background'] },
+  desserts: { key: 'gnd-dopamine-desserts', seed: ['Social media', 'YouTube', 'Video games'] },
+};
+function getCareList(listId) {
+  const spec = CARE_LISTS[listId];
+  const saved = ls(spec.key, null);
+  if (Array.isArray(saved)) return saved.filter(i => i && String(i.text || '').trim());
+  const seeded = spec.seed.map((s, i) => {
+    const [text, cost] = Array.isArray(s) ? s : [s, false];
+    return { id: `${listId}-${i}`, text, cost: !!cost };
+  });
+  lsSeed(spec.key, seeded);
+  return seeded;
+}
+function saveCareList(listId, items) { lsSave(CARE_LISTS[listId].key, items); }
+
+const careEditing = new Set();
+function toggleCareEdit(listId) {
+  if (careEditing.has(listId)) careEditing.delete(listId); else careEditing.add(listId);
+  careRefresh();
+}
+function careEditBtn(listId, label = 'Edit') {
+  const on = careEditing.has(listId);
+  return `<button class="routine-link-btn" type="button" aria-pressed="${on}" onclick="toggleCareEdit('${listId}')">${on ? 'Done' : esc(label)}</button>`;
+}
+function careListEditorHtml(listId, opts = {}) {
+  const placeholder = opts.placeholder || 'Add one…';
+  return `<div class="care-editor">
+    ${getCareList(listId).map(item => `<div class="care-editor-row">
+      <input type="text" class="modal-input" value="${attr(item.text)}" maxlength="120" aria-label="Edit ${attr(item.text)}" onchange="updateCareItem('${listId}', ${jsArg(item.id)}, this.value)">
+      ${opts.cost ? `<button type="button" class="care-cost-btn${item.cost ? ' on' : ''}" aria-pressed="${!!item.cost}" title="Costs money" aria-label="Costs money: ${attr(item.text)}" onclick="toggleCareItemCost('${listId}', ${jsArg(item.id)})">$</button>` : ''}
+      <button class="day-todo-x" type="button" title="Delete" aria-label="Delete ${attr(item.text)}" onclick="removeCareItem('${listId}', ${jsArg(item.id)})">&times;</button>
+    </div>`).join('')}
+    <form class="day-todo-add" onsubmit="event.preventDefault();addCareItem('${listId}', this.querySelector('input'))">
+      <input type="text" id="care-add-${listId}" placeholder="${attr(placeholder)}" maxlength="120" autocomplete="off" aria-label="${attr(placeholder)}">
+      <button type="submit" aria-label="Add">+</button>
+    </form>
+  </div>`;
+}
+function addCareItem(listId, input) {
+  const text = String(input?.value || '').trim();
+  if (!text) { input?.focus(); return; }
+  const items = getCareList(listId);
+  items.push({ id: careId(), text, cost: false });
+  saveCareList(listId, items);
+  careRefresh();
+  document.getElementById(`care-add-${listId}`)?.focus();
+}
+/* Saves quietly (no redraw), so tapping into the next box keeps focus. */
+function updateCareItem(listId, itemId, text) {
+  const clean = String(text || '').trim();
+  const items = getCareList(listId);
+  const item = items.find(i => i.id === itemId);
+  if (!item || !clean || clean === item.text) return;
+  item.text = clean;
+  saveCareList(listId, items);
+}
+function toggleCareItemCost(listId, itemId) {
+  const items = getCareList(listId);
+  const item = items.find(i => i.id === itemId);
+  if (!item) return;
+  item.cost = !item.cost;
+  saveCareList(listId, items);
+  careRefresh();
+}
+function removeCareItem(listId, itemId) {
+  saveCareList(listId, getCareList(listId).filter(i => i.id !== itemId));
+  careRefresh();
+}
+
+/* Redraw whichever of these tools is on screen. */
+function careRefresh() {
+  if (isHardDayOpen()) renderHardDay();
+  if (isDopamineOpen()) renderDopamine();
+  if (currentTab === 'notes') renderNotes();
+}
+
+/* A row of number buttons (1–5 or 1–10). `call` is the start of the
+   handler call; the number and the button are added to it. */
+function careScaleHtml(label, max, value, call, low = '', high = '') {
+  const buttons = Array.from({ length: max }, (_, i) => i + 1).map(n =>
+    `<button type="button" class="${value === n ? 'active' : ''}" aria-pressed="${value === n}" onclick="${call}${n}, this)">${n}</button>`).join('');
+  return `<div class="care-scale" style="--n:${max}" role="group" aria-label="${attr(label)}">${buttons}</div>
+    ${low || high ? `<div class="care-scale-ends" aria-hidden="true"><span>${esc(low)}</span><span>${esc(high)}</span></div>` : ''}`;
+}
+function markScalePick(btn, on) {
+  btn.parentElement.querySelectorAll('button').forEach(b => {
+    const active = on && b === btn;
+    b.classList.toggle('active', active);
+    b.setAttribute('aria-pressed', active);
+  });
+}
+
+/* Which history entries are open survives redraws. */
+const careOpenEntries = new Set();
+function careEntryToggle(el, id) { if (el.open) careOpenEntries.add(id); else careOpenEntries.delete(id); }
+function careKv(label, value) {
+  return String(value || '').trim() ? `<div class="care-kv"><b>${esc(label)}</b><p>${esc(value)}</p></div>` : '';
+}
+
+let careToastTimer = null;
+function showCareToast(message, holdMs = 0) {
+  const el = document.getElementById('care-toast');
+  if (!el) return;
+  el.innerHTML = `<span>${esc(message)}</span><button class="routine-link-btn" type="button" onclick="hideCareToast()">Okay</button>`;
+  el.classList.add('show');
+  clearTimeout(careToastTimer);
+  if (holdMs) careToastTimer = setTimeout(hideCareToast, holdMs);
+}
+function hideCareToast() { document.getElementById('care-toast')?.classList.remove('show'); }
+
+/* ── Bare Minimum Day ──
+   Turned on from Home (or the Hard Day card) for today only; it ends at
+   midnight on its own. Stored per day as gnd-YYYY-MM-DD-bareminimum =
+   { on, at, checks: { meds: true, … }, moved: { chores, school } },
+   apart from the routine and med checks. */
+const BARE_MINIMUM_ITEMS = [
+  { key: 'meds', label: 'Take your meds' },
+  { key: 'water', label: 'Drink some water', icon: 'water' },
+  { key: 'meals', label: 'Eat 2 meals', detail: 'A snack that looks like a meal counts.', icon: 'eat' },
+  { key: 'shower', label: 'Shower', icon: 'shower' },
+  { key: 'teeth', label: 'Brush teeth', icon: 'brushTeeth' },
+  { key: 'face', label: 'Wash face', icon: 'washFace' },
+];
+const BARE_MINIMUM_CONFIRM = "This lasts until midnight and moves today's chores and school blocks. Turn it on?";
+const BARE_MINIMUM_CHEERS = ['Bare minimum: nailed it.', 'All six. Gold star.', 'Basic needs: met. Legend.', 'That counts. All of it.'];
+const BARE_MINIMUM_LOOKAHEAD_DAYS = 14;
+
+function bareMinimumKey(dateKey = todayKey()) { return `gnd-${dateKey}-bareminimum`; }
+function getBareMinimum(dateKey = todayKey()) {
+  const d = ls(bareMinimumKey(dateKey), null) || {};
+  return { on: !!d.on, at: d.at || '', checks: d.checks && typeof d.checks === 'object' ? d.checks : {}, moved: d.moved || null };
+}
+function isBareMinimumToday() { return getBareMinimum().on; }
+/* Home trims its lists only for today, and only while it's on. */
+function bareMinimumHidesOn(dateKey) { return dateKey === todayKey() && isBareMinimumToday(); }
+
+function startBareMinimumDay() {
+  if (isBareMinimumToday()) return;
+  if (!confirm(BARE_MINIMUM_CONFIRM)) return;
+  const dk = todayKey();
+  const school = moveTodaysSchoolForBareMinimum(dk); // school first: it has due dates
+  const chores = moveTodaysChoresForBareMinimum(dk);
+  lsSave(bareMinimumKey(dk), { on: true, at: new Date().toISOString(), checks: {}, moved: { chores, school } });
+  renderActivePage();
+  updateBookTabs();
+  refreshDayModalIfOpen();
+  if (isHardDayOpen()) renderHardDay();
+}
+
+/* Each chore goes to the next day with a free hour; the chore scheduler
+   (assignCleaningTaskToDate) picks the time. If the chore is already on a
+   day next week, that day covers it. */
+function moveTodaysChoresForBareMinimum(dateKey) {
+  const from = dateFromKey(dateKey);
+  const thisWeek = currentMondayKey(from);
+  const done = getCleaningWeek(from).done;
+  const moved = [];
+  (getCleaningAssignments()[dateKey] || []).slice().forEach(a => {
+    if (done[a.taskId]) return; // already done this week
+    let to = null;
+    let already = false;
+    for (let i = 1; i <= BARE_MINIMUM_LOOKAHEAD_DAYS; i++) {
+      const dk = localDateKey(addDays(from, i));
+      const week = currentMondayKey(dateFromKey(dk));
+      const planned = week !== thisWeek ? getCleaningAssignmentForTask(a.taskId, week) : null;
+      if (planned) { to = planned.dateKey; already = true; break; }
+      if (isLaundryTask(a.taskId) || !computeCleaningSlot(dk, a.taskId).allDay) { to = dk; break; }
+    }
+    unassignCleaningTask(a.taskId, dateKey);
+    if (!to) to = localDateKey(addDays(from, 1)); // nothing free soon: tomorrow, any time
+    if (!already) assignCleaningTaskToDate(a.taskId, to);
+    moved.push({ taskId: a.taskId, to, already });
+  });
+  return moved;
+}
+
+/* School blocks go where the school scheduler (findAcademicSlot) would
+   put them, with today held so they can't land on it. */
+function moveTodaysSchoolForBareMinimum(dateKey) {
+  const events = getEvents();
+  const assignments = getAcademicAssignments();
+  const autoDone = getAutoDone(dateKey);
+  const isDone = e => !!autoDone[e.id] || !!assignments.find(a => a && a.id === e.academicAssignmentId)?.done;
+  const todays = events.filter(e => e.type === 'academic' && e.date === dateKey && !e.recurring && !isDone(e));
+  if (!todays.length) return [];
+  const holdToday = { id: `bare-minimum-${dateKey}`, title: 'Bare Minimum Day', type: 'personal', date: dateKey, start: '00:00', end: '23:59' };
+  const next = events.map(e => ({ ...e }));
+  const moved = [];
+  todays.forEach(ev => {
+    const idx = next.findIndex(e => e.id === ev.id);
+    if (idx < 0) return;
+    const moving = next.splice(idx, 1)[0];
+    const item = academicWorkItemFromEvent(moving, assignments);
+    const label = [item.assignment.className, item.assignment.title].filter(Boolean).join(': ') || 'School block';
+    const slot = findAcademicSlot(item, next.concat([holdToday]), true);
+    if (!slot) {
+      next.push(moving);
+      moved.push({ id: moving.id, title: label, to: null });
+      return;
+    }
+    moving.date = slot.dateKey;
+    moving.start = minutesToClock(slot.start);
+    moving.end = minutesToClock(slot.end);
+    moving.academicDueDate = item.assignment.dueDate;
+    moving.academicClass = moving.academicClass || item.assignment.className;
+    moving.academicAssignmentTitle = moving.academicAssignmentTitle || item.assignment.title;
+    moving.detail = moving.detail || buildAcademicDetail(item);
+    next.push(moving);
+    moved.push({ id: moving.id, title: label, to: moving.date, start: moving.start });
+  });
+  next.sort((a, b) => (a.date || '').localeCompare(b.date || '') || (a.start || '').localeCompare(b.start || '') || (a.title || '').localeCompare(b.title || ''));
+  saveEvents(next);
+  return moved;
+}
+
+function toggleBareMinimumItem(key) {
+  const dk = todayKey();
+  const bm = getBareMinimum(dk);
+  if (!bm.on) return;
+  const wasDone = BARE_MINIMUM_ITEMS.every(i => bm.checks[i.key]);
+  bm.checks[key] = !bm.checks[key];
+  lsSave(bareMinimumKey(dk), bm);
+  renderActivePage();
+  if (!wasDone && BARE_MINIMUM_ITEMS.every(i => bm.checks[i.key])) {
+    celebrate(BARE_MINIMUM_CHEERS[Math.floor(Math.random() * BARE_MINIMUM_CHEERS.length)], 3200);
+  }
+}
+
+/* While it's on, Home drops chores, school blocks, meal prep and the full
+   routines from its lists (work, appointments, meals and sleep stay). */
+function isBareMinimumHiddenBlock(b) {
+  return b.source === 'cleaning' || b.source === 'mealprep' || (b.source === 'event' && b.type === 'academic')
+    || b.blockKey === 'morning' || b.blockKey === 'evening';
+}
+function trimBlocksForBareMinimum(blocks) {
+  for (let i = blocks.length - 1; i >= 0; i--) if (isBareMinimumHiddenBlock(blocks[i])) blocks.splice(i, 1);
+}
+const BARE_MINIMUM_HIDDEN_TODO_GROUPS = ['morning', 'school', 'home', 'meals', 'evening'];
+function trimTodoGroupsForBareMinimum(groups) {
+  for (let i = groups.length - 1; i >= 0; i--) if (BARE_MINIMUM_HIDDEN_TODO_GROUPS.includes(groups[i].key)) groups.splice(i, 1);
+}
+
+function bareMinimumDayLabel(dateKey) {
+  const days = Math.round((dateFromKey(dateKey) - dateFromKey(todayKey())) / 86400000);
+  if (days === 1) return 'tomorrow';
+  if (days > 1 && days < 7) return FULL_DAY_NAMES[dateFromKey(dateKey).getDay()];
+  return formatShortDate(dateFromKey(dateKey));
+}
+function bareMinimumMovedText(moved) {
+  if (!moved) return '';
+  const tasks = getCleaningTasks();
+  const parts = [];
+  (moved.chores || []).forEach(m => {
+    const title = tasks.find(t => t.id === m.taskId)?.title || 'A chore';
+    parts.push(m.already ? `${title} (already on ${bareMinimumDayLabel(m.to)})` : `${title} → ${bareMinimumDayLabel(m.to)}`);
+  });
+  (moved.school || []).forEach(m => {
+    parts.push(m.to ? `${m.title} → ${bareMinimumDayLabel(m.to)} ${formatTime(m.start)}` : `${m.title} (no free spot found, still on today)`);
+  });
+  return parts.join(' · ');
+}
+/* School assignments due today or tomorrow stay in view. */
+function bareMinimumDueRows(dateKey) {
+  const tomorrow = localDateKey(addDays(dateFromKey(dateKey), 1));
+  return getAcademicAssignments()
+    .filter(a => a && (a.dueDate === dateKey || a.dueDate === tomorrow))
+    .sort(academicAssignmentSort)
+    .map(a => ({
+      title: [a.className, a.title].filter(Boolean).join(': ') || 'School work',
+      done: !!a.done,
+      meta: a.dueDate === dateKey ? 'Due today' : 'Due tomorrow',
+      toggle: `toggleDueSoonDone(${jsArg(a.id)})`,
+      icon: themeIcon('academic', 'todo-icon'),
+    }));
+}
+/* A small picture beside each checklist step (a blank spot keeps the
+   labels lined up until a step has its own art). */
+function bareMinimumItemIcon(item) {
+  if (item.icon === 'water') return `<span class="bmd-item-icon bmd-water" aria-hidden="true">${waterBottleSvg(0.7)}</span>`;
+  return (item.icon && themeIcon(item.icon, 'bmd-item-icon')) || '<span class="bmd-item-icon" aria-hidden="true"></span>';
+}
+function buildBareMinimumCard(dateKey) {
+  const bm = getBareMinimum(dateKey);
+  const done = BARE_MINIMUM_ITEMS.filter(i => bm.checks[i.key]).length;
+  const allDone = done === BARE_MINIMUM_ITEMS.length;
+  const due = bareMinimumDueRows(dateKey);
+  const movedText = bareMinimumMovedText(bm.moved);
+  const rows = BARE_MINIMUM_ITEMS.map(i => {
+    const on = !!bm.checks[i.key];
+    return `<div class="check-item ${on ? 'checked' : ''}" role="checkbox" tabindex="0" aria-checked="${on}" onclick="toggleBareMinimumItem('${i.key}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleBareMinimumItem('${i.key}')}">
+      <div class="check-box">${checkSvg()}</div>
+      ${bareMinimumItemIcon(i)}
+      <div style="flex:1"><div class="check-label">${esc(i.label)}</div>${i.detail ? `<div class="check-detail">${esc(i.detail)}</div>` : ''}</div>
+    </div>`;
+  }).join('');
+  return `<div class="card theme-card bmd-card">
+    <div class="card-title-row"><div class="collapse-title-row">${themeIcon('bareMinimum', 'collapse-title-sticker')}<div class="card-title">Bare Minimum Day</div></div><span class="bmd-count">${done}/${BARE_MINIMUM_ITEMS.length}</span></div>
+    <div class="bmd-sub">${allDone ? 'All done. Anything else today is extra credit.' : 'Just these today. Everything else can wait.'}</div>
+    ${rows}
+    ${due.length ? `<div class="care-subhead">Due today or tomorrow</div>${due.map(todoRowHtml).join('')}` : ''}
+    ${movedText ? `<div class="care-muted">Moved out of the way: ${esc(movedText)}</div>` : ''}
+    <div class="care-muted">Ends at midnight on its own.</div>
+  </div>`;
+}
+
+/* Home: the checklist sits at the top while it's on. (The buttons live
+   with the section buttons — see careNavItems.) */
+function buildHomeCareTop(dateKey) {
+  return isBareMinimumToday() ? buildBareMinimumCard(dateKey) : '';
+}
+/* After Home is drawn: hide Bills this week while it's on, and remember
+   the day so the page and buttons redraw themselves after midnight. */
+let bareMinimumShownOn = null;
+function afterHomeRenderCare() {
+  const on = isBareMinimumToday();
+  document.getElementById('page-home')?.classList.toggle('bmd-on', on);
+  if (on) bareMinimumShownOn = todayKey();
+  // Turned on from another device: bring the buttons up to date too.
+  if (on !== !!document.querySelector('#book-tabs .care-tab.on')) updateBookTabs();
+}
+setInterval(() => {
+  if (!bareMinimumShownOn || bareMinimumShownOn === todayKey()) return;
+  bareMinimumShownOn = null;
+  updateBookTabs();
+  if (currentTab === 'home') renderHome();
+}, 60000);
+
+/* The three buttons beside the section buttons (wide screens) and in the
+   row above the bottom bar (phones). */
+function careNavItems() {
+  const on = isBareMinimumToday();
+  return [
+    { label: 'Bare Minimum Day', short: 'Bare Minimum', color: 'var(--pal-green-strong)', on, icon: 'bareMinimum',
+      sub: on ? 'On till midnight' : '', onclick: on ? "switchTab('home')" : 'startBareMinimumDay()',
+      aria: on ? 'Bare Minimum Day is on until midnight. Show the checklist' : 'Make today a Bare Minimum Day' },
+    { label: 'Hard Day', short: 'Hard Day', color: 'var(--pal-purple-strong)', icon: 'hardDay', onclick: 'openHardDay()', aria: 'Open the Hard Day card' },
+    { label: 'Dopamine Menu', short: 'Dopamine Menu', color: 'var(--pal-yellow-strong)', onclick: 'openDopamine()', aria: 'Open the Dopamine Menu',
+      sub: dessertTimer ? dessertTimeLeftText() : '', timer: !!dessertTimer },
+  ];
+}
+function careTabHtml(item, lead = false) {
+  const sub = item.sub ? `<span class="care-tab-sub${item.timer ? ' dm-timer-mini' : ''}">${esc(item.sub)}</span>` : '';
+  return `<button class="book-tab care-tab${item.on ? ' on' : ''}${lead ? ' lead' : ''}" type="button" style="--tab-color:${item.color}" onclick="${item.onclick}" aria-label="${attr(item.aria)}">
+    ${item.icon ? themeIcon(item.icon, 'book-tab-sticker care-tab-icon') : ''}<span class="book-tab-label">${esc(item.label)}</span>${sub}</button>`;
+}
+function careDockBtnHtml(item) {
+  const sub = item.on ? '<small>On</small>' : item.sub ? `<small class="${item.timer ? 'dm-timer-mini' : ''}">${esc(item.sub)}</small>` : '';
+  return `<button class="care-dock-btn${item.on ? ' on' : ''}" type="button" style="--tab-color:${item.color}" onclick="${item.onclick}" aria-label="${attr(item.aria)}">
+    <span class="care-dock-label">${item.icon ? themeIcon(item.icon, 'care-dock-icon') : ''}<span>${esc(item.short)}</span></span>${sub}</button>`;
+}
+
+/* ── Hard Day card ── */
+const HARD_DAY_PEOPLE_KEY = 'gnd-hardday-people';
+const HARD_DAY_MESSAGE_KEY = 'gnd-hardday-message';
+const HARD_DAY_DEFAULT_MESSAGE = 'Hey, having a rough day. Up for a quick call or text?';
+let hardDayGround = null; // null, { kind: 'box' } or { kind: 'senses', step, taps }
+
+function isHardDayOpen() { return !!document.getElementById('hard-day-modal')?.classList.contains('open'); }
+function openHardDay() {
+  stopBoxBreathing();
+  hardDayGround = null;
+  renderHardDay();
+  document.getElementById('hard-day-modal').classList.add('open');
+  const sheet = document.querySelector('#hard-day-modal .modal-sheet');
+  if (sheet) sheet.scrollTop = 0;
+}
+function closeHardDay() {
+  document.getElementById('hard-day-modal')?.classList.remove('open');
+  stopBoxBreathing();
+  hardDayGround = null;
+}
+
+function getHardDayPeople() {
+  const people = ls(HARD_DAY_PEOPLE_KEY, []);
+  return Array.isArray(people) ? people.filter(p => p && p.id) : [];
+}
+function saveHardDayPeople(people) { lsSave(HARD_DAY_PEOPLE_KEY, people); }
+function getHardDayMessage() {
+  const msg = ls(HARD_DAY_MESSAGE_KEY, null);
+  return typeof msg === 'string' && msg.trim() ? msg : HARD_DAY_DEFAULT_MESSAGE;
+}
+function saveHardDayMessage(text) {
+  if (String(text) === getHardDayMessage()) return;
+  lsSave(HARD_DAY_MESSAGE_KEY, String(text));
+}
+function smsHref(phone, body) {
+  const number = String(phone || '').replace(/[^\d+]/g, '');
+  return `sms:${number}${body ? `?&body=${encodeURIComponent(body)}` : ''}`;
+}
+/* Built when tapped, so it carries whatever the message box says now. */
+function hardDaySmsHref(personId) {
+  const person = getHardDayPeople().find(p => p.id === personId);
+  const box = document.getElementById('hard-day-message');
+  const msg = box && box.value.trim() ? box.value : getHardDayMessage();
+  return smsHref(person?.phone, msg);
+}
+function addHardDayPerson(form) {
+  const nameEl = form.querySelector('[name="name"]');
+  const phoneEl = form.querySelector('[name="phone"]');
+  const name = nameEl.value.trim();
+  const phone = phoneEl.value.trim();
+  if (!name) { nameEl.focus(); return; }
+  if (!phone.replace(/\D/g, '')) { phoneEl.focus(); return; }
+  const people = getHardDayPeople();
+  people.push({ id: careId(), name, phone });
+  saveHardDayPeople(people);
+  renderHardDay();
+  document.querySelector('#hard-day-body .care-person-add [name="name"]')?.focus();
+}
+function updateHardDayPerson(id, field, value) {
+  const clean = String(value || '').trim();
+  const people = getHardDayPeople();
+  const person = people.find(p => p.id === id);
+  if (!person || !clean || person[field] === clean) return;
+  person[field] = clean;
+  saveHardDayPeople(people);
+}
+function removeHardDayPerson(id) {
+  saveHardDayPeople(getHardDayPeople().filter(p => p.id !== id));
+  renderHardDay();
+}
+
+function hardDayListSection(listId, title, hint, soft = false, icon = '') {
+  const items = getCareList(listId);
+  const body = careEditing.has(listId)
+    ? careListEditorHtml(listId)
+    : items.length
+      ? `<ul class="care-list${soft ? ' soft' : ''}">${items.map(i => `<li>${esc(i.text)}</li>`).join('')}</ul>`
+      : `<div class="care-empty">Nothing here yet. Tap Edit to add some.</div>`;
+  return `<div class="care-section">
+    <div class="care-section-head"><div><div class="care-section-title">${icon ? themeIcon(icon, 'care-title-icon') : ''}${esc(title)}</div><div class="care-hint">${esc(hint)}</div></div>${careEditBtn(listId)}</div>
+    ${body}
+  </div>`;
+}
+function hardDayPeopleSection() {
+  const people = getHardDayPeople();
+  const msg = getHardDayMessage();
+  let body;
+  if (careEditing.has('people')) {
+    body = `<div class="care-editor">
+      ${people.map(p => `<div class="care-person-edit">
+        <input type="text" class="modal-input" value="${attr(p.name)}" maxlength="60" aria-label="Name" onchange="updateHardDayPerson(${jsArg(p.id)}, 'name', this.value)">
+        <input type="tel" class="modal-input" value="${attr(p.phone)}" maxlength="30" aria-label="Phone number for ${attr(p.name)}" onchange="updateHardDayPerson(${jsArg(p.id)}, 'phone', this.value)">
+        <button class="day-todo-x" type="button" title="Remove" aria-label="Remove ${attr(p.name)}" onclick="removeHardDayPerson(${jsArg(p.id)})">&times;</button>
+      </div>`).join('')}
+    </div>`;
+  } else if (people.length) {
+    body = `<div class="care-people">${people.map(p => `<a class="care-person" href="${attr(smsHref(p.phone, msg))}" onclick="this.href=hardDaySmsHref(${jsArg(p.id)})">
+      <b>${esc(p.name)}</b><span>Text</span></a>`).join('')}</div>`;
+  } else {
+    body = `<div class="care-empty">Add someone you can text when it's a lot.</div>`;
+  }
+  const addForm = careEditing.has('people') || !people.length
+    ? `<form class="care-person-add" onsubmit="event.preventDefault();addHardDayPerson(this)">
+        <input type="text" class="modal-input" name="name" placeholder="Name" maxlength="60" autocomplete="off" aria-label="Name">
+        <input type="tel" class="modal-input" name="phone" placeholder="Phone" maxlength="30" autocomplete="off" aria-label="Phone number">
+        <button type="submit" aria-label="Add person">+</button>
+      </form>`
+    : '';
+  return `<div class="care-section">
+    <div class="care-section-head"><div><div class="care-section-title">Reach out</div><div class="care-hint">Tap someone to start a text.</div></div>${people.length ? careEditBtn('people') : ''}</div>
+    ${body}${addForm}
+    <label class="care-msg"><span class="care-hint">Message (change it any time)</span>
+      <textarea class="text-area" id="hard-day-message" rows="2" maxlength="300" onblur="saveHardDayMessage(this.value)">${esc(msg)}</textarea>
+    </label>
+  </div>`;
+}
+
+/* Grounding: box breathing or 5-4-3-2-1, picked when you open it. */
+const BOX_PHASES = ['Breathe in', 'Hold', 'Breathe out', 'Hold'];
+const BOX_SECONDS = 4;
+let boxBreath = null; // { phase, count, timer }
+const SENSES_STEPS = [
+  { n: 5, text: 'things you can see' },
+  { n: 4, text: 'things you can hear' },
+  { n: 3, text: 'things you can touch' },
+  { n: 2, text: 'things you can smell' },
+  { n: 1, text: 'thing you can taste' },
+];
+function hardDayGroundingSection() {
+  const kind = hardDayGround?.kind;
+  let panel = '';
+  if (kind === 'box') panel = boxBreathingHtml();
+  if (kind === 'senses') panel = sensesHtml();
+  return `<div class="care-section">
+    <div class="care-section-head"><div><div class="care-section-title">Grounding</div><div class="care-hint">Pick one.</div></div></div>
+    <div class="care-choice">
+      <button class="cat-btn${kind === 'box' ? ' active' : ''}" type="button" aria-pressed="${kind === 'box'}" onclick="startGrounding('box')">${themeIcon('boxBreathing', 'care-btn-icon')}Box breathing</button>
+      <button class="cat-btn${kind === 'senses' ? ' active' : ''}" type="button" aria-pressed="${kind === 'senses'}" onclick="startGrounding('senses')">5-4-3-2-1 senses</button>
+    </div>
+    ${panel}
+  </div>`;
+}
+function startGrounding(kind) {
+  stopBoxBreathing();
+  hardDayGround = kind === 'box' ? { kind } : { kind: 'senses', step: 0, taps: 0 };
+  renderHardDay();
+  if (kind === 'box') startBoxBreathing();
+}
+function stopGrounding() {
+  stopBoxBreathing();
+  hardDayGround = null;
+  renderHardDay();
+}
+function boxBreathingHtml() {
+  const b = boxBreath || { phase: -1, count: BOX_SECONDS };
+  const started = b.phase >= 0;
+  return `<div class="ground-panel">
+    <div class="breath-box${started ? ` p${b.phase}` : ''}" id="breath-box">
+      <div class="breath-fill" aria-hidden="true"></div><div class="breath-dot" aria-hidden="true"></div>
+      <div class="breath-text"><div class="breath-phase" id="breath-phase" aria-live="polite">${started ? BOX_PHASES[b.phase] : 'Get comfy'}</div><div class="breath-count" id="breath-count" aria-hidden="true">${started ? b.count : ''}</div></div>
+    </div>
+    <div class="care-hint">In for 4 · hold 4 · out for 4 · hold 4. Follow the dot.</div>
+    <div class="ground-actions"><button class="routine-link-btn" type="button" onclick="stopGrounding()">Stop</button></div>
+  </div>`;
+}
+function startBoxBreathing() {
+  stopBoxBreathing();
+  boxBreath = { phase: -1, count: BOX_SECONDS, timer: null };
+  // A short beat first, so the dot starts from the corner.
+  boxBreath.timer = setTimeout(() => {
+    if (!boxBreath) return;
+    boxBreath.phase = 0;
+    boxBreath.count = BOX_SECONDS;
+    updateBoxBreathingDom();
+    boxBreath.timer = setInterval(tickBoxBreathing, 1000);
+  }, 800);
+}
+function tickBoxBreathing() {
+  if (!boxBreath) return;
+  if (!isHardDayOpen() || hardDayGround?.kind !== 'box') { stopBoxBreathing(); return; }
+  boxBreath.count -= 1;
+  if (boxBreath.count <= 0) {
+    boxBreath.phase = (boxBreath.phase + 1) % BOX_PHASES.length;
+    boxBreath.count = BOX_SECONDS;
+  }
+  updateBoxBreathingDom();
+}
+function updateBoxBreathingDom() {
+  const box = document.getElementById('breath-box');
+  if (!box || !boxBreath) return;
+  box.classList.remove('p0', 'p1', 'p2', 'p3');
+  if (boxBreath.phase >= 0) box.classList.add(`p${boxBreath.phase}`);
+  const label = boxBreath.phase >= 0 ? BOX_PHASES[boxBreath.phase] : 'Get comfy';
+  const phase = document.getElementById('breath-phase');
+  if (phase && phase.textContent !== label) phase.textContent = label;
+  const count = document.getElementById('breath-count');
+  if (count) count.textContent = boxBreath.phase >= 0 ? boxBreath.count : '';
+}
+function stopBoxBreathing() {
+  if (boxBreath?.timer) { clearTimeout(boxBreath.timer); clearInterval(boxBreath.timer); }
+  boxBreath = null;
+}
+function sensesHtml() {
+  const g = hardDayGround;
+  if (g.step >= SENSES_STEPS.length) {
+    return `<div class="ground-panel">
+      <div class="senses-prompt">That's all five. Take one more slow breath. You're here, right now.</div>
+      <div class="ground-actions"><button class="routine-link-btn" type="button" onclick="startGrounding('senses')">Start over</button><button class="routine-link-btn" type="button" onclick="stopGrounding()">Done</button></div>
+    </div>`;
+  }
+  const s = SENSES_STEPS[g.step];
+  const dots = Array.from({ length: s.n }, (_, i) =>
+    `<button type="button" class="senses-dot${i < g.taps ? ' on' : ''}" aria-pressed="${i < g.taps}" aria-label="Noticed ${i + 1} of ${s.n}" onclick="tapSense(${i})">${checkSvg()}</button>`).join('');
+  return `<div class="ground-panel">
+    <div class="senses-progress">Step ${g.step + 1} of ${SENSES_STEPS.length}</div>
+    <div class="senses-num" aria-hidden="true">${s.n}</div>
+    <div class="senses-prompt">Name ${s.n} ${s.text}.</div>
+    <div class="senses-dots">${dots}</div>
+    <div class="care-hint">Tap a circle for each one you notice, if that helps.</div>
+    <div class="ground-actions">
+      ${g.step > 0 ? `<button class="routine-link-btn" type="button" onclick="moveSenses(-1)">Back</button>` : ''}
+      <button class="routine-link-btn" type="button" onclick="moveSenses(1)">${g.step === SENSES_STEPS.length - 1 ? 'Finish' : 'Next'}</button>
+      <button class="routine-link-btn" type="button" onclick="stopGrounding()">Stop</button>
+    </div>
+  </div>`;
+}
+function tapSense(i) {
+  if (hardDayGround?.kind !== 'senses') return;
+  hardDayGround.taps = hardDayGround.taps === i + 1 ? i : i + 1;
+  renderHardDay();
+}
+function moveSenses(delta) {
+  if (hardDayGround?.kind !== 'senses') return;
+  hardDayGround.step = Math.max(0, hardDayGround.step + delta);
+  hardDayGround.taps = 0;
+  renderHardDay();
+}
+
+function crisisLinesHtml() {
+  return `<div class="crisis-box">
+    <div class="crisis-title">If you need to talk to someone now</div>
+    <div class="crisis-line">
+      <div class="crisis-name">988 Suicide &amp; Crisis Lifeline</div>
+      <div class="crisis-how">Call or text 988.</div>
+      <div class="crisis-links"><a href="tel:988">Call 988</a><a href="sms:988">Text 988</a></div>
+    </div>
+    <div class="crisis-line">
+      <div class="crisis-name">Veterans Crisis Line</div>
+      <div class="crisis-how">Dial 988, then press 1. Or text 838255, or chat at veteranscrisisline.net.</div>
+      <div class="crisis-links"><a href="tel:988">Call 988, then press 1</a><a href="sms:838255">Text 838255</a><a href="https://www.veteranscrisisline.net/" target="_blank" rel="noopener">Chat online</a></div>
+    </div>
+  </div>`;
+}
+
+function renderHardDay() {
+  const body = document.getElementById('hard-day-body');
+  if (!body) return;
+  const bmd = isBareMinimumToday()
+    ? `<div class="care-on-note">Today is a Bare Minimum Day. Your checklist is at the top of Home.</div>`
+    : `<button class="modal-submit care-bmd-btn" type="button" onclick="startBareMinimumDay()">Make today a Bare Minimum Day</button>`;
+  body.innerHTML = `<div class="care-sheet-head">
+      <div class="modal-title care-sheet-title" id="hard-day-title">${themeIcon('hardDay', 'care-sheet-icon')}Hard Day</div>
+      <button class="modal-close-btn" type="button" aria-label="Close" onclick="closeHardDay()">&times;</button>
+    </div>
+    <div class="care-intro">Rough one? That's allowed. Nothing here is homework. Pick whatever helps.</div>
+    ${hardDayListSection('helps', 'Things that help', 'Pick one. One is plenty.', false, 'careHelps')}
+    ${hardDayListSection('easy', 'Go easy on', 'Gentle reminders, not rules.', true, 'careEasy')}
+    ${hardDayPeopleSection()}
+    ${hardDayGroundingSection()}
+    <div class="care-section">${bmd}</div>
+    ${crisisLinesHtml()}`;
+}
+
+/* ── Notes: collapsible sections under Brainstorm ── */
+const NOTES_CARE_KEY = 'device-notes-open';
+function getNotesCareOpen() {
+  const closed = { journal: false, thought: false };
+  try { return { ...closed, ...JSON.parse(localStorage.getItem(NOTES_CARE_KEY) || '{}') }; }
+  catch (e) { return closed; }
+}
+function toggleNotesCareSection(id) {
+  const open = getNotesCareOpen();
+  open[id] = !open[id];
+  try { localStorage.setItem(NOTES_CARE_KEY, JSON.stringify(open)); } catch (e) {}
+  const sec = document.querySelector(`.notes-care-section[data-id="${id}"]`);
+  if (sec) {
+    const head = sec.querySelector('.collapse-header');
+    head.classList.toggle('open', open[id]);
+    head.setAttribute('aria-expanded', open[id]);
+    sec.querySelector('.collapse-body').classList.toggle('open', open[id]);
+  }
+}
+function notesCareSection(id, title, sub, content, icon = '') {
+  const isOpen = getNotesCareOpen()[id];
+  return `<div class="collapse-section theme-card notes-care-section" data-id="${id}">
+    <div class="collapse-header ${isOpen ? 'open' : ''}" role="button" tabindex="0" aria-expanded="${isOpen}" onclick="toggleNotesCareSection('${id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleNotesCareSection('${id}')}">
+      <div class="collapse-header-left"><div><div class="collapse-title-row">${icon ? themeIcon(icon, 'collapse-title-sticker') : ''}<div class="collapse-title">${esc(title)}</div></div><div class="collapse-sub">${esc(sub)}</div></div></div>
+      <svg class="collapse-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="collapse-body ${isOpen ? 'open' : ''}">${content}</div>
+  </div>`;
+}
+function buildNotesCareSections() {
+  return notesCareSection('journal', 'Daily Journal', 'A few words, any time', buildDailyJournal(), 'dailyJournal')
+    + notesCareSection('thought', 'Thought Reset', 'Talk back to a harsh thought', buildThoughtReset(), 'thoughtReset');
+}
+
+/* ── Dopamine Menu ──
+   Opens as a sheet from its button beside the section buttons (or in the
+   row above the bottom bar on phones). */
+const DOPAMINE_COURSES = [
+  { id: 'appetizers', title: 'Appetizers', one: 'Appetizer', hint: 'Quick boosts' },
+  { id: 'mains', title: 'Mains', one: 'Main', hint: 'Bigger and more filling' },
+  { id: 'sides', title: 'Sides', one: 'Side', hint: 'Pair with boring tasks' },
+  { id: 'desserts', title: 'Desserts', one: 'Dessert', hint: 'Easy to overdo, so each comes with a 15-minute timer' },
+];
+const DESSERT_MINUTES = 15;
+let dopaminePick = null;  // { course, id, text, cost }
+let dessertTimer = null;  // { id, text, endsAt, tick, audio }
+
+function isDopamineOpen() { return !!document.getElementById('dopamine-modal')?.classList.contains('open'); }
+function openDopamine() {
+  renderDopamine();
+  document.getElementById('dopamine-modal').classList.add('open');
+  const sheet = document.querySelector('#dopamine-modal .modal-sheet');
+  if (sheet) sheet.scrollTop = 0;
+}
+function closeDopamine() { document.getElementById('dopamine-modal')?.classList.remove('open'); }
+function renderDopamine() {
+  const body = document.getElementById('dopamine-body');
+  if (!body) return;
+  body.innerHTML = `<div class="care-sheet-head">
+      <div class="modal-title" id="dopamine-title">Dopamine Menu</div>
+      <button class="modal-close-btn" type="button" aria-label="Close" onclick="closeDopamine()">&times;</button>
+    </div>${buildDopamineMenu()}`;
+}
+function buildDopamineMenu() {
+  return `<div class="care-intro">Things that reliably make you feel a bit better. Order off the menu when you're stuck.</div>
+    <div class="dm-pick">
+      <button class="modal-submit" type="button" onclick="pickDopamine()">Pick for me</button>
+      ${dopaminePick ? dopaminePickHtml() : ''}
+    </div>
+    ${DOPAMINE_COURSES.map(dopamineCourseHtml).join('')}`;
+}
+function dopamineCourseHtml(c) {
+  const items = getCareList(c.id);
+  let body;
+  if (careEditing.has(c.id)) body = careListEditorHtml(c.id, { cost: true, placeholder: `Add to ${c.title.toLowerCase()}…` });
+  else if (!items.length) body = `<div class="care-empty">Empty plate. Tap Edit to add something.</div>`;
+  else if (c.id === 'desserts') body = `<div>${items.map(dessertRowHtml).join('')}</div>`;
+  else body = `<div class="dm-items">${items.map(i => `<span class="dm-item">${esc(i.text)}${i.cost ? dopamineCostTag() : ''}</span>`).join('')}</div>`;
+  return `<div class="dm-course">
+    <div class="care-section-head"><div><div class="care-section-title">${themeIcon(c.id, 'care-title-icon')}${esc(c.title)}</div><div class="care-hint">${esc(c.hint)}</div></div>${careEditBtn(c.id)}</div>
+    ${body}
+  </div>`;
+}
+function dopamineCostTag() { return `<span class="dm-cost" title="Costs money" aria-label="costs money">$</span>`; }
+function dessertRowHtml(i) {
+  const running = dessertTimer && dessertTimer.id === i.id;
+  const side = running
+    ? `${themeIcon('timer', 'care-timer-icon')}<span class="dm-timer" id="dessert-timer-left">${dessertTimeLeftText()}</span><button class="routine-link-btn" type="button" onclick="stopDessertTimer()">Stop</button>`
+    : `<button class="routine-link-btn" type="button" onclick="startDessertTimer(${jsArg(i.id)})">Start ${DESSERT_MINUTES} min</button>`;
+  return `<div class="dm-dessert-row"><span class="dm-item">${esc(i.text)}${i.cost ? dopamineCostTag() : ''}</span><span class="dm-dessert-side">${side}</span></div>`;
+}
+function pickDopamine() {
+  const all = DOPAMINE_COURSES.flatMap(c => getCareList(c.id).map(i => ({ ...i, course: c.id })));
+  if (!all.length) { dopaminePick = null; careRefresh(); return; }
+  let pick = all[Math.floor(Math.random() * all.length)];
+  if (all.length > 1 && dopaminePick && pick.id === dopaminePick.id && pick.course === dopaminePick.course) {
+    pick = all[(all.indexOf(pick) + 1) % all.length]; // not the same one twice in a row
+  }
+  dopaminePick = pick;
+  careRefresh();
+}
+function dopaminePickHtml() {
+  const p = dopaminePick;
+  const course = DOPAMINE_COURSES.find(c => c.id === p.course);
+  const canTime = p.course === 'desserts' && !(dessertTimer && dessertTimer.id === p.id);
+  return `<div class="dm-pick-result" role="status">
+    <small>${esc(course ? course.one : '')}</small>
+    <div>How about: <b>${esc(p.text)}</b>${p.cost ? ` ${dopamineCostTag()}` : ''}</div>
+    ${canTime ? `<button class="routine-link-btn" type="button" onclick="startDessertTimer(${jsArg(p.id)})">Start ${DESSERT_MINUTES} min</button>` : ''}
+  </div>`;
+}
+
+/* Dessert timer: only runs while the app is open. The sound is set up on
+   the tap that starts it, so phones let it chime later. */
+function startDessertTimer(itemId) {
+  const item = getCareList('desserts').find(i => i.id === itemId);
+  if (!item) return;
+  stopDessertTimer(false);
+  let audio = null;
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (Ctx) { audio = new Ctx(); if (audio.resume) audio.resume(); }
+  } catch (e) { audio = null; }
+  dessertTimer = { id: item.id, text: item.text, endsAt: Date.now() + DESSERT_MINUTES * 60000, audio, tick: null };
+  dessertTimer.tick = setInterval(tickDessertTimer, 1000);
+  careRefresh();
+  updateBookTabs();
+}
+function dessertTimeLeftText() {
+  if (!dessertTimer) return '';
+  const s = Math.max(0, Math.ceil((dessertTimer.endsAt - Date.now()) / 1000));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')} left`;
+}
+function tickDessertTimer() {
+  if (!dessertTimer) return;
+  if (Date.now() >= dessertTimer.endsAt) { finishDessertTimer(); return; }
+  const left = dessertTimeLeftText();
+  const el = document.getElementById('dessert-timer-left');
+  if (el) el.textContent = left;
+  document.querySelectorAll('.dm-timer-mini').forEach(mini => { mini.textContent = left; });
+}
+function finishDessertTimer() {
+  const t = dessertTimer;
+  if (!t) return;
+  clearInterval(t.tick);
+  dessertTimer = null;
+  playSoftChime(t.audio);
+  showCareToast(`That's ${DESSERT_MINUTES} minutes of ${t.text}. Dessert's done! Maybe an appetizer or a main next?`);
+  careRefresh();
+  updateBookTabs();
+}
+function stopDessertTimer(redraw = true) {
+  if (!dessertTimer) return;
+  clearInterval(dessertTimer.tick);
+  try { if (dessertTimer.audio && dessertTimer.audio.close) dessertTimer.audio.close(); } catch (e) {}
+  dessertTimer = null;
+  if (redraw) { careRefresh(); updateBookTabs(); }
+}
+function playSoftChime(ctx) {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    const ac = ctx || (Ctx ? new Ctx() : null);
+    if (!ac) return;
+    if (ac.resume) ac.resume();
+    const t0 = ac.currentTime + 0.05;
+    [523.25, 659.25, 783.99].forEach((freq, i) => {
+      const osc = ac.createOscillator();
+      const gain = ac.createGain();
+      const t = t0 + i * 0.22;
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(0.12, t + 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 1.4);
+      osc.connect(gain);
+      gain.connect(ac.destination);
+      osc.start(t);
+      osc.stop(t + 1.5);
+    });
+    setTimeout(() => { try { ac.close(); } catch (e) {} }, 2600);
+  } catch (e) {}
+}
+
+/* ── Thought Reset ──
+   A short guided form; each finished one is kept in gnd-thought-resets. */
+const THINKING_TRAPS = [
+  { name: 'All-or-nothing', about: 'Seeing it as total success or total failure' },
+  { name: 'Catastrophizing', about: 'Jumping to the worst possible outcome' },
+  { name: 'Mind reading', about: 'Assuming you know what others think' },
+  { name: 'Fortune telling', about: "Predicting it'll go badly" },
+  { name: '"Should" statements', about: 'Rules about how you must be' },
+  { name: 'Labeling', about: 'Calling yourself a name instead of describing what happened' },
+  { name: 'Discounting the good', about: 'Brushing off what went right' },
+  { name: 'Feelings as facts', about: '"I feel it, so it must be true"' },
+];
+const THOUGHT_RESETS_KEY = 'gnd-thought-resets';
+const emptyThoughtDraft = () => ({ thought: '', trap: '', before: 0, friend: '', kinder: '', after: 0 });
+let thoughtDraft = emptyThoughtDraft();
+let thoughtJustSaved = false;
+
+function getThoughtResets() {
+  const list = ls(THOUGHT_RESETS_KEY, []);
+  return Array.isArray(list) ? list.filter(r => r && r.id) : [];
+}
+function setThoughtDraft(field, value) { thoughtDraft[field] = value; }
+function useThoughtStarter(text) {
+  thoughtDraft.thought = text;
+  const box = document.getElementById('tr-thought');
+  if (box) { box.value = text; box.focus(); }
+}
+function pickThoughtTrap(name, btn) {
+  thoughtDraft.trap = thoughtDraft.trap === name ? '' : name;
+  btn.parentElement.querySelectorAll('.tr-trap').forEach(b => {
+    const on = b === btn && !!thoughtDraft.trap;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-checked', on);
+  });
+}
+function pickThoughtScale(field, n, btn) {
+  thoughtDraft[field] = thoughtDraft[field] === n ? 0 : n;
+  markScalePick(btn, !!thoughtDraft[field]);
+}
+function saveThoughtReset() {
+  const d = thoughtDraft;
+  if (!d.thought.trim()) { document.getElementById('tr-thought')?.focus(); return; }
+  const list = getThoughtResets();
+  list.push({ id: careId(), at: new Date().toISOString(), thought: d.thought.trim(), trap: d.trap, before: d.before, friend: d.friend.trim(), kinder: d.kinder.trim(), after: d.after });
+  lsSave(THOUGHT_RESETS_KEY, list);
+  thoughtDraft = emptyThoughtDraft();
+  thoughtJustSaved = true;
+  careRefresh();
+  thoughtJustSaved = false;
+}
+function deleteThoughtReset(id) {
+  if (!confirm('Delete this thought reset?')) return;
+  lsSave(THOUGHT_RESETS_KEY, getThoughtResets().filter(r => r.id !== id));
+  careRefresh();
+}
+function buildThoughtReset() {
+  const d = thoughtDraft;
+  const starters = careEditing.has('starters')
+    ? careListEditorHtml('starters', { placeholder: 'Add a starter…' })
+    : `<div class="tr-chips">${getCareList('starters').map(s => `<button type="button" class="tr-chip" onclick="useThoughtStarter(${jsArg(s.text)})">${esc(s.text)}</button>`).join('')}</div>`;
+  const traps = THINKING_TRAPS.map(t => {
+    const on = d.trap === t.name;
+    return `<button type="button" class="tr-trap${on ? ' active' : ''}" role="radio" aria-checked="${on}" onclick="pickThoughtTrap(${jsArg(t.name)}, this)"><b>${esc(t.name)}</b><span>${esc(t.about)}</span></button>`;
+  }).join('');
+  return `<div class="notes-care-intro">When your brain says something harsh, fact-check it. One step at a time.</div>
+    <div class="tr-form">
+      <div class="tr-step">
+        <div class="care-section-head"><div class="tr-step-label">1. The thought</div>${careEditBtn('starters', 'Edit starters')}</div>
+        <textarea class="text-area" id="tr-thought" rows="2" placeholder="What's your brain telling you?" oninput="setThoughtDraft('thought', this.value)">${esc(d.thought)}</textarea>
+        ${starters}
+      </div>
+      <div class="tr-step">
+        <div class="tr-step-label">2. Thinking trap</div>
+        <div class="tr-traps" role="radiogroup" aria-label="Thinking trap">${traps}</div>
+      </div>
+      <div class="tr-step">
+        <div class="tr-step-label">3. How true does it feel?</div>
+        ${careScaleHtml('How true it feels, 1 to 10', 10, d.before, "pickThoughtScale('before', ", 'Not at all', 'Completely')}
+      </div>
+      <div class="tr-step">
+        <div class="tr-step-label">4. What would you tell a friend who thought this?</div>
+        <textarea class="text-area" id="tr-friend" rows="2" placeholder="Probably something nicer than you tell yourself…" oninput="setThoughtDraft('friend', this.value)">${esc(d.friend)}</textarea>
+      </div>
+      <div class="tr-step">
+        <div class="tr-step-label">5. A kinder, truer version</div>
+        <textarea class="text-area" id="tr-kinder" rows="2" placeholder="Something true that's also fair to you" oninput="setThoughtDraft('kinder', this.value)">${esc(d.kinder)}</textarea>
+      </div>
+      <div class="tr-step">
+        <div class="tr-step-label">6. How true does the original feel now?</div>
+        ${careScaleHtml('How true it feels now, 1 to 10', 10, d.after, "pickThoughtScale('after', ", 'Not at all', 'Completely')}
+      </div>
+      <div class="care-form-actions">
+        <button class="modal-submit" type="button" onclick="saveThoughtReset()">Save</button>
+        ${thoughtJustSaved ? `<div class="care-saved" role="status">Saved. Nice job talking back to that one.</div>` : ''}
+      </div>
+    </div>
+    <div class="care-subhead">Past resets</div>
+    ${thoughtHistoryHtml()}`;
+}
+function thoughtHistoryHtml() {
+  const list = getThoughtResets().sort((a, b) => String(b.at).localeCompare(String(a.at)));
+  if (!list.length) return `<div class="care-empty">Saved resets show up here.</div>`;
+  return `<div class="care-history">${list.map(r => {
+    const badges = [r.before ? `Before ${r.before}/10` : '', r.after ? `Now ${r.after}/10` : ''].filter(Boolean);
+    return `<details class="care-entry"${careOpenEntries.has(r.id) ? ' open' : ''} ontoggle="careEntryToggle(this, ${jsArg(r.id)})">
+      <summary><span class="entry-stamp">${esc(formatStamp(r.at))}</span><span class="care-entry-title">${esc(r.thought)}</span>
+        ${badges.length ? `<span class="care-badges">${badges.map(b => `<span class="care-badge">${esc(b)}</span>`).join('')}</span>` : ''}</summary>
+      <div class="care-entry-body">
+        ${careKv('Thinking trap', r.trap)}${careKv("What I'd tell a friend", r.friend)}${careKv('Kinder, truer version', r.kinder)}
+        <button class="care-entry-del" type="button" onclick="deleteThoughtReset(${jsArg(r.id)})">Delete</button>
+      </div>
+    </details>`;
+  }).join('')}</div>`;
+}
+
+/* ── Daily Journal ──
+   Entries are kept per day in gnd-YYYY-MM-DD-dailyjournal (a list; several
+   a day is fine). One prompt a day, the same for everyone on that date. */
+const JOURNAL_PROMPTS = {
+  Wins: ['What went okay today, even a little?', "What's one thing you handled better than you expected?", 'What did you get done that past-you would be glad about?', 'Where did you show up today?', "What's a small win you almost didn't notice?"],
+  Energy: ['What drained you today?', 'What gave you energy today?', 'When did you feel most like yourself?', 'What could you do less of tomorrow?', 'What helped, even for a minute?'],
+  Gratitude: ["What's one thing you're glad about today?", 'Who made your day a little easier?', "What's something comfortable or good you have right now?", "What's a small thing you enjoyed today?", "What are you thankful you didn't have to deal with?"],
+  Tomorrow: ["What's one thing that would make tomorrow easier?", "What's the first small step for tomorrow?", 'What can wait until later this week?', 'What do you want to remember tomorrow?', "What's one kind thing you can do for yourself tomorrow?"],
+};
+/* Topics take turns day to day. */
+const JOURNAL_PROMPT_LIST = [0, 1, 2, 3, 4].flatMap(i => Object.keys(JOURNAL_PROMPTS).map(topic => ({ topic, text: JOURNAL_PROMPTS[topic][i] })));
+let journalPromptShift = { dateKey: '', by: 0 };
+let journalDraft = { mood: 0, energy: 0, text: '' };
+let journalJustSaved = false;
+let journalShowCount = 10;
+
+function journalKey(dateKey) { return `gnd-${dateKey}-dailyjournal`; }
+function getJournalEntries(dateKey) {
+  const list = ls(journalKey(dateKey), []);
+  return Array.isArray(list) ? list.filter(e => e && e.id) : [];
+}
+function allJournalEntries() {
+  const out = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const m = /^gnd-(\d{4}-\d{2}-\d{2})-dailyjournal$/.exec(localStorage.key(i) || '');
+    if (m) getJournalEntries(m[1]).forEach(e => out.push({ ...e, dateKey: m[1] }));
+  }
+  return out.sort((a, b) => String(b.at).localeCompare(String(a.at)));
+}
+function journalPromptFor(dateKey) {
+  const [y, m, d] = dateKey.split('-').map(Number);
+  const day = Math.floor(Date.UTC(y, m - 1, d) / 86400000);
+  const shift = journalPromptShift.dateKey === dateKey ? journalPromptShift.by : 0;
+  const n = JOURNAL_PROMPT_LIST.length;
+  return JOURNAL_PROMPT_LIST[(((day + shift) % n) + n) % n];
+}
+function nextJournalPrompt() {
+  const dk = todayKey();
+  journalPromptShift = { dateKey: dk, by: (journalPromptShift.dateKey === dk ? journalPromptShift.by : 0) + 1 };
+  const prompt = journalPromptFor(dk);
+  const topic = document.getElementById('dj-prompt-topic');
+  const text = document.getElementById('dj-prompt-text');
+  if (topic) topic.textContent = `Today's prompt · ${prompt.topic}`;
+  if (text) text.textContent = prompt.text;
+}
+function setJournalText(value) { journalDraft.text = value; }
+function pickJournalScale(field, n, btn) {
+  journalDraft[field] = journalDraft[field] === n ? 0 : n;
+  markScalePick(btn, !!journalDraft[field]);
+}
+function saveJournalEntry() {
+  const d = journalDraft;
+  const text = d.text.trim();
+  if (!text && !d.mood && !d.energy) { document.getElementById('dj-text')?.focus(); return; }
+  const dk = todayKey();
+  const prompt = journalPromptFor(dk);
+  const entries = getJournalEntries(dk);
+  entries.push({ id: careId(), at: new Date().toISOString(), mood: d.mood, energy: d.energy, topic: prompt.topic, prompt: prompt.text, text });
+  lsSave(journalKey(dk), entries);
+  journalDraft = { mood: 0, energy: 0, text: '' };
+  journalJustSaved = true;
+  careRefresh();
+  journalJustSaved = false;
+}
+function deleteJournalEntry(dateKey, id) {
+  if (!confirm('Delete this journal entry?')) return;
+  lsSave(journalKey(dateKey), getJournalEntries(dateKey).filter(e => e.id !== id));
+  careRefresh();
+}
+function showMoreJournal() { journalShowCount += 10; careRefresh(); }
+function journalBadgesHtml(e) {
+  const badges = [e.mood ? `Mood ${e.mood}/5` : '', e.energy ? `Energy ${e.energy}/5` : ''].filter(Boolean);
+  return badges.length ? `<span class="care-badges">${badges.map(b => `<span class="care-badge">${esc(b)}</span>`).join('')}</span>` : '';
+}
+function buildDailyJournal() {
+  const d = journalDraft;
+  const prompt = journalPromptFor(todayKey());
+  return `<div class="notes-care-intro">Check in whenever you like. One line counts.</div>
+    <div class="dj-form">
+      <div>
+        <div class="tr-step-label">Mood</div>
+        ${careScaleHtml('Mood, 1 to 5', 5, d.mood, "pickJournalScale('mood', ", 'Rough', 'Great')}
+      </div>
+      <div>
+        <div class="tr-step-label">Energy</div>
+        ${careScaleHtml('Energy, 1 to 5', 5, d.energy, "pickJournalScale('energy', ", 'Running on fumes', 'Charged up')}
+      </div>
+      <div class="dj-prompt"><small id="dj-prompt-topic">Today's prompt · ${esc(prompt.topic)}</small><p id="dj-prompt-text">${esc(prompt.text)}</p></div>
+      <div class="dj-prompt-row"><button class="routine-link-btn" type="button" onclick="nextJournalPrompt()">Different prompt</button></div>
+      <textarea class="text-area" id="dj-text" rows="4" placeholder="Write as much or as little as you want…" aria-label="Journal entry" oninput="setJournalText(this.value)">${esc(d.text)}</textarea>
+      <div class="care-form-actions">
+        <button class="modal-submit" type="button" onclick="saveJournalEntry()">Save entry</button>
+        ${journalJustSaved ? `<div class="care-saved" role="status">Saved. Thanks for checking in.</div>` : ''}
+      </div>
+    </div>
+    <div class="care-subhead">Past entries</div>
+    ${journalHistoryHtml()}`;
+}
+function journalHistoryHtml() {
+  const all = allJournalEntries();
+  if (!all.length) return `<div class="care-empty">Entries show up here, newest first.</div>`;
+  const shown = all.slice(0, journalShowCount);
+  return `<div class="care-history">${shown.map(e => `<details class="care-entry"${careOpenEntries.has(e.id) ? ' open' : ''} ontoggle="careEntryToggle(this, ${jsArg(e.id)})">
+      <summary><span class="entry-stamp">${esc(formatStamp(e.at))}</span>${journalBadgesHtml(e)}<span class="care-entry-title">${esc(e.text || 'Quick check-in')}</span></summary>
+      <div class="care-entry-body">
+        ${e.text ? careKv('Prompt', e.prompt) : ''}
+        <button class="care-entry-del" type="button" onclick="deleteJournalEntry(${jsArg(e.dateKey)}, ${jsArg(e.id)})">Delete</button>
+      </div>
+    </details>`).join('')}</div>
+    ${all.length > shown.length ? `<button class="add-btn care-more" type="button" onclick="showMoreJournal()">Show older entries</button>` : ''}`;
+}
+
+/* ── Sunday Weekly Reset: Bare Minimum days and this week's journal ── */
+function buildWeeklyResetCareExtras() {
+  const monday = startOfMondayWeek(new Date());
+  const days = Array.from({ length: 7 }, (_, i) => localDateKey(addDays(monday, i)));
+  const bmd = days.filter(dk => getBareMinimum(dk).on).length;
+  const bmdLine = bmd
+    ? `${bmd} Bare Minimum day${bmd === 1 ? '' : 's'} this week. Taking it easy when you need to is part of the plan.`
+    : 'Bare Minimum days this week: none.';
+  const entries = days.flatMap(dk => getJournalEntries(dk)).sort((a, b) => String(a.at).localeCompare(String(b.at)));
+  const list = entries.length
+    ? entries.map(e => `<div class="reset-week-entry">
+        <div class="reset-week-entry-head"><span class="entry-stamp">${esc(formatStamp(e.at))}</span>${journalBadgesHtml(e)}</div>
+        ${e.text && e.prompt ? `<div class="care-hint">${esc(e.prompt)}</div>` : ''}
+        ${e.text ? `<div class="reset-last-text">${esc(e.text)}</div>` : ''}
+      </div>`).join('')
+    : `<div class="care-empty">No daily journal entries this week.</div>`;
+  return `<div class="reset-care">
+    <div class="reset-bmd-line">${esc(bmdLine)}</div>
+    <div class="reset-last"><div class="reset-last-title">This week's journal</div>${list}</div>
+  </div>`;
 }
 
 /* ═══════════════════════ INIT ═══════════════════════ */
