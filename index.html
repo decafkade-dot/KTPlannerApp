@@ -2974,6 +2974,9 @@ const PRIORITY_SYNC_KEYS = new Set([
   'gnd-bills-list',
   'gnd-transactions',
   'gnd-accounts',
+  'gnd-paycheck-instances',
+  'gnd-paycheck-removed-extras',
+  'gnd-paycheck-plan',
 ]);
 
 function getSupabaseConfig() { return JSON.parse(localStorage.getItem('gnd-supabase') || 'null'); }
@@ -3172,13 +3175,22 @@ async function pullFromSupabase(renderAfterPull = false) {
     if (!rows) return;
     let changed = false;
     const changedKeys = new Set();
+    // Removed paycheck extras first, so the paycheck merge below can honor them.
+    const removedRow = rows.find(r => r.data_key === REMOVED_EXTRAS_KEY);
+    if (removedRow && absorbRemoteRemovedExtras(removedRow)) { changed = true; changedKeys.add(REMOVED_EXTRAS_KEY); }
     rows.forEach(row => {
+      if (row.data_key === REMOVED_EXTRAS_KEY) return;
       const local = localStorage.getItem(row.data_key);
       const remoteTime = new Date(row.updated_at);
       const localTime = new Date(localStorage.getItem(row.data_key + '_ts') || 0);
       const localDirty = syncQueue.has(row.data_key) || localStorage.getItem(dirtyFlagKey(row.data_key)) === '1';
       const localTimeInvalid = Number.isNaN(localTime.getTime());
       const localTimeFuture = localTime > new Date(Date.now() + 5 * 60 * 1000);
+      if (row.data_key === paycheckInstancesKey()) {
+        const preferRemote = !localDirty && (local === null || localTimeInvalid || localTimeFuture || remoteTime > localTime);
+        if (absorbRemotePaycheckInstances(row, preferRemote)) { changed = true; changedKeys.add(row.data_key); }
+        return;
+      }
       if (!localDirty && shouldKeepLocalInsteadOfRemote(row.data_key, local, row.data_value)) {
         queueLocalValueForSync(row.data_key, local);
         return;
@@ -4247,6 +4259,10 @@ function clearBillOverride(paycheckId, billKey, monthDate = getBillMonthDate()) 
    amount. Only wired up for credit-card bills in the paycheck view. */
 function submitPaycheckBillAmt(paycheckId, billKey, rawValue) {
   const trimmed = String(rawValue == null ? '' : rawValue).trim();
+  const ov = getPaycheckInstance(paycheckId).billOverrides[billKey] || {};
+  const bill = BILLS.find(b => b.key === billKey);
+  const shown = ov.amount !== undefined ? Number(ov.amount) : Number(bill?.amount || 0);
+  if (trimmed !== '' && Number(trimmed) === Number(shown.toFixed(2))) return;
   if (trimmed === '') {
     overrideBillOnPaycheck(paycheckId, billKey, { amount: undefined });
   } else {
@@ -4260,8 +4276,9 @@ function submitPaycheckBillAmt(paycheckId, billKey, rawValue) {
    clears the override so the card falls back to the income source's
    base amount. Used for variable paydays like VA (fixed disability +
    variable BAH lumped together). */
-function submitPaycheckAmount(paycheckId, rawValue) {
+function submitPaycheckAmount(paycheckId, rawValue, shownAmount) {
   const trimmed = String(rawValue == null ? '' : rawValue).trim();
+  if (trimmed !== '' && shownAmount !== undefined && Number(trimmed) === Number(Number(shownAmount).toFixed(2))) return;
   if (trimmed === '') {
     setPaycheckAmountOverride(paycheckId, null);
   } else {
@@ -4302,7 +4319,103 @@ function removePaycheckExtra(paycheckId, extraId, monthDate = getBillMonthDate()
   const inst = getPaycheckInstance(paycheckId, monthDate);
   const before = inst.extras.length;
   inst.extras = inst.extras.filter(e => e.id !== extraId);
+  rememberRemovedExtra(extraId);
   if (inst.extras.length !== before) savePaycheckInstance(paycheckId, inst, monthDate);
+}
+
+/* ─── Keeping paycheck extras in step across devices ────────────────────
+   Sync stores all paycheck edits as one value, so a phone or tab holding an
+   older copy could push back extras that were removed elsewhere. Removed
+   extras are remembered by id (and that list only ever grows), and on every
+   pull the two copies are merged extra by extra: removed ones stay gone,
+   ones added on either device are kept. */
+const REMOVED_EXTRAS_KEY = 'gnd-paycheck-removed-extras';
+function getRemovedExtras() {
+  const v = ls(REMOVED_EXTRAS_KEY, {});
+  return v && typeof v === 'object' && !Array.isArray(v) ? v : {};
+}
+function rememberRemovedExtra(extraId) {
+  if (!extraId) return;
+  const removed = getRemovedExtras();
+  if (removed[extraId]) return;
+  removed[extraId] = new Date().toISOString();
+  lsSave(REMOVED_EXTRAS_KEY, removed);
+}
+function mergeRemovedExtras(a, b) {
+  const out = { ...(a && typeof a === 'object' ? a : {}) };
+  Object.entries(b && typeof b === 'object' ? b : {}).forEach(([id, t]) => {
+    if (!out[id] || String(t) < String(out[id])) out[id] = t;
+  });
+  return out;
+}
+/* Key order doesn't matter (the server re-sorts keys), only content. */
+function stableJson(v) {
+  if (Array.isArray(v)) return '[' + v.map(stableJson).join(',') + ']';
+  if (v && typeof v === 'object') return '{' + Object.keys(v).sort().map(k => JSON.stringify(k) + ':' + stableJson(v[k])).join(',') + '}';
+  return JSON.stringify(v === undefined ? null : v);
+}
+/* `primary` wins for amounts, overrides and where an extra sits; extras
+   only `secondary` has are added; removed extras are dropped from both. */
+function mergePaycheckInstanceMaps(primary, secondary, removed) {
+  const out = JSON.parse(JSON.stringify(primary && typeof primary === 'object' ? primary : {}));
+  const seen = new Set();
+  Object.keys(out).forEach(mk => Object.keys(out[mk] || {}).forEach(pid => {
+    const inst = out[mk][pid];
+    if (!inst || !Array.isArray(inst.extras)) return;
+    inst.extras = inst.extras.filter(e => e && e.id && !removed[e.id] && !seen.has(e.id) && seen.add(e.id));
+  }));
+  Object.keys(secondary && typeof secondary === 'object' ? secondary : {}).forEach(mk => {
+    Object.keys(secondary[mk] || {}).forEach(pid => {
+      (secondary[mk][pid]?.extras || []).forEach(e => {
+        if (!e || !e.id || removed[e.id] || seen.has(e.id)) return;
+        seen.add(e.id);
+        if (!out[mk] || typeof out[mk] !== 'object') out[mk] = {};
+        if (!out[mk][pid]) out[mk][pid] = { amountOverride: null, extras: [], billOverrides: {} };
+        out[mk][pid].extras = (out[mk][pid].extras || []).concat(e);
+      });
+    });
+  });
+  return out;
+}
+/* Pull-side handling for the two keys above. Returns true if local data changed. */
+function absorbRemoteRemovedExtras(row) {
+  const local = getRemovedExtras();
+  const merged = mergeRemovedExtras(local, row.data_value);
+  const remoteIds = Object.keys(row.data_value && typeof row.data_value === 'object' ? row.data_value : {});
+  const localChanged = Object.keys(merged).length !== Object.keys(local).length;
+  if (localChanged) localStorage.setItem(REMOVED_EXTRAS_KEY, JSON.stringify(merged));
+  if (Object.keys(merged).length !== remoteIds.length) {
+    localStorage.setItem(dirtyFlagKey(REMOVED_EXTRAS_KEY), '1');
+    syncDebounced(REMOVED_EXTRAS_KEY, merged);
+  } else {
+    localStorage.setItem(REMOVED_EXTRAS_KEY + '_ts', row.updated_at);
+    localStorage.removeItem(dirtyFlagKey(REMOVED_EXTRAS_KEY));
+    syncQueue.delete(REMOVED_EXTRAS_KEY);
+  }
+  return localChanged;
+}
+function absorbRemotePaycheckInstances(row, preferRemote) {
+  const key = paycheckInstancesKey();
+  const localRaw = localStorage.getItem(key);
+  const local = readStorageJson(localRaw, {}) || {};
+  const remote = row.data_value && typeof row.data_value === 'object' ? row.data_value : {};
+  const removed = getRemovedExtras();
+  const merged = preferRemote
+    ? mergePaycheckInstanceMaps(remote, local, removed)
+    : mergePaycheckInstanceMaps(local, remote, removed);
+  const mergedJson = stableJson(merged);
+  const localChanged = localRaw === null || mergedJson !== stableJson(local);
+  if (localChanged) localStorage.setItem(key, JSON.stringify(merged));
+  if (mergedJson !== stableJson(remote)) {
+    localStorage.setItem(key + '_ts', new Date().toISOString());
+    localStorage.setItem(dirtyFlagKey(key), '1');
+    syncDebounced(key, merged);
+  } else {
+    localStorage.setItem(key + '_ts', row.updated_at);
+    localStorage.removeItem(dirtyFlagKey(key));
+    syncQueue.delete(key);
+  }
+  return localChanged;
 }
 function moveExtraToPaycheck(fromPaycheckId, extraId, toPaycheckId, monthDate = getBillMonthDate()) {
   if (fromPaycheckId === toPaycheckId) return;
@@ -7568,15 +7681,15 @@ function buildCheckingSection(billMonth) {
   }
   perPaycheck.forEach(({ paycheck, items, needed, allPaid }) => {
     const dateLabel = paycheck.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-    // Received and fully paid: fold down to its header; tap to open.
-    const foldable = allPaid && paycheck.received;
+    // Every bill paid and the paycheck received (or its day has passed): fold to its header; tap to open.
+    const foldable = allPaid && (paycheck.received || paycheck.dateKey < todayKey());
     const isOpen = !foldable || !!ffPaycheckOpen[paycheck.id];
     const pid = attr(paycheck.id);
     body += `<div class="ff-paycheck-card ${allPaid ? 'ff-sent' : ''} ${doneIds.has(paycheck.id) ? 'ff-done' : ''} ${foldable ? 'ff-foldable' : ''} ${foldable && isOpen ? 'open' : ''} ${isOpen ? '' : 'folded'}">
       <div class="ff-paycheck-head"${foldable ? ` role="button" tabindex="0" aria-expanded="${isOpen}" onclick="ffPaycheckOpen['${pid}']=!ffPaycheckOpen['${pid}'];renderMoney()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"` : ''}>
         <div>
           <div class="ff-paycheck-name">${esc(paycheck.label)}</div>
-          <div class="ff-paycheck-date">${esc(dateLabel)}${foldable ? ` · Received · ${items.length} paid` : ''}</div>
+          <div class="ff-paycheck-date">${esc(dateLabel)}${foldable ? `${paycheck.received ? ' · Received' : ''} · ${items.length} paid` : ''}</div>
         </div>
         <div class="ff-paycheck-head-right">
           ${foldable ? `<div class="ff-paycheck-fold">${allPaid ? 'All paid' : ''}<svg class="ff-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg></div>` : `
@@ -7840,7 +7953,7 @@ function renderMoneyPaychecks() {
                   value="${Number(paycheckAmt).toFixed(2)}"
                   onclick="event.stopPropagation();this.select()"
                   onfocus="this.select()"
-                  onblur="submitPaycheckAmount('${attr(p.id)}',this.value)"
+                  onblur="submitPaycheckAmount('${attr(p.id)}',this.value,${Number(paycheckAmt)})"
                   onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}">
               </label>
               ${instance.amountOverride !== null
