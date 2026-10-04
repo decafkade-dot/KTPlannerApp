@@ -3198,7 +3198,11 @@ const IMG_ICONS = {
   hardDay: 'Assets/images/hard-day.png',
   thoughtReset: 'Assets/images/thought-reset.png',
   dailyJournal: 'Assets/images/daily-journal.png',
-  shower: 'Assets/images/shower.png',
+  shower: 'Assets/images/shower-head.png',
+  dopamineMenu: 'Assets/images/dopamine-menu.png',
+  meds: 'Assets/images/meds.png',
+  senses: 'Assets/images/senses.png',
+  reachOut: 'Assets/images/reach-out.png',
   brushTeeth: 'Assets/images/brush-teeth.png',
   washFace: 'Assets/images/wash-face.png',
   appetizers: 'Assets/images/appetizers.png',
@@ -9486,7 +9490,7 @@ function hideCareToast() { document.getElementById('care-toast')?.classList.remo
    { on, at, checks: { meds: true, … }, moved: { chores, school } },
    apart from the routine and med checks. */
 const BARE_MINIMUM_ITEMS = [
-  { key: 'meds', label: 'Take your meds' },
+  { key: 'meds', label: 'Take your meds', icon: 'meds' },
   { key: 'water', label: 'Drink some water', icon: 'water' },
   { key: 'meals', label: 'Eat 2 meals', detail: 'A snack that looks like a meal counts.', icon: 'eat' },
   { key: 'shower', label: 'Shower', icon: 'shower' },
@@ -9706,7 +9710,7 @@ function careNavItems() {
       sub: on ? 'On till midnight' : '', onclick: on ? "switchTab('home')" : 'startBareMinimumDay()',
       aria: on ? 'Bare Minimum Day is on until midnight. Show the checklist' : 'Make today a Bare Minimum Day' },
     { label: 'Hard Day', short: 'Hard Day', color: 'var(--pal-purple-strong)', icon: 'hardDay', onclick: 'openHardDay()', aria: 'Open the Hard Day card' },
-    { label: 'Dopamine Menu', short: 'Dopamine Menu', color: 'var(--pal-yellow-strong)', onclick: 'openDopamine()', aria: 'Open the Dopamine Menu',
+    { label: 'Dopamine Menu', short: 'Dopamine Menu', color: 'var(--pal-yellow-strong)', icon: 'dopamineMenu', onclick: 'openDopamine()', aria: 'Open the Dopamine Menu',
       sub: dessertTimer ? dessertTimeLeftText() : '', timer: !!dessertTimer },
   ];
 }
@@ -9830,7 +9834,7 @@ function hardDayPeopleSection() {
       </form>`
     : '';
   return `<div class="care-section">
-    <div class="care-section-head"><div><div class="care-section-title">Reach out</div><div class="care-hint">Tap someone to start a text.</div></div>${people.length ? careEditBtn('people') : ''}</div>
+    <div class="care-section-head"><div><div class="care-section-title">${themeIcon('reachOut', 'care-title-icon')}Reach out</div><div class="care-hint">Tap someone to start a text.</div></div>${people.length ? careEditBtn('people') : ''}</div>
     ${body}${addForm}
     <label class="care-msg"><span class="care-hint">Message (change it any time)</span>
       <textarea class="text-area" id="hard-day-message" rows="2" maxlength="300" onblur="saveHardDayMessage(this.value)">${esc(msg)}</textarea>
@@ -9858,7 +9862,7 @@ function hardDayGroundingSection() {
     <div class="care-section-head"><div><div class="care-section-title">Grounding</div><div class="care-hint">Pick one.</div></div></div>
     <div class="care-choice">
       <button class="cat-btn${kind === 'box' ? ' active' : ''}" type="button" aria-pressed="${kind === 'box'}" onclick="startGrounding('box')">${themeIcon('boxBreathing', 'care-btn-icon')}Box breathing</button>
-      <button class="cat-btn${kind === 'senses' ? ' active' : ''}" type="button" aria-pressed="${kind === 'senses'}" onclick="startGrounding('senses')">5-4-3-2-1 senses</button>
+      <button class="cat-btn${kind === 'senses' ? ' active' : ''}" type="button" aria-pressed="${kind === 'senses'}" onclick="startGrounding('senses')">${themeIcon('senses', 'care-btn-icon')}5-4-3-2-1 senses</button>
     </div>
     ${panel}
   </div>`;
@@ -10053,7 +10057,7 @@ function renderDopamine() {
   const body = document.getElementById('dopamine-body');
   if (!body) return;
   body.innerHTML = `<div class="care-sheet-head">
-      <div class="modal-title" id="dopamine-title">Dopamine Menu</div>
+      <div class="modal-title care-sheet-title" id="dopamine-title">${themeIcon('dopamineMenu', 'care-sheet-icon')}Dopamine Menu</div>
       <button class="modal-close-btn" type="button" aria-label="Close" onclick="closeDopamine()">&times;</button>
     </div>${buildDopamineMenu()}`;
 }
