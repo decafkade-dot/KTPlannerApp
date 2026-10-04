@@ -1878,11 +1878,36 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
 }
 .today-times .card-title-row { margin-bottom: 8px; }
 .time-row {
-  display: flex; align-items: flex-start; gap: 10px;
+  position: relative; display: flex; align-items: flex-start; gap: 10px;
   padding: 9px 4px 9px 10px;
   border-left: 3px solid var(--block-color, var(--nude));
   border-bottom: 1px solid var(--border-soft);
+  border-radius: 0 10px 10px 0; transform-origin: left center;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
+.time-row[role="button"] { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+@media (hover: hover) {
+  .time-row[role="button"]:hover { transform: scale(1.025); background: var(--bg-card); box-shadow: var(--shadow-sm); z-index: 1; }
+}
+.time-row:focus-visible { outline: 2px solid var(--icon-pink); outline-offset: 1px; }
+.time-row-chevron { width: 16px; height: 16px; flex-shrink: 0; margin-top: 4px; color: var(--text-muted); transition: transform 0.15s ease; }
+.time-row.open .time-row-chevron { transform: rotate(180deg); }
+.time-row-more {
+  display: none; margin-top: 8px; padding: 10px 12px; border-radius: 10px;
+  background: var(--bg-input); font-size: 14px; line-height: 1.45; cursor: default;
+}
+.time-row.open .time-row-more { display: flex; flex-direction: column; gap: 4px; }
+.time-row-sub { font-size: 13px; color: var(--text-muted); }
+.time-row-btn { width: auto; align-self: flex-start; margin: 6px 0 0; padding: 6px 14px; border-style: solid; }
+.time-row-checklist .check-item { padding: 6px 0; }
+/* The block to do now (or next) — a little bigger than the rest. */
+.time-row.focus {
+  background: var(--espresso-light); border-left-width: 5px;
+  padding: 13px 6px 13px 12px; margin: 2px 0;
+}
+.time-row.focus .time-row-title { font-size: 18px; }
+.time-row.focus .time-row-time { font-size: 14.5px; }
+.time-row.focus .time-row-icon { --sticker-size: 34px; }
 .time-row:last-child { border-bottom: none; }
 .time-row-time {
   flex: 0 0 60px; display: flex; flex-direction: column; line-height: 1.2;
@@ -1899,7 +1924,7 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
 }
 .time-row-detail { font-size: 12.5px; color: var(--text-muted); margin-top: 2px; }
 .time-row.past { opacity: 0.5; }
-.time-row.now { background: var(--espresso-light); border-radius: 0 10px 10px 0; }
+.time-row.past.open { opacity: 1; }
 .time-row-now {
   font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;
   color: #fff; background: var(--espresso); border-radius: 999px; padding: 2px 7px;
@@ -2256,6 +2281,10 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
         <input type="time" class="modal-input" id="ev-end">
       </div>
     </div>
+    <div class="modal-field" id="ev-class-wrap">
+      <div class="field-label">Class</div>
+      <select class="modal-input" id="ev-class" onchange="onClassPickChange(this)"></select>
+    </div>
     <div class="modal-field" id="ev-commute-wrap">
       <div class="field-label">Commute (minutes)</div>
       <input type="number" class="modal-input" id="ev-commute" min="0" step="5" inputmode="numeric" placeholder="0">
@@ -2267,7 +2296,7 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
         <button class="cat-btn active" data-evtype="appointment" onclick="setEvType(this)">Appointment</button>
         <button class="cat-btn" data-evtype="work" onclick="setEvType(this)">Work Shift</button>
         <button class="cat-btn" data-evtype="personal" onclick="setEvType(this)">Personal</button>
-        <button class="cat-btn" data-evtype="academic" onclick="setEvType(this)">Academic</button>
+        <button class="cat-btn" data-evtype="academic" onclick="setEvType(this)">School</button>
       </div>
     </div>
     <div class="modal-field" id="ev-recurring-wrap">
@@ -3930,7 +3959,7 @@ let currentTab = 'home';
 const BOOK_SECTIONS = [
   { tab: 'calendar', label: 'Calendar', img: 'Assets/images/calendar.svg', color: 'var(--pal-blue-strong)' },
   { tab: 'routines', label: 'Routines', img: 'Assets/images/routines.png', color: 'var(--pal-purple-strong)' },
-  { tab: 'health', label: 'Health', img: 'Assets/images/health.png', color: 'var(--pal-yellow-strong)' },
+  { tab: 'health', label: 'Health', img: 'Assets/images/health.png', color: 'var(--pal-pink-strong)' },
   { tab: 'money', label: 'Money', img: 'Assets/images/money.png', color: 'var(--pal-green-strong)' },
   { tab: 'notes', label: 'Notes', img: 'Assets/images/notes.svg', color: 'var(--rainbow-down)' },
 ];
@@ -4594,6 +4623,15 @@ function buildTodayTimeList(dateKey) {
   const anyTime = blocks.filter(b => b.allDay);
   const timed = blocks.filter(b => !b.allDay && b.time);
   const now = dateKey === todayKey() ? nowMinutes() : -1;
+  const span = b => {
+    const start = timeToMinutes(b.time);
+    const hasEnd = b.end && b.end !== b.time && timeToMinutes(b.end) > start;
+    return { start, hasEnd, end: hasEnd ? timeToMinutes(b.end) : start + 1 };
+  };
+  // The block to do right now stands out; between blocks, the next one does.
+  let focusIdx = timed.findIndex(b => { const t = span(b); return t.hasEnd && now >= t.start && now < t.end; });
+  const focusLabel = focusIdx > -1 ? 'Now' : 'Up next';
+  if (focusIdx === -1 && now > -1) focusIdx = timed.findIndex(b => span(b).start > now);
 
   let html = `<div class="card theme-card today-times">
     <div class="card-title-row"><div class="card-title">What to do when</div><button class="today-add-btn" type="button" onclick="openEventModal('${dateKey}')">+ Add</button></div>`;
@@ -4603,22 +4641,90 @@ function buildTodayTimeList(dateKey) {
       <div class="time-row-main">${anyTime.map(b => `<div class="time-row-title">${themeIcon(blockIconName(b), 'time-row-inline-icon')}${esc(b.title)}</div>`).join('')}</div>
     </div>`;
   }
-  timed.forEach(b => {
-    const start = timeToMinutes(b.time);
-    const hasEnd = b.end && b.end !== b.time && timeToMinutes(b.end) > start;
-    const end = hasEnd ? timeToMinutes(b.end) : start + 1;
-    const state = now >= start && now < end && hasEnd ? 'now' : end <= now ? 'past' : '';
-    html += `<div class="time-row ${state}" style="--block-color:${evColor(b.type)}">
+  timed.forEach((b, idx) => {
+    const { hasEnd, end } = span(b);
+    const isFocus = idx === focusIdx;
+    const state = [isFocus ? 'focus' : '', end <= now && !isFocus ? 'past' : ''].filter(Boolean).join(' ');
+    const rowId = timeRowId(b);
+    const open = timeRowOpen.has(rowId);
+    html += `<div class="time-row ${state}${open ? ' open' : ''}" style="--block-color:${evColor(b.type)}" role="button" tabindex="0" aria-expanded="${open}"
+      onclick="toggleTimeRow(this, ${jsArg(rowId)})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleTimeRow(this, ${jsArg(rowId)})}">
       <div class="time-row-time">${formatTime(b.time)}${hasEnd ? `<small>${formatTime(b.end)}</small>` : ''}</div>
       ${themeIcon(blockIconName(b), 'time-row-icon') || '<span class="time-row-icon-blank" aria-hidden="true"></span>'}
       <div class="time-row-main">
-        <div class="time-row-title">${esc(b.title)}${state === 'now' ? '<span class="time-row-now">Now</span>' : ''}</div>
+        <div class="time-row-title">${esc(b.title)}${isFocus ? `<span class="time-row-now">${focusLabel}</span>` : ''}</div>
         ${b.detail ? `<div class="time-row-detail">${esc(b.detail)}</div>` : ''}
+        <div class="time-row-more" onclick="event.stopPropagation()">${timeRowDetails(b, dateKey)}</div>
       </div>
+      <svg class="time-row-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
     </div>`;
   });
   if (!timed.length && !anyTime.length) html += `<div class="day-panel-empty">Nothing scheduled.</div>`;
   return html + `</div>`;
+}
+
+/* Tapping a row opens its details; which rows are open survives redraws
+   (checking off a routine step redraws the page). */
+const timeRowOpen = new Set();
+function timeRowId(b) { return b.id || `${b.blockKey || b.source || 'block'}-${b.time}`; }
+function toggleTimeRow(el, rowId) {
+  const open = !timeRowOpen.has(rowId);
+  if (open) timeRowOpen.add(rowId); else timeRowOpen.delete(rowId);
+  el.classList.toggle('open', open);
+  el.setAttribute('aria-expanded', open);
+}
+
+/* What a row shows when it's opened. */
+function timeRowDetails(b, dateKey) {
+  const btn = (label, onclick) => `<button class="add-btn time-row-btn" type="button" onclick="${onclick}">${label}</button>`;
+  const start = timeToMinutes(b.time);
+  const end = b.end && b.end !== b.time ? timeToMinutes(b.end) : null;
+  const when = end && end > start ? `${formatTime(b.time)} – ${formatTime(b.end)} · ${minutesLabel(end - start)}` : formatTime(b.time);
+  let body = '';
+
+  if (b.blockKey === 'morning' || b.blockKey === 'evening') {
+    const type = b.blockKey;
+    const items = type === 'morning' ? getMorningItemsForDate(dateKey) : EVENING_ITEMS;
+    const data = ls(`gnd-${dateKey}-${type}`, null) || defRoutine(type);
+    body = `<div class="time-row-checklist">${buildRoutineChecklist(type, items, data, b)}</div>`;
+  } else if (b.blockKey === 'sleep') {
+    body = `<div>Lights out by ${formatTime(b.time)}.</div>${btn('Look at tomorrow', `openDayModal('${localDateKey(addDays(dateFromKey(dateKey), 1))}')`)}`;
+  } else if (b.source === 'mealtime') {
+    const planDay = MEAL_DAY_BY_DOW[dateFromKey(dateKey).getDay()];
+    if (planDay) {
+      const settings = getMealSettings();
+      const option = getMealOptionsForDay(planDay, settings)[b.mealKey];
+      body = `<div><strong>${esc(option.label)}</strong></div><div>${esc(option.summary(settings))}</div><div class="time-row-sub">About ${Math.round(option.calories(settings))} calories</div>`;
+    } else {
+      body = `<div>No meal plan on weekends — eat what sounds good.</div>`;
+    }
+    body += btn('Meal plan', "switchTab('health')");
+  } else if (b.source === 'mealprep' && b.mealPrepKind === 'grocery') {
+    const data = getGroceryPlanData();
+    const total = data.groceries.reduce((sum, g) => sum + (groceryCost(g)?.cost || 0), 0);
+    body = `<div>${data.groceries.length} items${total ? ` · about ${formatMoney(total)}` : ''}</div>
+      <div class="time-row-sub">${data.groceries.slice(0, 6).map(g => esc(g.item)).join(' · ')}${data.groceries.length > 6 ? ' …' : ''}</div>
+      ${btn('Open grocery list', "switchTab('grocery')")}`;
+  } else if (b.source === 'mealprep') {
+    const settings = getMealSettings();
+    const counts = {};
+    MEAL_DAY_KEYS.slice(0, getGroceryDays()).forEach(day => {
+      const meals = getMealOptionsForDay(day, settings);
+      [meals.lunch, meals.dinner].forEach(o => { counts[o.label] = (counts[o.label] || 0) + 1; });
+    });
+    body = `<div>Cook for the week:</div><div class="time-row-sub">${Object.entries(counts).map(([label, n]) => `${n} × ${esc(label)}`).join(' · ')}</div>${btn('Meal plan', "switchTab('health')")}`;
+  } else if (b.source === 'cleaning') {
+    body = `<div>${b.cleaningDone ? 'Done this week.' : 'Not done yet this week.'}</div>${btn(b.cleaningDone ? 'Mark not done' : 'Mark done', `toggleCleaningTask(${jsArg(b.cleaningTaskId)})`)}`;
+  } else if (b.source === 'reset') {
+    const reset = getWeeklyReset(dateFromKey(dateKey));
+    body = `<div>${reset.meds ? '✓' : '○'} Reload meds for the week</div><div>${reset.journal.trim() ? '✓' : '○'} Journal: how did the week go?</div>${btn('Open weekly reset', 'openWeeklyJournal()')}`;
+  } else if (b.source === 'event') {
+    const kind = { work: 'Work shift', appointment: 'Appointment', personal: 'Personal', academic: 'School' }[b.type] || 'Plan';
+    body = `<div class="time-row-sub">${esc(kind)}${b.recurring ? ' · repeats weekly' : ''}</div>${btn('Edit', `openEventModal('${dateKey}', ${jsArg(b.id)})`)}`;
+  } else {
+    body = btn('Open this day', `openDayModal('${dateKey}')`);
+  }
+  return `<div class="time-row-sub">${when}</div>${body}`;
 }
 
 function buildTodayNotesCard(dateKey) {
@@ -5112,7 +5218,7 @@ function getMealTimeBlocksForDate(dateKey, morningBlock) {
   const planDay = MEAL_DAY_BY_DOW[dateFromKey(dateKey).getDay()];
   const planned = planDay ? getMealOptionsForDay(planDay) : null;
   const meal = (key, title, start) => ({
-    id: `meal-${key}-${dateKey}`, source: 'mealtime', title, type: 'meal', editable: false,
+    id: `meal-${key}-${dateKey}`, source: 'mealtime', mealKey: key, title, type: 'meal', editable: false,
     time: minutesToClock(start), end: minutesToClock(start + MEAL_TIME_MINUTES),
     detail: planned ? planned[key].label : '',
     mealIcon: 'eat',
@@ -6380,7 +6486,6 @@ function buildSchoolContent() {
   const all = getAcademicAssignments().filter(a => a && a.dueDate);
   const open = all.filter(a => !a.done).sort(academicAssignmentSort);
   const done = all.filter(a => a.done).sort(academicAssignmentSort).reverse().slice(0, 5);
-  const classes = [...new Set(all.map(a => normalizeAcademicClassName(a.className)).concat(['Internship']))];
 
   const row = assignment => {
     const due = dateFromKey(assignment.dueDate);
@@ -6427,8 +6532,7 @@ function buildSchoolContent() {
       <div class="school-add-title">Add a school or internship task</div>
       <input class="modal-input compact" name="title" type="text" placeholder="e.g. Module 4 discussion post" maxlength="120" required>
       <div class="school-add-row">
-        <input class="modal-input compact" name="className" type="text" placeholder="Class or Internship" list="school-class-list" maxlength="60">
-        <datalist id="school-class-list">${classes.map(c => `<option value="${attr(c)}"></option>`).join('')}</datalist>
+        <select class="modal-input compact" name="className" aria-label="Class" required onchange="onClassPickChange(this)">${classOptionsHtml('')}</select>
         <input class="modal-input compact" name="dueDate" type="date" value="${localDateKey(addDays(new Date(), 7))}" aria-label="Due date" required>
       </div>
       <div class="school-add-row">
@@ -6438,6 +6542,28 @@ function buildSchoolContent() {
     </form>
     <button class="add-btn" type="button" style="margin:10px 0 0;" onclick="openSyllabusImportModal()">Import a syllabus</button>`;
   return html;
+}
+
+/* Classes you're enrolled in = the ones that still have assignments
+   ("Class is over" removes a class). School items pick from these. */
+function enrolledClasses() {
+  return [...new Set(getAcademicAssignments().filter(a => a && String(a.className || '').trim()).map(a => normalizeAcademicClassName(a.className)))].sort();
+}
+function classOptionsHtml(selected) {
+  const classes = enrolledClasses();
+  if (selected && !classes.includes(selected)) classes.push(selected);
+  return `<option value="" ${selected ? '' : 'selected'} disabled>Pick a class</option>`
+    + classes.map(c => `<option value="${attr(c)}" ${c === selected ? 'selected' : ''}>${esc(c)}</option>`).join('')
+    + `<option value="__new">+ New class…</option>`;
+}
+function onClassPickChange(select) {
+  if (select.value !== '__new') return;
+  const name = String(prompt('Name of the new class:') || '').trim();
+  if (!name) { select.value = ''; return; }
+  const opt = document.createElement('option');
+  opt.value = name; opt.textContent = name;
+  select.insertBefore(opt, select.querySelector('option[value="__new"]'));
+  select.value = name;
 }
 
 /* A class has ended: drop all of its assignments and their planned work
@@ -6455,10 +6581,11 @@ function finishAcademicClass(className) {
 function addSchoolTask(form) {
   const title = form.title.value.trim();
   const dueDate = form.dueDate.value;
-  if (!title || !dueDate) return;
+  const className = form.className.value;
+  if (!title || !dueDate || !className || className === '__new') return;
   const assignment = {
     id: 'as-manual-' + Date.now(),
-    className: normalizeAcademicClassName(form.className.value),
+    className: normalizeAcademicClassName(className),
     title,
     dueDate,
     estimatedHours: Math.max(1, Math.min(4, Number(form.hours.value) || 2)),
@@ -8439,6 +8566,7 @@ function openEventModal(dateKey, eventId = '', customKey = '') {
   document.getElementById('ev-start').value = existingEvent?.start || existingCustom?.time || '';
   document.getElementById('ev-end').value = existingEvent?.end || existingCustom?.end || '';
   document.getElementById('ev-commute').value = existingEvent?.commute || '';
+  document.getElementById('ev-class').innerHTML = classOptionsHtml(existingEvent?.academicClass || '');
   document.querySelectorAll('#event-modal [data-evtype]').forEach(b => b.classList.toggle('active', b.dataset.evtype === evType));
 
   let daysHtml = '';
@@ -8448,6 +8576,7 @@ function openEventModal(dateKey, eventId = '', customKey = '') {
   document.getElementById('ev-days-grid').innerHTML = daysHtml;
   document.getElementById('ev-recurring-wrap').style.display = evType === 'work' ? 'block' : 'none';
   document.getElementById('ev-commute-wrap').style.display = evType === 'appointment' && !evEditingCustomKey ? 'block' : 'none';
+  document.getElementById('ev-class-wrap').style.display = evType === 'academic' && !evEditingCustomKey ? 'block' : 'none';
 
   const deleteBtn = document.getElementById('ev-delete');
   deleteBtn.style.display = editing ? '' : 'none';
@@ -8461,6 +8590,7 @@ function setEvType(btn) {
   document.querySelectorAll('#event-modal [data-evtype]').forEach(b => b.classList.toggle('active', b.dataset.evtype === evType));
   document.getElementById('ev-recurring-wrap').style.display = evType === 'work' ? 'block' : 'none';
   document.getElementById('ev-commute-wrap').style.display = evType === 'appointment' && !evEditingCustomKey ? 'block' : 'none';
+  document.getElementById('ev-class-wrap').style.display = evType === 'academic' && !evEditingCustomKey ? 'block' : 'none';
 }
 
 function toggleRecurDay(i, btn) {
@@ -8499,7 +8629,8 @@ function saveEvent() {
     ev.recurDays = evRecurDays;
   }
   if (evType === 'academic') {
-    ev.academicClass = previousEvent?.academicClass || '';
+    const pickedClass = document.getElementById('ev-class').value;
+    ev.academicClass = pickedClass && pickedClass !== '__new' ? pickedClass : (previousEvent?.academicClass || '');
     ev.academicAssignmentId = previousEvent?.academicAssignmentId || '';
     ev.academicAssignmentTitle = previousEvent?.academicAssignmentTitle || title;
     ev.academicDueDate = parseAcademicDueDateFromText(detail) || previousEvent?.academicDueDate || date;
