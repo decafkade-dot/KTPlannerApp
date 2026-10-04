@@ -841,6 +841,15 @@ body.bill-dragging .paycheck-card { transition: transform 0.15s ease, box-shadow
 .ff-item-name .card-icon { margin-right: 4px; }
 .ff-item .paycheck-row-amt-edit { min-width: 0; padding: 1px 5px; }
 .ff-item .paycheck-row-amt-input { width: 64px; font-size: 13px; }
+.ff-item.has-edit { align-items: center; }
+.ff-item-right { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.ff-item-del {
+  width: 28px; height: 28px; padding: 0; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid rgba(192,40,40,0.35); background: var(--bg-card); color: var(--danger);
+  font-size: 16px; line-height: 1; cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.ff-item-del:hover { background: rgba(192,40,40,0.08); }
 .ff-item.paid .paycheck-row-amt-edit { opacity: 0.5; }
 
 /* ── Credit tab ── */
@@ -2881,10 +2890,13 @@ function themeIcon(name, cls = '') {
   return `<span class="theme-sticker ${cls}" aria-hidden="true">${THEME_ICONS[name]}</span>`;
 }
 
-/* Small card icon in the card's own color: Capital One blue, Discover orange. */
+/* Small card icon in the card's own pastel: Capital One blue, Discover peach. */
 function cardIconSvg(card, cls = 'card-icon') {
-  const color = { 'Capital One': '#2F6FD6', 'Discover': '#F28C28' }[card] || 'var(--text-muted)';
-  return `<svg class="${cls}" viewBox="0 0 20 14" aria-hidden="true"><rect x="0.5" y="0.5" width="19" height="13" rx="2.5" fill="${color}"/><rect x="0.5" y="3.5" width="19" height="2.5" fill="rgba(0,0,0,0.3)"/><rect x="3" y="9" width="6" height="1.6" rx="0.8" fill="rgba(255,255,255,0.85)"/></svg>`;
+  const { fill, edge } = {
+    'Capital One': { fill: '#A2BFFE', edge: '#7A9FEE' },
+    'Discover': { fill: '#FFCBA4', edge: '#F2A877' },
+  }[card] || { fill: 'var(--border-soft)', edge: 'var(--text-muted)' };
+  return `<svg class="${cls}" viewBox="0 0 20 14" aria-hidden="true"><rect x="0.5" y="0.5" width="19" height="13" rx="2.5" fill="${fill}" stroke="${edge}" stroke-width="1"/><rect x="1" y="3.5" width="18" height="2.2" fill="${edge}" opacity="0.75"/><rect x="3" y="9" width="6" height="1.6" rx="0.8" fill="#fff" opacity="0.9"/></svg>`;
 }
 const QUICK_PAY_CARDS = ['Capital One', 'Discover'];
 function cardQuickButtons(paycheckId) {
@@ -7530,7 +7542,10 @@ function buildCheckingSection(billMonth) {
   const doneIds = donePaycheckIds(billMonth);
   const itemRow = it => {
     if (it.card) {
-      return `<div class="ff-item ${it.paid ? 'paid' : ''}"><span class="ff-item-name">${cardIconSvg(it.card)}${esc(it.name)} · extra</span>${extraAmtInput(it.paycheckId, { id: it.extraId, amount: it.amount })}</div>`;
+      return `<div class="ff-item has-edit ${it.paid ? 'paid' : ''}"><span class="ff-item-name">${cardIconSvg(it.card)}${esc(it.name)} · extra</span>
+        <div class="ff-item-right">${extraAmtInput(it.paycheckId, { id: it.extraId, amount: it.amount })}
+          <button type="button" class="ff-item-del" title="Remove this payment" aria-label="Remove ${attr(it.name)}"
+            onmousedown="event.preventDefault()" onclick="removePaycheckExtra('${attr(it.paycheckId)}','${attr(it.extraId)}');renderMoney()">×</button></div></div>`;
     }
     const when = it.extra ? 'other' : it.fromNextMonth ? 'early' : it.date ? it.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
     return `<div class="ff-item ${it.paid ? 'paid' : ''}"><span>${esc(it.name)}${when ? ' · ' + esc(when) : ''}</span><span>${formatMoney(it.amount)}</span></div>`;
@@ -7982,6 +7997,9 @@ function addCardPaymentToPaycheck(paycheckId, card) {
 function submitPaycheckExtraAmt(paycheckId, extraId, rawValue) {
   const n = Number(String(rawValue == null ? '' : rawValue).trim() || 0);
   if (Number.isNaN(n) || n < 0) return;
+  // Unchanged: skip the redraw so a tap on a nearby button (like remove) still lands.
+  const current = getPaycheckInstance(paycheckId).extras.find(e => e.id === extraId);
+  if (!current || Number(current.amount || 0) === n) return;
   updatePaycheckExtra(paycheckId, extraId, { amount: n });
   renderMoney();
 }
