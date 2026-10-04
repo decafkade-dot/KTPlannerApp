@@ -357,13 +357,14 @@ body { background: var(--bg); }
   .book-tab-sticker { width: 24px; height: 24px; }
   .book-tab-label { font-size: 13px; }
   .app { padding-bottom: calc(var(--phone-tabs-h) + var(--safe-bottom)); }
+  .water-tab { display: none; }
   body .cleaning-picker-sheet { bottom: calc(var(--phone-tabs-h) + var(--safe-bottom) + 10px); }
 }
 
 @media (min-width: 800px) {
   .book-tabs { position: fixed; inset: 0; z-index: 5; pointer-events: none; }
   .nav-group {
-    position: absolute; top: 50%; transform: translateY(-50%);
+    position: absolute; top: calc(var(--safe-top) + 110px);
     display: flex; flex-direction: column; gap: 14px;
     width: min(132px, calc((100vw - var(--book-max)) / 2 - 36px));
     pointer-events: auto;
@@ -394,6 +395,14 @@ body { background: var(--bg); }
 .sticky-stack-icon i:nth-child(3) { left: 34%; top: 32%; background: #FFF6C2; transform: rotate(-3deg); }
 
 /* ── Home ── */
+.home-water { display: flex; align-items: center; gap: 12px; padding: 10px 14px; margin-bottom: 14px; }
+.home-water-bottle { width: 34px; height: 56px; flex-shrink: 0; border: none; background: none; padding: 0; cursor: pointer; }
+.home-water-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.home-water-text b { font-size: 17px; color: var(--espresso); }
+.home-water-text span { font-size: 13px; color: var(--text-muted); }
+.home-water-add { flex-shrink: 0; border: 1px solid var(--border-soft); background: var(--pal-blue, #DCE6FF); color: var(--espresso); border-radius: 999px; padding: 7px 14px; font-size: 14px; cursor: pointer; }
+.water-tab-bottle { display: block; width: 28px; height: 46px; }
+@media (min-width: 800px) { .home-water { display: none; } }  /* wide screens: it's with the side buttons */
 .home-section .collapse-body { padding-top: 4px; }
 .home-index-head { text-align: center; padding: 4px 8px 16px; }
 .home-index-title {
@@ -1845,6 +1854,10 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
 }
 .time-row.open .time-row-more { display: flex; flex-direction: column; gap: 4px; }
 .time-row-sub { font-size: 13px; color: var(--text-muted); }
+.chores-week-nav { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+.chores-week-label { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.chores-week-label b { font-size: 16px; color: var(--espresso); }
+.chores-week-label span { font-size: 13px; color: var(--text-muted); }
 .meal-log { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; cursor: default; }
 .meal-log-btn {
   display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px 3px 5px;
@@ -3269,8 +3282,8 @@ function getCleaningTasks() {
   return normalized.length ? normalized : DEFAULT_CLEANING_TASKS.map(t => ({ ...t }));
 }
 function saveCleaningTasks(tasks) { lsSave('gnd-cleaning-tasks', tasks.map(normalizeCleaningTask).filter(Boolean)); }
-function getCleaningWeek() {
-  const data = ls(cleaningWeekKey(), null) || {};
+function getCleaningWeek(date = new Date()) {
+  const data = ls(cleaningWeekKey(date), null) || {};
   return { done: data.done && typeof data.done === 'object' ? data.done : {} };
 }
 function saveCleaningWeek(data) { lsSave(cleaningWeekKey(), { done: data.done || {} }); }
@@ -3320,9 +3333,10 @@ function computeCleaningSlot(dateKey, taskId) {
 function assignCleaningTaskToDate(taskId, dateKey, time = null, end = null, allDay = null) {
   if (!taskId || !dateKey) return;
   const map = getCleaningAssignments();
-  // Remove from any other day first (single assignment per task)
+  // One day per chore per Monday–Sunday week: take it off any other day that week.
+  const week = currentMondayKey(dateFromKey(dateKey));
   Object.keys(map).forEach(k => {
-    if (Array.isArray(map[k])) {
+    if (Array.isArray(map[k]) && currentMondayKey(dateFromKey(k)) === week) {
       map[k] = map[k].filter(a => a.taskId !== taskId);
       if (!map[k].length) delete map[k];
     }
@@ -3333,11 +3347,12 @@ function assignCleaningTaskToDate(taskId, dateKey, time = null, end = null, allD
   map[dateKey].push({ taskId, time: slot.time, end: slot.end, allDay: !!slot.allDay });
   saveCleaningAssignments(map);
 }
-function unassignCleaningTask(taskId) {
+/* Take a chore off a day (or, with no day given, off every day). */
+function unassignCleaningTask(taskId, dateKey = null) {
   const map = getCleaningAssignments();
   let changed = false;
   Object.keys(map).forEach(k => {
-    if (Array.isArray(map[k])) {
+    if (Array.isArray(map[k]) && (!dateKey || k === dateKey)) {
       const before = map[k].length;
       map[k] = map[k].filter(a => a.taskId !== taskId);
       if (map[k].length !== before) changed = true;
@@ -3346,9 +3361,11 @@ function unassignCleaningTask(taskId) {
   });
   if (changed) saveCleaningAssignments(map);
 }
-function getCleaningAssignmentForTask(taskId) {
+/* The day a chore is on in the Monday–Sunday week starting weekStartKey. */
+function getCleaningAssignmentForTask(taskId, weekStartKey = currentMondayKey()) {
   const map = getCleaningAssignments();
   for (const dateKey of Object.keys(map)) {
+    if (currentMondayKey(dateFromKey(dateKey)) !== weekStartKey) continue;
     const found = (map[dateKey] || []).find(a => a.taskId === taskId);
     if (found) return { dateKey, ...found };
   }
@@ -3358,7 +3375,7 @@ function getCleaningBlocksForDate(dateKey) {
   const list = getCleaningAssignments()[dateKey] || [];
   if (!list.length) return [];
   const tasks = getCleaningTasks();
-  const week = getCleaningWeek();
+  const week = getCleaningWeek(dateFromKey(dateKey));
   return list.map(a => {
     const task = tasks.find(t => t.id === a.taskId);
     if (!task) return null;
@@ -3368,6 +3385,7 @@ function getCleaningBlocksForDate(dateKey) {
     return {
       id: `cleaning-${task.id}`,
       source: 'cleaning',
+      date: dateKey,
       time: allDay ? '' : (a.time || '10:00'),
       end: allDay ? '' : (a.end || '11:00'),
       allDay,
@@ -3758,7 +3776,7 @@ const BOOK_SECTIONS = [
   { tab: 'routines', label: 'Routines', img: 'Assets/images/routines.png', color: 'var(--pal-purple-strong)' },
   { tab: 'health', label: 'Health', img: 'Assets/images/health.png', color: 'var(--pal-pink-strong)' },
   { tab: 'money', label: 'Money', img: 'Assets/images/money.png', color: 'var(--pal-green-strong)' },
-  { tab: 'notes', label: 'Notes', img: 'Assets/images/notes.svg', color: 'var(--rainbow-down)' },
+  { tab: 'notes', label: 'Notes', img: 'Assets/images/notes.svg', color: '#9C86E0' },
 ];
 /* Pages without their own button belong to a section, whose button stays lit. */
 const SUB_PAGES = { grocery: 'routines' };
@@ -3803,8 +3821,14 @@ function updateBookTabs() {
     ${bookSectionIcon(section, 'book-tab-sticker')}<span class="book-tab-label">${esc(section.label)}</span>
   </button>`;
   const half = Math.ceil(tabs.length / 2);
+  let water = '';
+  if (currentTab === 'home') {
+    const w = homeWaterState();
+    water = `<button class="book-tab water-tab" type="button" style="--tab-color:#7CB8F0" onclick="chgWater(1)" title="Add one glass of water" aria-label="Water: ${w.water} of 8 glasses. Add one glass">
+      <span class="water-tab-bottle">${waterBottleSvg(w.frac)}</span><span class="book-tab-label">${w.water}/8 water</span></button>`;
+  }
   nav.innerHTML = `<div class="nav-group nav-group-a">${tabs.slice(0, half).map(tabHtml).join('')}</div>`
-    + `<div class="nav-group nav-group-b">${tabs.slice(half).map(tabHtml).join('')}</div>`;
+    + `<div class="nav-group nav-group-b">${tabs.slice(half).map(tabHtml).join('')}${water}</div>`;
 }
 
 /* ═══════════════════════ HOME / TODAY ═══════════════════════ */
@@ -4230,12 +4254,28 @@ function renderHome() {
     <div class="home-index-title">${esc(getTimeGreeting())}</div>
     <div class="page-date">${esc(formatDate())}</div>
   </div>`;
+  html += buildHomeWater();
   html += buildTodayTimeList(dk);
   html += homeSection('todo', 'To do', `${todo.done}/${todo.total} done`, todo.html, 'todayTab');
   html += homeSection('bills', 'Bills this week', bills.sub, bills.html, 'pay');
   html += homeSection('week', 'This week', '', buildScheduleSection(), 'calendarTab');
   html += homeSection('notes', 'Notes', '', buildTodayNotesCard(dk), 'notesTab');
   document.getElementById('page-home').innerHTML = html;
+}
+
+/* Water reminder on Home: a slim bar on phones; on wide screens the same
+   counter sits with the side buttons instead (see updateBookTabs). */
+function homeWaterState() {
+  const water = getHealthData().water || 0;
+  return { water, frac: Math.min(1, water / 8) };
+}
+function buildHomeWater() {
+  const { water, frac } = homeWaterState();
+  return `<div class="card theme-card home-water">
+    <button class="home-water-bottle" type="button" onclick="chgWater(1)" aria-label="Add one glass of water">${waterBottleSvg(frac)}</button>
+    <div class="home-water-text"><b>${water} of 8 glasses</b><span>${esc(waterPraiseText || (water >= 8 ? 'All done for today.' : 'Tap to add a glass.'))}</span></div>
+    <button class="home-water-add" type="button" onclick="chgWater(1)">+ Glass</button>
+  </div>`;
 }
 
 /* Necessities and Other bills due in the next 7 days (today included).
@@ -4977,7 +5017,7 @@ function weekItemHtml(b, dateKey) {
   const open = b.source === 'event' ? `openEventModal('${dateKey}','${attr(b.id)}')` : `openDayModal('${dateKey}')`;
   const detail = b.detail && !cleaning ? `<span class="wg-detail">${esc(b.detail)}</span>` : '';
   const x = cleaning
-    ? `<button class="wg-x" type="button" title="Unassign" aria-label="Unassign ${attr(b.title)}" onclick="event.stopPropagation();unassignCleaningTaskFromUI('${attr(b.cleaningTaskId)}')">✕</button>`
+    ? `<button class="wg-x" type="button" title="Unassign" aria-label="Unassign ${attr(b.title)}" onclick="event.stopPropagation();unassignCleaningTaskFromUI('${attr(b.cleaningTaskId)}','${attr(b.date)}')">✕</button>`
     : '';
   return `<div class="wg-item${b.cleaningDone ? ' done' : ''}" style="--block-color:${evColor(b.type)}">
     <button class="wg-item-main" type="button" onclick="${open}">
@@ -5188,7 +5228,7 @@ function buildAllDayStrip(allDayBlocks) {
   const chips = allDayBlocks.map(b => {
     const doneClass = b.cleaningDone ? ' done' : '';
     const x = b.source === 'cleaning'
-      ? `<button class="allday-chip-x" type="button" title="Unassign" aria-label="Unassign cleaning task" onclick="event.stopPropagation();unassignCleaningTaskFromUI('${attr(b.cleaningTaskId)}')">✕</button>`
+      ? `<button class="allday-chip-x" type="button" title="Unassign" aria-label="Unassign cleaning task" onclick="event.stopPropagation();unassignCleaningTaskFromUI('${attr(b.cleaningTaskId)}','${attr(b.date)}')">✕</button>`
       : '';
     return `<div class="allday-chip${doneClass}" style="--block-color:${evColor(b.type)};"><span class="allday-chip-tag">All day</span><span class="allday-chip-title">${esc(b.title)}</span>${x}</div>`;
   }).join('');
@@ -5265,7 +5305,7 @@ function buildTimelineHtml(dateKey, allowEdit = true, opts = {}) {
     const cleaningClass = b.source === 'cleaning' ? ' cleaning' : '';
     const doneClass = b.cleaningDone ? ' done' : '';
     const cleaningBtn = b.source === 'cleaning'
-      ? `<button class="timeline-block-action" type="button" title="Unassign from this day" aria-label="Unassign cleaning task" onclick="event.stopPropagation();unassignCleaningTaskFromUI('${attr(b.cleaningTaskId)}')">✕</button>`
+      ? `<button class="timeline-block-action" type="button" title="Unassign from this day" aria-label="Unassign cleaning task" onclick="event.stopPropagation();unassignCleaningTaskFromUI('${attr(b.cleaningTaskId)}','${attr(b.date)}')">✕</button>`
       : '';
     const cleaningImg = b.source === 'cleaning' ? cleaningIcon({ id: b.cleaningTaskId, title: b.title }, 'small') : '';
     html += `<div class="timeline-block${highlightClass}${cleaningClass}${doneClass}${compact}" style="top:${top}px;height:${height}px;${colStyle}--block-color:${evColor(b.type)};">
@@ -5411,7 +5451,7 @@ function buildDayTodoListHtml(dateKey) {
       <button class="day-todo-check" type="button" onclick="toggleCleaningTask('${attr(c.cleaningTaskId)}');refreshDayModalIfOpen()">${checkSvg()}</button>
       ${cleaningIcon({ id: c.cleaningTaskId, title: c.title }, 'small')}
       <span class="day-todo-text">${esc(c.title)}</span>
-      <button class="day-todo-x" type="button" title="Unassign from this day" onclick="unassignCleaningTaskFromUI('${attr(c.cleaningTaskId)}');refreshDayModalIfOpen()">&times;</button>
+      <button class="day-todo-x" type="button" title="Unassign from this day" onclick="unassignCleaningTaskFromUI('${attr(c.cleaningTaskId)}','${attr(c.date)}');refreshDayModalIfOpen()">&times;</button>
     </div>`;
   });
   todos.forEach(t => {
@@ -5965,6 +6005,7 @@ function chgWater(d) {
   if (d > 0) waterPraiseText = WATER_PRAISE[(h.water - 1) % WATER_PRAISE.length];
   saveDayData('health', h);
   if (currentTab === 'health') renderHealth();
+  if (currentTab === 'home') { renderHome(); updateBookTabs(); }
   if (d > 0 && prev < 8 && h.water >= 8) celebrate('Great job!');
 }
 
@@ -6509,8 +6550,9 @@ function buildWeeklyResetContent() {
 
 function buildCleaningBlock(tasks, week) {
   const assignments = getCleaningAssignments();
+  const thisWeek = currentMondayKey();
   const dateToDay = {};
-  Object.keys(assignments).forEach(dk => {
+  Object.keys(assignments).filter(dk => currentMondayKey(dateFromKey(dk)) === thisWeek).forEach(dk => {
     (assignments[dk] || []).forEach(a => { dateToDay[a.taskId] = dk; });
   });
   let html = `<div class="edit-hint" style="margin-bottom:8px;">${weeklyRangeLabel()} · tap + day (or Chores on the Calendar page) and a free hour is found for it. Laundry is all-day.</div>`;
@@ -6522,7 +6564,7 @@ function buildCleaningBlock(tasks, week) {
       const d = dateFromKey(assignedKey);
       const dayShort = DAY_NAMES[d.getDay()].slice(0,3);
       const dateLabel = `${dayShort} ${d.getMonth()+1}/${d.getDate()}`;
-      badge = `<button class="cleaning-day-badge" type="button" title="Tap to unassign" aria-label="Unassign from ${esc(dateLabel)}" onclick="event.stopPropagation();unassignCleaningTaskFromUI('${attr(task.id)}')">${esc(dateLabel)} ✕</button>`;
+      badge = `<button class="cleaning-day-badge" type="button" title="Tap to unassign" aria-label="Unassign from ${esc(dateLabel)}" onclick="event.stopPropagation();unassignCleaningTaskFromUI('${attr(task.id)}','${attr(assignedKey)}')">${esc(dateLabel)} ✕</button>`;
     } else {
       badge = `<button class="cleaning-assign-btn" type="button" title="Assign to a day" aria-label="Assign to a day" onclick="event.stopPropagation();openCleaningAssignPicker('${attr(task.id)}')">+ day</button>`;
     }
@@ -6582,8 +6624,8 @@ function onDayDrop(ev, dateKey) {
   renderActivePage();
   refreshDayModalIfOpen();
 }
-function unassignCleaningTaskFromUI(taskId) {
-  unassignCleaningTask(taskId);
+function unassignCleaningTaskFromUI(taskId, dateKey = null) {
+  unassignCleaningTask(taskId, dateKey);
   renderActivePage();
   refreshDayModalIfOpen();
 }
@@ -6619,11 +6661,14 @@ function closeCleaningPicker() {
   }
 }
 
-/* Chores picker (Calendar page): put each household task from the
-   Routines page on a day; the time is found for you. Shows the next seven
-   days, or the week picked in This Week. Tap the chosen day again to
+/* Chores picker (Calendar page): put each household task on a day of a
+   Monday–Sunday week; the time is found for you. Opens on the current
+   week; the arrows move to the weeks ahead. Tap the chosen day again to
    take it back off. */
+let choresWeekOffset = 0;
+const MAX_CHORES_WEEK_OFFSET = 8;
 function openChoresModal() {
+  choresWeekOffset = 0;
   renderChoresModal();
   document.getElementById('chores-modal').classList.add('open');
 }
@@ -6632,11 +6677,11 @@ function renderChoresModal() {
   const body = document.getElementById('chores-modal-body');
   if (!body) return;
   const today = dateFromKey(todayKey());
-  const firstDay = scheduleWeekOffset === 0 ? today : getScheduleWeekStart();
-  const days = Array.from({ length: 7 }, (_, i) => addDays(firstDay, i));
-  const weekDone = getCleaningWeek().done;
+  const monday = addDays(startOfMondayWeek(today), choresWeekOffset * 7);
+  const days = Array.from({ length: 7 }, (_, i) => addDays(monday, i));
+  const weekDone = getCleaningWeek(monday).done;
   const rows = getCleaningTasks().map(task => {
-    const assigned = getCleaningAssignmentForTask(task.id);
+    const assigned = getCleaningAssignmentForTask(task.id, localDateKey(monday));
     const block = assigned ? getCleaningBlocksForDate(assigned.dateKey).find(b => b.cleaningTaskId === task.id) : null;
     const when = assigned
       ? `${dateFromKey(assigned.dateKey).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} · ${block && !block.allDay ? formatTime(block.time) : 'any time'}`
@@ -6646,7 +6691,7 @@ function renderChoresModal() {
       const active = assigned && assigned.dateKey === dk;
       const off = USUAL_DAYS_OFF.includes(d.getDay());
       return `<button class="chore-day-btn${active ? ' active' : ''}${off ? ' off' : ''}" type="button" ${d < today ? 'disabled' : ''}
-        onclick="${active ? `unassignCleaningTask('${attr(task.id)}')` : `assignCleaningTaskToDate('${attr(task.id)}','${dk}')`};afterChoreChange()"
+        onclick="${active ? `unassignCleaningTask('${attr(task.id)}','${dk}')` : `assignCleaningTaskToDate('${attr(task.id)}','${dk}')`};afterChoreChange()"
         aria-pressed="${active ? 'true' : 'false'}" aria-label="${attr(task.title)} on ${attr(FULL_DAY_NAMES[d.getDay()])}">
         <span>${DAY_NAMES[d.getDay()].slice(0, 2)}</span><b>${d.getDate()}</b></button>`;
     }).join('');
@@ -6655,7 +6700,18 @@ function renderChoresModal() {
       <div class="chore-days">${buttons}</div>
     </div>`;
   }).join('');
-  body.innerHTML = `<div class="edit-hint" style="margin-bottom:10px;">${formatShortDate(days[0])} – ${formatShortDate(days[6])} · <span class="chore-off-key"></span> usual days off</div>${rows}`;
+  const weekLabel = choresWeekOffset === 0 ? 'This week' : choresWeekOffset === 1 ? 'Next week' : `In ${choresWeekOffset} weeks`;
+  body.innerHTML = `<div class="chores-week-nav">
+      <button class="tiny-nav-btn" type="button" onclick="moveChoresWeek(-1)" ${choresWeekOffset === 0 ? 'disabled' : ''} aria-label="Previous week">${arrowIcon('left')}</button>
+      <div class="chores-week-label"><b>${weekLabel}</b><span>${formatShortDate(days[0])} – ${formatShortDate(days[6])}</span></div>
+      <button class="tiny-nav-btn" type="button" onclick="moveChoresWeek(1)" ${choresWeekOffset === MAX_CHORES_WEEK_OFFSET ? 'disabled' : ''} aria-label="Next week">${arrowIcon('right')}</button>
+    </div>
+    <div class="edit-hint" style="margin-bottom:10px;"><span class="chore-off-key"></span> usual days off</div>${rows}`;
+}
+
+function moveChoresWeek(delta) {
+  choresWeekOffset = Math.max(0, Math.min(MAX_CHORES_WEEK_OFFSET, choresWeekOffset + delta));
+  renderChoresModal();
 }
 
 function afterChoreChange() {
