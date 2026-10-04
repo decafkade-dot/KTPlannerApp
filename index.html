@@ -699,6 +699,16 @@ body.bill-dragging .paycheck-card { transition: transform 0.15s ease, box-shadow
 .paycheck-card.is-done.open { opacity: 1; }
 .paycheck-card.is-done .paycheck-card-remaining { display: none; }
 .ff-paycheck-card.ff-done { opacity: 0.4; }
+.ff-paycheck-card.ff-foldable.open { opacity: 1; }
+.ff-foldable .ff-paycheck-head { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.ff-paycheck-card.folded { padding-bottom: 10px; }
+.ff-paycheck-card.folded .ff-paycheck-head { border-bottom: 0; padding-bottom: 0; margin-bottom: 0; align-items: center; }
+.ff-paycheck-fold {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 700; color: var(--pal-green-strong, #6DA76D);
+}
+.ff-chev { width: 18px; height: 18px; color: var(--text-muted); transition: transform 0.25s ease; }
+.ff-paycheck-card.open .ff-chev { transform: rotate(180deg); }
 .paycheck-card.overdraft { border-left-color: var(--danger); }
 
 .paycheck-edited-badge {
@@ -7533,6 +7543,7 @@ function donePaycheckIds(billMonth) {
   return done;
 }
 
+let ffPaycheckOpen = {}; // paycheckId -> bool: a folded (received + paid) paycheck opened on the Bills tab
 function buildCheckingSection(billMonth) {
   const chevron = `<svg class="collapse-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>`;
   const openKey = '@checking';
@@ -7557,22 +7568,27 @@ function buildCheckingSection(billMonth) {
   }
   perPaycheck.forEach(({ paycheck, items, needed, allPaid }) => {
     const dateLabel = paycheck.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-    body += `<div class="ff-paycheck-card ${allPaid ? 'ff-sent' : ''} ${doneIds.has(paycheck.id) ? 'ff-done' : ''}">
-      <div class="ff-paycheck-head">
+    // Received and fully paid: fold down to its header; tap to open.
+    const foldable = allPaid && paycheck.received;
+    const isOpen = !foldable || !!ffPaycheckOpen[paycheck.id];
+    const pid = attr(paycheck.id);
+    body += `<div class="ff-paycheck-card ${allPaid ? 'ff-sent' : ''} ${doneIds.has(paycheck.id) ? 'ff-done' : ''} ${foldable ? 'ff-foldable' : ''} ${foldable && isOpen ? 'open' : ''} ${isOpen ? '' : 'folded'}">
+      <div class="ff-paycheck-head"${foldable ? ` role="button" tabindex="0" aria-expanded="${isOpen}" onclick="ffPaycheckOpen['${pid}']=!ffPaycheckOpen['${pid}'];renderMoney()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"` : ''}>
         <div>
           <div class="ff-paycheck-name">${esc(paycheck.label)}</div>
-          <div class="ff-paycheck-date">${esc(dateLabel)}</div>
+          <div class="ff-paycheck-date">${esc(dateLabel)}${foldable ? ` · Received · ${items.length} paid` : ''}</div>
         </div>
         <div class="ff-paycheck-head-right">
+          ${foldable ? `<div class="ff-paycheck-fold">${allPaid ? 'All paid' : ''}<svg class="ff-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg></div>` : `
           <div class="ff-paycheck-total">
             <div class="ff-paycheck-total-label">${allPaid ? 'All paid' : 'Need in checking'}</div>
             <div class="ff-paycheck-total-amt">${formatMoney(needed)}</div>
-          </div>
-          ${items.length ? `<button type="button" class="ff-sent-btn ${allPaid ? 'on' : ''}" onclick="togglePaycheckAllPaid('${attr(paycheck.id)}')">${allPaid ? '✓ Paid' : 'Mark paid'}</button>` : ''}
+          </div>`}
+          ${items.length && isOpen ? `<button type="button" class="ff-sent-btn ${allPaid ? 'on' : ''}" onclick="event.stopPropagation();togglePaycheckAllPaid('${pid}')">${allPaid ? '✓ Paid' : 'Mark paid'}</button>` : ''}
         </div>
       </div>
-      ${items.length ? `<div class="ff-item-list">${items.map(itemRow).join('')}</div>` : `<div class="ff-item-empty">No bills on this paycheck yet. Add some on the Paychecks tab.</div>`}
-      ${cardQuickButtons(paycheck.id)}
+      ${isOpen ? `${items.length ? `<div class="ff-item-list">${items.map(itemRow).join('')}</div>` : `<div class="ff-item-empty">No bills on this paycheck yet. Add some on the Paychecks tab.</div>`}
+      ${cardQuickButtons(paycheck.id)}` : ''}
     </div>`;
   });
   if (unassignedItems.length) {
