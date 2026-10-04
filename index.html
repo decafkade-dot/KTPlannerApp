@@ -1084,6 +1084,15 @@ body.paycheck-dragging .paycheck-pool-row {
 .timeline-block-title { font-size: 13px; font-weight: 800; color: var(--text); line-height: 1.2; }
 .timeline-block-time { font-size: 9.5px; color: var(--text-muted); margin-top: 2px; }
 .timeline-block-detail { font-size: 9.5px; color: var(--text-secondary); margin-top: 2px; }
+.timeline-block-title { overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.timeline-block-time, .timeline-block-detail { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Medium blocks: title and time only. */
+.timeline-block.mid .timeline-block-detail { display: none; }
+/* Short blocks: just the title on one line (the time is on the ruler). */
+.timeline-block.compact { padding-top: 4px; padding-bottom: 4px; display: flex; align-items: center; }
+.timeline-block.compact .timeline-block-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.timeline-block.compact .timeline-block-time,
+.timeline-block.compact .timeline-block-detail { display: none; }
 .timeline-block .inline-edit-btn {
   position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
 }
@@ -1393,7 +1402,7 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
   width: 72px; height: 172px; border: none; background: transparent;
   position: relative; cursor: pointer; filter: drop-shadow(0 6px 10px rgba(40,100,160,0.13));
 }
-.water-count { font-size: 30px; font-weight: 800; color: var(--espresso); line-height: 1; }
+.water-count { font-size: 30px; font-weight: 800; color: var(--espresso); line-height: 1.2; }
 .water-praise { font-size: 14px; color: var(--success); min-height: 20px; margin-top: 6px; font-weight: 700; }
 .water-side { max-width: 170px; }
 .water-reset {
@@ -1721,7 +1730,7 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
 .month-grid { gap: 4px; }
 .month-cell {
   padding: 4px; display: flex; flex-direction: column; align-items: stretch;
-  border-radius: 10px;
+  border-radius: 10px; container-type: size;
 }
 .month-cell .month-date {
   position: relative; align-self: flex-start;
@@ -1733,10 +1742,16 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
   align-items: center; justify-content: center; align-content: center;
   gap: 1px; pointer-events: none;
 }
-.month-cell .month-icons .month-day-sticker { --sticker-size: 24px; opacity: 1; }
-.month-cell .month-icons[data-count="2"] .month-day-sticker { --sticker-size: 18px; }
-.month-cell .month-icons[data-count="3"] .month-day-sticker { --sticker-size: 15px; }
-.month-cell .month-icons[data-count="4"] .month-day-sticker { --sticker-size: 13px; }
+/* Icons never grow past the room under the date (100cqh minus the date
+   row) or their share of the width, so they can't spill or cover the date. */
+.month-cell .month-icons .month-day-sticker { --sticker-size: min(24px, 100cqh - 16px, 90cqw); opacity: 1; }
+.month-cell .month-icons[data-count="2"] .month-day-sticker { --sticker-size: min(18px, 100cqh - 16px, 46cqw); }
+.month-cell .month-icons[data-count="3"] .month-day-sticker,
+.month-cell .month-icons[data-count="4"] .month-day-sticker { --sticker-size: min(15px, (100cqh - 18px) / 2, 46cqw); }
+/* Phones: day squares get a little taller so the icons stay readable. */
+@media (max-width: 520px) {
+  .month-cell { aspect-ratio: 4 / 5; }
+}
 .month-cell.past { opacity: 0.4; }
 .month-cell.past .month-date::after {
   content: ''; position: absolute; inset: -3px -3px;
@@ -1830,6 +1845,34 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
 }
 .time-row.open .time-row-more { display: flex; flex-direction: column; gap: 4px; }
 .time-row-sub { font-size: 13px; color: var(--text-muted); }
+.meal-log { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; cursor: default; }
+.meal-log-btn {
+  display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px 3px 5px;
+  border-radius: 999px; border: 1px solid var(--border-soft); background: var(--bg-card);
+  font-size: 13px; color: var(--text-secondary); cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.meal-log-btn.on { background: var(--espresso); border-color: var(--espresso); color: #fff; }
+.meal-log-icon { --sticker-size: 18px; }
+.meal-log-x { display: inline-flex; align-items: center; justify-content: center; width: 18px; font-size: 11px; font-weight: 800; }
+/* Health: eating this week */
+.eat-totals { display: flex; gap: 10px; margin: 4px 0 12px; }
+.eat-total { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 4px; border-radius: 12px; background: var(--bg-input); }
+.eat-total b { font-size: 22px; color: var(--espresso); line-height: 1.2; }
+.eat-total span { font-size: 12.5px; color: var(--text-muted); }
+.eat-total-icon { --sticker-size: 26px; }
+.eat-total .meal-log-x { width: 26px; height: 26px; font-size: 15px; color: var(--text-muted); }
+.eat-grid { display: grid; grid-template-columns: 70px repeat(5, minmax(0, 1fr)); gap: 6px; align-items: center; }
+.eat-day { text-align: center; font-size: 12.5px; font-weight: 700; color: var(--text-muted); }
+.eat-day.today { color: var(--espresso); }
+.eat-meal { font-size: 13px; color: var(--text-secondary); }
+.eat-cell {
+  height: 40px; border-radius: 10px; border: 1px dashed var(--border); background: var(--bg-input);
+  display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0;
+}
+.eat-cell.ate, .eat-cell.snack { border-style: solid; border-color: var(--pal-green-strong); background: var(--bg-card); }
+.eat-cell.skipped { border-style: solid; color: var(--text-muted); }
+.eat-cell.future { opacity: 0.35; cursor: default; }
+.eat-cell-icon { --sticker-size: 24px; }
 .time-row-btn { width: auto; align-self: flex-start; margin: 6px 0 0; padding: 6px 14px; border-style: solid; }
 .time-row-checklist .check-item { padding: 6px 0; }
 /* The block to do now (or next) — a little bigger than the rest. */
@@ -1855,8 +1898,8 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
   font-size: 15px; font-weight: 700; color: var(--text);
 }
 .time-row-detail { font-size: 12.5px; color: var(--text-muted); margin-top: 2px; }
-.time-row.past { opacity: 0.5; }
-.time-row.past.open { opacity: 1; }
+.time-row.past > .time-row-time, .time-row.past > .theme-sticker, .time-row.past .time-row-title, .time-row.past .time-row-detail { opacity: 0.5; }
+.time-row.past.open > .time-row-time, .time-row.past.open > .theme-sticker, .time-row.past.open .time-row-title, .time-row.past.open .time-row-detail { opacity: 1; }
 .time-row-now {
   font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;
   color: #fff; background: var(--espresso); border-radius: 999px; padding: 2px 7px;
@@ -2722,6 +2765,7 @@ const USUAL_DAYS_OFF = [4, 6];
 
 /* ── Cozy sticker icons inspired by the uploaded planner art ── */
 const THEME_ICONS = {
+  snack: `<svg viewBox="0 0 64 64" fill="none"><path d="M32 19c-4-6-14-7-20-1-7 7-6 21 1 31 4 6 9 9 13 8 2-1 4-2 6-2s4 1 6 2c4 1 9-2 13-8 7-10 8-24 1-31-6-6-16-5-20 1z" fill="#F08A8A"/><path d="M32 19c0-6 3-11 8-13" stroke="#7A5230" stroke-width="3" stroke-linecap="round"/><path d="M35 12c4-6 12-6 15-3-4 5-11 6-15 3z" fill="#8CC97B"/><path d="M19 27c-3 4-3 10-1 15" stroke="#fff" stroke-opacity=".6" stroke-width="3" stroke-linecap="round"/></svg>`,
   money: `<svg viewBox="0 -196 1416 1416" fill="none"><path d="M55.351 290.041h1038.391c18.82 0 33.211 14.391 33.211 33.211v645.397c0 18.819-14.391 33.21-33.211 33.21H55.351c-18.819 0-33.21-14.391-33.21-33.21V323.252c0-17.713 14.391-33.211 33.21-33.211z" fill="#9DBE87"/><path d="M954.257 902.227H194.837c0-52.03-43.174-95.204-95.204-95.204V472.7c52.03 0 95.204-43.174 95.204-95.204h759.42c0 52.03 43.175 95.204 95.205 95.204v334.322c-53.137 0-95.205 43.174-95.205 95.204z" fill="#D6F0C5"/><path d="M576.761 790.417c-35.425 0-73.064-13.284-99.632-47.602c-7.75-9.963-5.535-23.247 3.321-30.997c9.963-7.749 23.247-5.535 30.997 3.321c26.568 34.318 67.528 35.425 94.097 26.569c22.14-7.75 35.424-22.141 35.424-37.639c0-14.391-34.317-24.354-64.207-33.21c-46.495-14.392-105.168-30.997-105.168-86.349c0-26.568 16.606-50.923 45.388-65.314c35.425-17.713 95.205-24.355 151.663 16.605c9.963 7.749 12.177 21.034 4.428 30.997c-7.749 9.963-21.034 12.177-30.997 4.428c-37.639-27.676-79.706-26.569-105.168-13.284c-13.284 6.642-22.14 16.605-22.14 26.568c0 21.034 30.996 30.997 73.063 44.281c45.388 13.284 95.205 28.783 95.205 75.278c0 34.318-25.462 65.315-65.315 79.706c-11.07 3.321-26.568 6.642-40.96 6.642z" fill="#131313"/><path d="M574.547 549.085c-12.177 0-22.14-9.963-22.14-22.14v-48.71c0-12.177 9.963-22.14 22.14-22.14s22.14 9.963 22.14 22.14v48.71c0 13.284-9.963 22.14-22.14 22.14z" fill="#131313"/><path d="M574.547 832.484c-12.177 0-22.14-9.963-22.14-22.14v-36.532c0-12.177 9.963-22.14 22.14-22.14s22.14 9.963 22.14 22.14v36.532c0 12.177-9.963 22.14-22.14 22.14z" fill="#131313"/><circle cx="285.613" cy="653.146" r="40.96" fill="#AECD99"/><circle cx="865.695" cy="653.146" r="40.96" fill="#AECD99"/></svg>`,
   sleep: `<svg viewBox="0 0 512 512" fill="none"><circle fill="#F8E99B" cx="252.278" cy="255.998" r="252.278"/><path fill="#F6E27D" d="M252.278 3.724V508.28c139.329 0 252.278-112.949 252.278-252.278S391.608 3.724 252.278 3.724z"/><path fill="#A58868" d="M159.334 329.03c-30.901 0-60.762-14.752-62.018-15.381l17.772-35.648c.227.112 22.906 11.196 44.246 11.196 21.259 0 43.98-11.063 44.204-11.175l17.813 35.627C220.096 314.278 190.235 329.03 159.334 329.03z"/><path fill="#947859" d="M345.223 329.03c-30.901 0-60.762-14.752-62.018-15.381l17.772-35.648c.227.112 22.906 11.196 44.246 11.196 21.259 0 43.981-11.063 44.204-11.175l17.814 35.627C405.985 314.278 376.124 329.03 345.223 329.03z"/><path fill="#A58868" d="M252.278 435.252c-14.643 0-26.556-11.913-26.556-26.556 0-14.643 11.913-26.556 26.556-26.556 14.645 0 26.556 11.913 26.556 26.556 0 14.643-11.911 26.556-26.556 26.556z"/><polygon fill="#3862CC" points="278.834 222.81 192.528 222.81 178.446 188.811 224.112 143.143 185.889 143.143 185.889 103.31 272.195 103.31 286.277 137.31 240.611 182.977 278.834 182.977"/><polygon fill="#3862CC" points="391.695 196.252 305.389 196.252 291.307 162.253 336.973 116.585 298.751 116.585 298.751 76.752 385.056 76.752 399.139 110.752 353.472 156.418 391.695 156.418"/><polygon fill="#3862CC" points="504.556 169.696 418.251 169.696 404.168 135.697 449.835 90.029 411.612 90.029 411.612 50.196 497.918 50.196 512 84.197 466.334 129.863 504.556 129.863"/></svg>`,
   bill: `<svg viewBox="0 0 1024 1024" fill="none"><path d="M853.333333 874.666667H170.666667c-46.933333 0-85.333333-38.4-85.333334-85.333334V343.466667c0-27.733333 12.8-53.333333 36.266667-70.4L512 0l390.4 273.066667c23.466667 14.933333 36.266667 42.666667 36.266667 70.4V789.333333c0 46.933333-38.4 85.333333-85.333334 85.333334z" fill="#78909C"/><path d="M298.666667 21.333333h426.666666v661.333334H298.666667z" fill="#AED581"/><path d="M277.333333 0v704h469.333334V0H277.333333z m426.666667 661.333333H320V42.666667h384v618.666666z" fill="#558B2F"/><path d="M725.333333 64c0 36.266667-6.4 64-42.666666 64s-64-27.733333-64-64 27.733333-42.666667 64-42.666667 42.666667 6.4 42.666666 42.666667zM341.333333 21.333333c36.266667 0 64 6.4 64 42.666667s-27.733333 64-64 64-42.666667-27.733333-42.666666-64 6.4-42.666667 42.666666-42.666667z" fill="#558B2F"/><path d="M512 170.666667m-42.666667 0a42.666667 42.666667 0 1 0 85.333334 0 42.666667 42.666667 0 1 0-85.333334 0Z" fill="#558B2F"/><path d="M512 426.666667m-128 0a128 128 0 1 0 256 0 128 128 0 1 0-256 0Z" fill="#558B2F"/><path d="M853.333333 874.666667H170.666667c-46.933333 0-85.333333-38.4-85.333334-85.333334V362.666667l426.666667 277.333333 426.666667-277.333333v426.666666c0 46.933333-38.4 85.333333-85.333334 85.333334z" fill="#CFD8DC"/></svg>`,
@@ -4404,6 +4448,7 @@ function buildTodayTimeList(dateKey) {
       <div class="time-row-main">
         <div class="time-row-title">${esc(b.title)}${isFocus ? `<span class="time-row-now">${focusLabel}</span>` : ''}</div>
         ${b.detail ? `<div class="time-row-detail">${esc(b.detail)}</div>` : ''}
+        ${b.source === 'mealtime' ? mealLogButtons(dateKey, b.mealKey) : ''}
         <div class="time-row-more" onclick="event.stopPropagation()">${timeRowDetails(b, dateKey)}</div>
       </div>
       <svg class="time-row-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
@@ -4411,6 +4456,68 @@ function buildTodayTimeList(dateKey) {
   });
   if (!timed.length && !anyTime.length) html += `<div class="day-panel-empty">Nothing scheduled.</div>`;
   return html + `</div>`;
+}
+
+/* ── Meal log: did you eat breakfast, lunch and dinner (or a snack)? ──
+   Stored per day as gnd-YYYY-MM-DD-meallog = { breakfast: 'ate' | 'snack' | 'skipped', … }. */
+const MEAL_LOG_STATES = {
+  ate: { label: 'Ate', icon: 'eat' },
+  snack: { label: 'Snack', icon: 'snack' },
+  skipped: { label: 'Skipped', icon: '' },
+};
+const MEAL_LOG_MEALS = [['breakfast', 'Breakfast'], ['lunch', 'Lunch'], ['dinner', 'Dinner']];
+function getMealLog(dateKey) { return ls(`gnd-${dateKey}-meallog`, null) || {}; }
+function setMealLog(dateKey, meal, state) {
+  const log = getMealLog(dateKey);
+  if (!state || log[meal] === state) delete log[meal]; else log[meal] = state;
+  lsSave(`gnd-${dateKey}-meallog`, log);
+  renderActivePage();
+}
+/* Health grid: each tap steps through ate → snack → skipped → blank. */
+function cycleMealLog(dateKey, meal) {
+  const order = ['', 'ate', 'snack', 'skipped'];
+  const next = order[(order.indexOf(getMealLog(dateKey)[meal] || '') + 1) % order.length];
+  setMealLog(dateKey, meal, next);
+}
+function mealLogIcon(state, cls) {
+  if (!state) return '';
+  return MEAL_LOG_STATES[state].icon ? themeIcon(MEAL_LOG_STATES[state].icon, cls) : `<span class="meal-log-x ${cls}" aria-hidden="true">✕</span>`;
+}
+function mealLogButtons(dateKey, meal) {
+  const current = getMealLog(dateKey)[meal] || '';
+  return `<div class="meal-log" role="group" aria-label="Log ${attr(meal)}" onclick="event.stopPropagation()">
+    ${Object.entries(MEAL_LOG_STATES).map(([state, s]) => `<button type="button" class="meal-log-btn${current === state ? ' on' : ''}" aria-pressed="${current === state}" onclick="setMealLog('${dateKey}','${meal}','${state}')">${mealLogIcon(state, 'meal-log-icon')}${s.label}</button>`).join('')}
+  </div>`;
+}
+
+/* Health: this week's meals, Monday – Friday. */
+function buildEatingWeek() {
+  const monday = startOfMondayWeek(new Date());
+  const today = todayKey();
+  const days = [0, 1, 2, 3, 4].map(i => { const d = addDays(monday, i); return { d, dk: localDateKey(d), log: getMealLog(localDateKey(d)) }; });
+  const counts = { ate: 0, snack: 0, skipped: 0 };
+  days.forEach(day => MEAL_LOG_MEALS.forEach(([meal]) => { const st = day.log[meal]; if (counts[st] !== undefined) counts[st]++; }));
+  let grid = `<div class="eat-grid"><span></span>${days.map(day => `<span class="eat-day${day.dk === today ? ' today' : ''}">${DAY_NAMES[day.d.getDay()]}</span>`).join('')}`;
+  MEAL_LOG_MEALS.forEach(([meal, label]) => {
+    grid += `<span class="eat-meal">${label}</span>`;
+    days.forEach(day => {
+      const st = day.log[meal] || '';
+      const future = day.dk > today;
+      grid += `<button type="button" class="eat-cell${st ? ' ' + st : ''}${future ? ' future' : ''}" ${future ? 'disabled' : `onclick="cycleMealLog('${day.dk}','${meal}')"`}
+        aria-label="${label}, ${DAY_NAMES[day.d.getDay()]}: ${st ? MEAL_LOG_STATES[st].label : 'not logged'}">${mealLogIcon(st, 'eat-cell-icon')}</button>`;
+    });
+  });
+  grid += `</div>`;
+  return `<div class="card theme-card eat-week">
+    <div class="card-title-row"><div class="card-title">Eating this week</div><span class="today-todo-count">Mon – Fri</span></div>
+    <div class="eat-totals">
+      <div class="eat-total">${themeIcon('eat', 'eat-total-icon')}<b>${counts.ate}</b><span>meals</span></div>
+      <div class="eat-total">${themeIcon('snack', 'eat-total-icon')}<b>${counts.snack}</b><span>snacks</span></div>
+      <div class="eat-total"><span class="meal-log-x eat-total-icon" aria-hidden="true">✕</span><b>${counts.skipped}</b><span>skipped</span></div>
+    </div>
+    ${grid}
+    <div class="edit-hint" style="margin-top:8px;">Log meals from Home, or tap a square here to fill in a day.</div>
+  </div>`;
 }
 
 /* Tapping a row opens its details; which rows are open survives redraws
@@ -5130,10 +5237,30 @@ function buildTimelineHtml(dateKey, allowEdit = true, opts = {}) {
     html += `<div class="timeline-grid-line" style="top:${top}px;"></div>`;
   });
 
-  busyBlocks.forEach(b => {
+  // Blocks whose drawn boxes would overlap share the width in columns.
+  const MIN_BLOCK_PX = 26;
+  const drawnEnd = b => b.start + Math.max(b.duration, MIN_BLOCK_PX / pxPerMinute + 1);
+  const placed = busyBlocks.slice().sort((a, b) => a.start - b.start || b.duration - a.duration);
+  let cluster = [], clusterEnd = -1;
+  const finishCluster = () => { const cols = Math.max(...cluster.map(b => b.col)) + 1; cluster.forEach(b => { b.cols = cols; }); };
+  placed.forEach(b => {
+    if (cluster.length && b.start >= clusterEnd) { finishCluster(); cluster = []; clusterEnd = -1; }
+    const colEnds = [];
+    cluster.forEach(o => { colEnds[o.col] = Math.max(colEnds[o.col] ?? -1, drawnEnd(o)); });
+    let col = colEnds.findIndex(end => end <= b.start);
+    if (col === -1) col = colEnds.length;
+    b.col = col;
+    cluster.push(b);
+    clusterEnd = Math.max(clusterEnd, drawnEnd(b));
+  });
+  if (cluster.length) finishCluster();
+
+  placed.forEach(b => {
     const canEdit = allowEdit && b.editable !== false;
     const top = Math.max(0, (b.start - windowStart) * pxPerMinute);
-    const height = Math.max(26, b.duration * pxPerMinute);
+    const height = Math.max(MIN_BLOCK_PX, b.duration * pxPerMinute);
+    const compact = height < 44 ? ' compact' : height < 64 ? ' mid' : '';
+    const colStyle = b.cols > 1 ? `left:calc(8px + (100% - 8px) * ${b.col} / ${b.cols});width:calc((100% - 8px) / ${b.cols} - 3px);right:auto;` : '';
     const highlightClass = highlightedAcademicEventId && b.id === highlightedAcademicEventId ? ' highlighted' : '';
     const cleaningClass = b.source === 'cleaning' ? ' cleaning' : '';
     const doneClass = b.cleaningDone ? ' done' : '';
@@ -5141,7 +5268,7 @@ function buildTimelineHtml(dateKey, allowEdit = true, opts = {}) {
       ? `<button class="timeline-block-action" type="button" title="Unassign from this day" aria-label="Unassign cleaning task" onclick="event.stopPropagation();unassignCleaningTaskFromUI('${attr(b.cleaningTaskId)}')">✕</button>`
       : '';
     const cleaningImg = b.source === 'cleaning' ? cleaningIcon({ id: b.cleaningTaskId, title: b.title }, 'small') : '';
-    html += `<div class="timeline-block${highlightClass}${cleaningClass}${doneClass}" style="top:${top}px;height:${height}px;--block-color:${evColor(b.type)};">
+    html += `<div class="timeline-block${highlightClass}${cleaningClass}${doneClass}${compact}" style="top:${top}px;height:${height}px;${colStyle}--block-color:${evColor(b.type)};">
       <div class="timeline-block-title">${cleaningImg}${esc(b.title)}</div>
       <div class="timeline-block-time">${formatTime(b.time)}${b.end && b.end !== b.time ? ` - ${formatTime(b.end)}` : ''}</div>
       ${b.detail ? `<div class="timeline-block-detail">${esc(b.detail)}</div>` : ''}
@@ -7851,6 +7978,7 @@ function renderHealth() {
   let html = themePageHeader('Health', 'Take care of yourself.', ['healthTab']);
 
   html += buildWaterBottle(h);
+  html += buildEatingWeek();
 
   html += buildMealPlan(h);
   html += buildGroceryList(h);
