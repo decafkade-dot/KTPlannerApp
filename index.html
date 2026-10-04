@@ -694,6 +694,11 @@ body.bill-dragging .paycheck-card { transition: transform 0.15s ease, box-shadow
 .paycheck-card.state-received { border-left-color: var(--success, #4c8f61); }
 .paycheck-card.state-upcoming { border-left-color: var(--caramel, #d9b48a); }
 .paycheck-card.state-past { border-left-color: var(--text-muted, #a89f95); opacity: 0.85; }
+/* Done paychecks fade back and stop showing what was left over. */
+.paycheck-card.is-done { opacity: 0.4; transition: opacity 0.2s ease; }
+.paycheck-card.is-done.open { opacity: 1; }
+.paycheck-card.is-done .paycheck-card-remaining { display: none; }
+.ff-paycheck-card.ff-done { opacity: 0.4; }
 .paycheck-card.overdraft { border-left-color: var(--danger); }
 
 .paycheck-edited-badge {
@@ -820,6 +825,59 @@ body.bill-dragging .paycheck-card { transition: transform 0.15s ease, box-shadow
 @media (max-width: 480px) {
   .paycheck-row-head { grid-template-columns: 24px 1fr 90px; }
 }
+/* Quick-add an extra credit-card payment (Paychecks and Bills tabs). */
+.card-quick-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.card-quick-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 10px; border-radius: 999px; font-size: 12px; font-weight: 700;
+  background: var(--bg-card); border: 1px solid var(--border-soft); color: var(--text-secondary);
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.card-quick-btn:hover { color: var(--espresso); border-color: var(--espresso); }
+.card-icon { width: 20px; height: 14px; flex: 0 0 auto; vertical-align: -2px; }
+.card-icon.lg { width: 26px; height: 18px; }
+.paycheck-row-name .card-icon { margin-right: 5px; }
+.ff-item-name { min-width: 0; }
+.ff-item-name .card-icon { margin-right: 4px; }
+.ff-item .paycheck-row-amt-edit { min-width: 0; padding: 1px 5px; }
+.ff-item .paycheck-row-amt-input { width: 64px; font-size: 13px; }
+.ff-item.paid .paycheck-row-amt-edit { opacity: 0.5; }
+
+/* ── Credit tab ── */
+.credit-card-title { display: flex; align-items: center; gap: 8px; }
+.credit-settings { display: flex; flex-wrap: wrap; gap: 10px 16px; margin: 4px 0 2px; }
+.credit-field { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--text-muted); font-weight: 700; }
+.credit-hint { font-size: 12px; color: var(--text-muted); margin-top: 8px; line-height: 1.45; }
+.credit-sub { font-size: 12px; color: var(--text-muted); margin-top: 8px; }
+.paycheck-card-totals strong.over { color: var(--danger); }
+.credit-warn {
+  margin-top: 8px; padding: 8px 10px; border-radius: 10px; font-size: 13px; font-weight: 700;
+  color: var(--danger); background: rgba(192,40,40,0.08);
+}
+.credit-list { margin-top: 10px; }
+.credit-row {
+  display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; gap: 8px; align-items: center;
+  padding: 8px 0; border-top: 1px solid var(--border-soft);
+}
+.credit-row.already { opacity: 0.45; }
+.credit-row-date { font-size: 12px; font-weight: 700; color: var(--text-muted); }
+.credit-row-name { font-size: 14px; font-weight: 700; color: var(--text); overflow-wrap: anywhere; }
+.credit-row-kind { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.credit-row-right { text-align: right; white-space: nowrap; }
+.credit-row-amt { font-size: 14px; font-weight: 800; color: var(--espresso); }
+.credit-row.is-payment .credit-row-amt { color: var(--success); }
+.credit-row-avail { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.credit-row-avail.over { color: var(--danger); font-weight: 700; }
+.credit-empty { font-size: 13px; color: var(--text-muted); font-style: italic; padding: 8px 0; }
+.credit-est-row {
+  display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+  padding: 10px 0; border-top: 1px solid var(--border-soft);
+}
+.credit-est-name { flex: 1 1 100%; min-width: 0; }
+.credit-est-card { flex: 1 1 120px; min-width: 0; width: auto; }
+.credit-est-start { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); font-weight: 700; }
+.credit-est-start input { width: auto; }
+@media (min-width: 481px) { .credit-est-name { flex: 1 1 160px; } }
 @media (prefers-reduced-motion: reduce) {
   .paycheck-add-extra .text-input { transition: none; }
 }
@@ -2823,6 +2881,18 @@ function themeIcon(name, cls = '') {
   return `<span class="theme-sticker ${cls}" aria-hidden="true">${THEME_ICONS[name]}</span>`;
 }
 
+/* Small card icon in the card's own color: Capital One blue, Discover orange. */
+function cardIconSvg(card, cls = 'card-icon') {
+  const color = { 'Capital One': '#2F6FD6', 'Discover': '#F28C28' }[card] || 'var(--text-muted)';
+  return `<svg class="${cls}" viewBox="0 0 20 14" aria-hidden="true"><rect x="0.5" y="0.5" width="19" height="13" rx="2.5" fill="${color}"/><rect x="0.5" y="3.5" width="19" height="2.5" fill="rgba(0,0,0,0.3)"/><rect x="3" y="9" width="6" height="1.6" rx="0.8" fill="rgba(255,255,255,0.85)"/></svg>`;
+}
+const QUICK_PAY_CARDS = ['Capital One', 'Discover'];
+function cardQuickButtons(paycheckId) {
+  return `<div class="card-quick-row">${QUICK_PAY_CARDS.map(card =>
+    `<button type="button" class="card-quick-btn" title="Add an extra ${attr(card)} payment to this paycheck" onclick="addCardPaymentToPaycheck('${attr(paycheckId)}','${attr(card)}')">${cardIconSvg(card)}${esc(card)}</button>`
+  ).join('')}</div>`;
+}
+
 function pngSticker(src, cls = '') {
   return `<img class="${cls}" src="${attr(src)}" alt="" aria-hidden="true">`;
 }
@@ -3425,11 +3495,37 @@ function getSettings() { return ls('gnd-settings', { theme: 'light' }); }
 function billPaidKey(date = new Date()) { return `gnd-bills-${date.getFullYear()}-${date.getMonth()}`; }
 function getBillsPaid(date = new Date()) { return ls(billPaidKey(date), {}); }
 function saveBillsPaid(p, date = new Date()) { lsSave(billPaidKey(date), p); }
+/* ── One "paid" state for bills ──
+   A bill checked off on the Paychecks tab is checked off on the Bills tab
+   too (and the other way round): both read the month's bills-paid map,
+   keyed by the month the bill is due in. A monthly bill has one tick per
+   month. A biweekly bill can be due twice in a month, so each due date
+   gets its own tick ("billKey@YYYY-MM-DD"). */
+function billPaidEntryKey(billKey, date) {
+  const bill = BILLS.find(b => b.key === billKey);
+  return bill?.frequency === 'biweekly' ? `${billKey}@${localDateKey(date)}` : billKey;
+}
+function isBillPaidOn(billKey, date) {
+  const p = getBillsPaid(date);
+  const k = billPaidEntryKey(billKey, date);
+  // Older data ticked a biweekly bill once for the whole month.
+  return !!(p[k] || (k !== billKey && p[billKey]));
+}
+function setBillPaid(billKey, date, isPaid) {
+  const p = getBillsPaid(date);
+  const k = billPaidEntryKey(billKey, date);
+  if (k !== billKey && p[billKey]) {
+    // Split an old month-wide tick into one tick per due date first.
+    const bill = BILLS.find(b => b.key === billKey);
+    billOccurrenceDatesInMonth(bill, date).forEach(d => { p[`${billKey}@${localDateKey(d)}`] = true; });
+    delete p[billKey];
+  }
+  if (isPaid) p[k] = true; else delete p[k];
+  saveBillsPaid(p, date);
+}
 function toggleBill(billKey, dateKey = todayKey()) {
   const date = dateFromKey(dateKey);
-  const p = getBillsPaid(date);
-  p[billKey] = !p[billKey];
-  saveBillsPaid(p, date);
+  setBillPaid(billKey, date, !isBillPaidOn(billKey, date));
   renderMoney();
   refreshDayModalIfOpen();
 }
@@ -4026,7 +4122,7 @@ function unassignBillOcc(occId) {
      "2026-08": {
        "<paycheckId>": {
          amountOverride: 1485.00 | null,
-         extras: [ { id, name, amount, note, reschedule, skip, paid } ],
+         extras: [ { id, name, amount, note, reschedule, skip, paid, card } ],
          billOverrides: { "<billKey>": { amount, note, reschedule, skip, paid } }
        }
      }
@@ -4054,6 +4150,7 @@ function normalizePaycheckInstance(raw) {
         reschedule: !!e.reschedule,
         skip: !!e.skip,
         paid: !!e.paid,
+        card: QUICK_PAY_CARDS.includes(e.card) ? e.card : '',
       }));
   }
   if (raw.billOverrides && typeof raw.billOverrides === 'object') {
@@ -4167,6 +4264,7 @@ function addPaycheckExtra(paycheckId, extra, monthDate = getBillMonthDate()) {
     reschedule: !!extra?.reschedule,
     skip: !!extra?.skip,
     paid: !!extra?.paid,
+    card: extra?.card || '',
   });
   savePaycheckInstance(paycheckId, inst, monthDate);
   return id;
@@ -4287,7 +4385,7 @@ function buildWeekBillsBody() {
   for (let i = 0; i < 7; i++) {
     const date = addDays(today, i);
     BILLS.filter(b => HOME_BILL_CATEGORIES.has(b.category) && billOccursOnDate(b, date)).forEach(b => {
-      rows.push({ b, date, paid: !!getBillsPaid(date)[b.key] });
+      rows.push({ b, date, paid: isBillPaidOn(b.key, date) });
     });
   }
   const left = rows.filter(r => !r.paid).reduce((sum, r) => sum + Number(r.b.amount || 0), 0);
@@ -5343,7 +5441,7 @@ function getDayMoneyItems(dateKey) {
     });
   });
   BILLS.filter(b => billOccursOnDate(b, date)).forEach(b => {
-    const paid = !!getBillsPaid(date)[b.key];
+    const paid = isBillPaidOn(b.key, date);
     items.push({
       title: b.name,
       meta: `${paid ? 'Paid' : 'Bill due'}${b.frequency === 'biweekly' ? ' · biweekly' : ''}${b.note ? ' · ' + b.note : ''}`,
@@ -6905,21 +7003,258 @@ function togglePaycheckCardOpen(id) {
   renderMoney();
 }
 
+/* ─── Credit tab ─────────────────────────────────────────────────────────
+   Tracks only the credit cards: what each card will be charged (bills paid
+   from the card, plus estimated spending like gas) against the payments
+   scheduled on paychecks, so you can see how much available credit there
+   should be on each day. Everything runs forward from the "owed" figure
+   entered on the tab and the day it was entered. */
+function getCreditCardSettings() {
+  const saved = ls('gnd-credit-cards', null) || {};
+  const accounts = getAccounts() || [];
+  const out = {};
+  QUICK_PAY_CARDS.forEach(card => {
+    const acct = accounts.find(a => (a.name || '').trim().toLowerCase() === card.toLowerCase());
+    const s = saved[card] || {};
+    out[card] = {
+      limit: s.limit !== undefined ? Number(s.limit) : Number(acct?.creditLimit || 0),
+      owed: Number(s.owed || 0),
+      asOf: /^\d{4}-\d{2}-\d{2}$/.test(s.asOf || '') ? s.asOf : '',
+    };
+  });
+  return out;
+}
+function submitCreditCardField(card, field, rawValue) {
+  const n = Number(String(rawValue == null ? '' : rawValue).trim() || 0);
+  if (Number.isNaN(n) || n < 0) return;
+  const all = getCreditCardSettings();
+  all[card] = { ...all[card], ...(field === 'owed' ? { owed: n, asOf: todayKey() } : { limit: n }) };
+  lsSave('gnd-credit-cards', all);
+  renderMoney();
+}
+
+/* Regular card spending that isn't a bill, e.g. gas every other Friday. */
+function getCreditEstimates() {
+  let list = ls('gnd-credit-estimates', null);
+  if (list === null) {
+    list = [{ id: 'est-gas', name: 'Gas fill-up', amount: 120, card: 'Capital One', start: '2026-10-16', everyDays: 14 }];
+    lsSeed('gnd-credit-estimates', list);
+  }
+  return Array.isArray(list) ? list : [];
+}
+function saveCreditEstimates(list) { lsSave('gnd-credit-estimates', list); }
+function updateCreditEstimate(id, patch) {
+  saveCreditEstimates(getCreditEstimates().map(e => e.id === id ? { ...e, ...patch } : e));
+  renderMoney();
+}
+function addCreditEstimate() {
+  const list = getCreditEstimates();
+  list.push({ id: 'est-' + Date.now(), name: '', amount: 0, card: QUICK_PAY_CARDS[0], start: todayKey(), everyDays: 14 });
+  saveCreditEstimates(list);
+  renderMoney();
+}
+function removeCreditEstimate(id) {
+  saveCreditEstimates(getCreditEstimates().filter(e => e.id !== id));
+  renderMoney();
+}
+
+function billChargesCard(bill, card) {
+  return bill.category !== 'Credit Card Payments'
+    && String(bill.source || '').trim().toLowerCase() === card.toLowerCase();
+}
+function billPaysCard(bill, card) {
+  if (bill.category !== 'Credit Card Payments') return false;
+  const acct = (getAccounts() || []).find(a => a.id === billPaysAccountId(bill));
+  return String(acct ? acct.name : `${bill.name} ${bill.note}`).toLowerCase().includes(card.toLowerCase());
+}
+
+/* Charges (negative) and scheduled payments (positive) on a card between
+   two dates. Card payments count on the payday they're scheduled on; ones
+   not on a paycheck yet come back separately and don't count. */
+function creditCardEvents(card, from, to) {
+  const events = [];
+  const unscheduled = [];
+  const inRange = d => d >= from && d <= to;
+  const payday = p => p.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const months = [];
+  for (let m = new Date(from.getFullYear(), from.getMonth(), 1); m <= to; m = nextMonthDate(m)) months.push(m);
+
+  BILLS.filter(b => billChargesCard(b, card)).forEach(b => {
+    months.forEach(m => billOccurrenceDatesInMonth(b, m).forEach(d => {
+      if (inRange(d)) events.push({ date: d, name: b.name, amount: -Number(b.amount || 0), kind: b.category === 'Variable' ? 'Spending budget' : b.category });
+    }));
+  });
+
+  getCreditEstimates().forEach(e => {
+    if (e.card !== card || !(Number(e.amount) > 0) || !/^\d{4}-\d{2}-\d{2}$/.test(e.start || '')) return;
+    const step = Math.max(1, Number(e.everyDays) || 14);
+    let d = dateFromKey(e.start);
+    while (d < from) d = addDays(d, step);
+    for (; d <= to; d = addDays(d, step)) {
+      events.push({ date: new Date(d), name: e.name || 'Card spending', amount: -Number(e.amount), kind: `Estimate · every ${step === 14 ? '2 weeks' : step + ' days'}` });
+    }
+  });
+
+  const payBills = BILLS.filter(b => billPaysCard(b, card));
+  months.forEach(m => {
+    const paychecks = incomeOccurrencesForMonth(null, m);
+    const byId = {};
+    paychecks.forEach(p => { byId[p.id] = p; });
+    const plan = getPaycheckPlan(m);
+    paycheckOccurrencesForMonth(payBills, m, false)
+      .concat(paycheckOccurrencesForMonth(payBills, nextMonthDate(m), true))
+      .forEach(o => {
+        const p = byId[plan.assignments[o.occId]];
+        if (p) {
+          const ov = getPaycheckInstance(p.id, m).billOverrides[o.billKey] || {};
+          if (ov.skip || !inRange(p.date)) return;
+          const amount = ov.amount !== undefined ? Number(ov.amount) : Number(o.bill.amount || 0);
+          events.push({ date: p.date, name: o.bill.name, amount, kind: `Paid from ${payday(p)} paycheck` });
+        } else if (!o.fromNextMonth && !findOccurrenceAssignment(o.occId) && inRange(o.date)) {
+          unscheduled.push({ date: o.date, name: o.bill.name, amount: Number(o.bill.amount || 0) });
+        }
+      });
+    paychecks.forEach(p => {
+      if (!inRange(p.date)) return;
+      getPaycheckInstance(p.id, m).extras.forEach(e => {
+        if (e.card === card && !e.skip && Number(e.amount) > 0) {
+          events.push({ date: p.date, name: e.name || `${card} payment`, amount: Number(e.amount), kind: `Extra · paid from ${payday(p)} paycheck` });
+        }
+      });
+    });
+  });
+  // Same day: charges before payments, so the low point isn't understated.
+  events.sort((a, b) => a.date - b.date || a.amount - b.amount);
+  return { events, unscheduled };
+}
+
+function renderMoneyCredit() {
+  const billMonth = getBillMonthDate();
+  const monthName = billMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const monthShort = billMonth.toLocaleDateString('en-US', { month: 'long' });
+  const monthEnd = new Date(billMonth.getFullYear(), billMonth.getMonth() + 1, 0);
+  const today = dateFromKey(todayKey());
+  const settings = getCreditCardSettings();
+  const shortDate = d => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+  let html = `<div class="bill-month-nav">
+    <button class="tiny-nav-btn" onclick="moveBillMonth(-1)" ${billMonthOffset===0?'disabled':''}>${arrowIcon('left')}</button>
+    <div>
+      <div class="bill-month-label">${esc(monthName)}</div>
+      <div class="bill-month-sub">How much credit each card should have open, day by day.</div>
+    </div>
+    <button class="tiny-nav-btn" onclick="moveBillMonth(1)" ${billMonthOffset===MAX_BILL_MONTH_OFFSET?'disabled':''}>${arrowIcon('right')}</button>
+  </div>`;
+
+  QUICK_PAY_CARDS.forEach(card => {
+    const s = settings[card];
+    // Anything after the day "owed" was entered still has to happen.
+    const from = s.asOf ? addDays(dateFromKey(s.asOf), 1) : today;
+    const start = from < billMonth ? from : billMonth;
+    const { events, unscheduled } = creditCardEvents(card, start, monthEnd);
+    let owed = s.owed;
+    let monthOpen = null;
+    const rows = [];
+    events.forEach(ev => {
+      const counts = ev.date >= from;
+      if (ev.date >= billMonth && monthOpen === null) monthOpen = s.limit - owed;
+      if (counts) owed = Math.max(0, owed - ev.amount);
+      if (ev.date >= billMonth) rows.push({ ...ev, counts, available: s.limit - owed });
+    });
+    if (monthOpen === null) monthOpen = s.limit - owed;
+    const counted = rows.filter(r => r.counts);
+    const low = counted.reduce((lo, r) => (r.available < lo.available ? r : lo), { available: monthOpen, date: null });
+    const charges = counted.filter(r => r.amount < 0).reduce((sum, r) => sum - r.amount, 0);
+    const payments = counted.filter(r => r.amount > 0).reduce((sum, r) => sum + r.amount, 0);
+    const endAvail = s.limit - owed;
+    const availClass = n => (n < 0 ? 'over' : '');
+
+    html += `<div class="card theme-card credit-card">
+      <div class="card-title-row"><div class="card-title credit-card-title">${cardIconSvg(card, 'card-icon lg')}${esc(card)}</div></div>
+      <div class="credit-settings">
+        <label class="credit-field"><span>Credit limit</span>
+          <span class="paycheck-row-amt-edit"><span class="paycheck-row-amt-currency">$</span>
+            <input type="number" step="0.01" min="0" inputmode="decimal" class="paycheck-row-amt-input" value="${Number(s.limit).toFixed(2)}"
+              onfocus="this.select()" onblur="submitCreditCardField('${attr(card)}','limit',this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}"></span>
+        </label>
+        <label class="credit-field"><span>Owed${s.asOf ? ' as of ' + esc(shortDate(dateFromKey(s.asOf))) : ' today'}</span>
+          <span class="paycheck-row-amt-edit"><span class="paycheck-row-amt-currency">$</span>
+            <input type="number" step="0.01" min="0" inputmode="decimal" class="paycheck-row-amt-input" value="${Number(s.owed).toFixed(2)}"
+              onfocus="this.select()" onblur="submitCreditCardField('${attr(card)}','owed',this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}"></span>
+        </label>
+      </div>
+      ${s.asOf ? '' : `<div class="credit-hint">Enter what you owe on ${esc(card)} today so the numbers below start from the real balance.</div>`}
+      <div class="paycheck-card-totals">
+        <div><span>${from > billMonth ? 'Open now' : 'Open ' + esc(shortDate(billMonth))}</span><strong class="${availClass(monthOpen)}">${formatMoney(monthOpen)}</strong></div>
+        <div><span>Lowest${low.date ? ' · ' + esc(shortDate(low.date)) : ''}</span><strong class="${availClass(low.available)}">${formatMoney(low.available)}</strong></div>
+        <div><span>End of ${esc(monthShort)}</span><strong class="${availClass(endAvail)}">${formatMoney(endAvail)}</strong></div>
+      </div>
+      <div class="credit-sub">${formatMoney(charges)} in charges · ${formatMoney(payments)} in scheduled payments</div>
+      ${low.available < 0 ? `<div class="credit-warn">Short ${formatMoney(-low.available)} on ${esc(shortDate(low.date))}. Schedule a ${esc(card)} payment on a paycheck before then.</div>` : ''}
+      <div class="credit-list">`;
+    if (!rows.length) html += `<div class="credit-empty">Nothing on ${esc(card)} in ${esc(monthShort)}.</div>`;
+    rows.forEach(r => {
+      html += `<div class="credit-row ${r.counts ? '' : 'already'} ${r.amount > 0 ? 'is-payment' : ''}">
+        <div class="credit-row-date">${esc(shortDate(r.date))}</div>
+        <div class="credit-row-info">
+          <div class="credit-row-name">${esc(r.name)}</div>
+          <div class="credit-row-kind">${r.counts ? esc(r.kind) : 'Already in what you owe'}</div>
+        </div>
+        <div class="credit-row-right">
+          <div class="credit-row-amt">${r.amount > 0 ? '+' : '−'}${formatMoney(Math.abs(r.amount))}</div>
+          ${r.counts ? `<div class="credit-row-avail ${availClass(r.available)}">${formatMoney(r.available)} open</div>` : ''}
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
+    const loose = unscheduled.filter(u => u.date >= billMonth);
+    if (loose.length) {
+      html += `<div class="credit-hint">Not on a paycheck yet, so not counted: ${loose.map(u => `${esc(u.name)} (${esc(shortDate(u.date))}, ${formatMoney(u.amount)})`).join(', ')}.</div>`;
+    }
+    html += `</div>`;
+  });
+
+  // Estimated regular spending
+  const estimates = getCreditEstimates();
+  html += `<div class="card theme-card credit-card">
+    <div class="card-title-row"><div class="card-title">Regular card spending</div></div>
+    <div class="credit-hint" style="margin-top:0;">Estimates for spending that isn't a bill. Each one repeats every 2 weeks from its date.</div>`;
+  estimates.forEach(e => {
+    html += `<div class="credit-est-row">
+      <input type="text" class="text-input compact credit-est-name" placeholder="e.g. Gas" value="${attr(e.name || '')}" onchange="updateCreditEstimate('${attr(e.id)}',{name:this.value.trim()})">
+      <span class="paycheck-row-amt-edit"><span class="paycheck-row-amt-currency">$</span>
+        <input type="number" step="0.01" min="0" inputmode="decimal" class="paycheck-row-amt-input" value="${Number(e.amount || 0).toFixed(2)}"
+          onfocus="this.select()" onchange="updateCreditEstimate('${attr(e.id)}',{amount:Number(this.value)||0})"></span>
+      <select class="text-input compact credit-est-card" onchange="updateCreditEstimate('${attr(e.id)}',{card:this.value})">
+        ${QUICK_PAY_CARDS.map(c => `<option value="${attr(c)}" ${c === e.card ? 'selected' : ''}>${esc(c)}</option>`).join('')}
+      </select>
+      <label class="credit-est-start"><span>From</span>
+        <input type="date" class="text-input compact" value="${attr(e.start || '')}" onchange="updateCreditEstimate('${attr(e.id)}',{start:this.value})"></label>
+      <button type="button" class="paycheck-tool-btn danger-soft" onclick="removeCreditEstimate('${attr(e.id)}')">Delete</button>
+    </div>`;
+  });
+  html += `<button type="button" class="add-btn" style="margin-top:8px;" onclick="addCreditEstimate()">+ Add estimate</button>
+  </div>`;
+  return html;
+}
+
 function renderMoney() {
   BILLS = getBillsList();
 
   let html = themePageHeader('Money', 'Know where it goes.', ['money']);
 
-  if (!['bills', 'paychecks', 'income'].includes(moneySubTab)) moneySubTab = 'bills';
+  if (!['bills', 'paychecks', 'credit', 'income'].includes(moneySubTab)) moneySubTab = 'bills';
 
   html += `<div class="money-tabs">
     <button class="money-tab ${moneySubTab==='bills'?'active':''}" onclick="moneySubTab='bills';renderMoney()">Bills</button>
     <button class="money-tab ${moneySubTab==='paychecks'?'active':''}" onclick="moneySubTab='paychecks';renderMoney()">Paychecks</button>
+    <button class="money-tab ${moneySubTab==='credit'?'active':''}" onclick="moneySubTab='credit';renderMoney()">Credit</button>
     <button class="money-tab ${moneySubTab==='income'?'active':''}" onclick="moneySubTab='income';renderMoney()">Income</button>
   </div>`;
 
   if (moneySubTab === 'bills') html += renderMoneyBills();
   else if (moneySubTab === 'paychecks') html += renderMoneyPaychecks();
+  else if (moneySubTab === 'credit') html += renderMoneyCredit();
   else if (moneySubTab === 'income') html += renderMoneyIncome();
 
   document.getElementById('page-money').innerHTML = html;
@@ -6938,15 +7273,23 @@ function renderMoneyBills() {
   const bills = BILLS;
   const billMonth = getBillMonthDate();
   const billMonthName = billMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-  const paid = getBillsPaid(billMonth);
-  const totalAll = bills.reduce((s, b) => s + b.amount, 0);
-  const paidCount = bills.filter(b => paid[b.key]).length;
-  const paidTotal = bills.filter(b => paid[b.key]).reduce((s, b) => s + b.amount, 0);
+  // Each time a bill is due this month: one for a monthly bill, one per due
+  // date for a biweekly bill (each is paid on its own).
+  const billEntries = b => {
+    const dates = b.category === 'Variable' ? [] : billOccurrenceDatesInMonth(b, billMonth);
+    if (b.frequency === 'biweekly' && b.firstDue && dates.length) return dates.map((date, index) => ({ b, date, index }));
+    return [{ b, date: dates[0] || new Date(billMonth.getFullYear(), billMonth.getMonth(), Math.min(b.day, 28)), index: 0 }];
+  };
+  const entryPaid = e => isBillPaidOn(e.b.key, e.date);
+  const allEntries = bills.flatMap(billEntries);
+  const totalAll = allEntries.reduce((s, e) => s + e.b.amount, 0);
+  const paidCount = allEntries.filter(entryPaid).length;
+  const paidTotal = allEntries.filter(entryPaid).reduce((s, e) => s + e.b.amount, 0);
   // Which paycheck each unpaid bill is scheduled on, for the "Scheduled" tag.
   const paychecksById = {};
   incomeOccurrencesForMonth(null, billMonth).forEach(p => { paychecksById[p.id] = p; });
-  const scheduledOn = b => {
-    const a = findOccurrenceAssignment(billOccId(b.key, billMonth, 0));
+  const scheduledOn = (b, index = 0) => {
+    const a = findOccurrenceAssignment(billOccId(b.key, billMonth, index));
     const p = a && paychecksById[a.paycheckId];
     return p ? p.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
   };
@@ -6955,7 +7298,7 @@ function renderMoneyBills() {
     <button class="tiny-nav-btn" onclick="moveBillMonth(-1)" ${billMonthOffset===0?'disabled':''}>${arrowIcon('left')}</button>
     <div>
       <div class="bill-month-label">${billMonthName}</div>
-      <div class="bill-month-sub">${formatMoney(paidTotal)} paid · ${formatMoney(totalAll - paidTotal)} to go · ${paidCount}/${bills.length} paid</div>
+      <div class="bill-month-sub">${formatMoney(paidTotal)} paid · ${formatMoney(totalAll - paidTotal)} to go · ${paidCount}/${allEntries.length} paid</div>
     </div>
     <button class="tiny-nav-btn" onclick="moveBillMonth(1)" ${billMonthOffset===MAX_BILL_MONTH_OFFSET?'disabled':''}>${arrowIcon('right')}</button>
   </div>`;
@@ -6967,14 +7310,15 @@ function renderMoneyBills() {
 
   BILL_CATEGORIES.forEach(cat => {
     const catBills = bills.filter(b => b.category === cat).sort((a, b) => a.day - b.day);
-    const catTotal = catBills.reduce((s, b) => s + b.amount, 0);
-    const catPaid = catBills.filter(b => paid[b.key]).length;
+    const catEntries = catBills.flatMap(billEntries);
+    const catTotal = catEntries.reduce((s, e) => s + e.b.amount, 0);
+    const catPaid = catEntries.filter(entryPaid).length;
     const isOpen = billCatOpen[cat] !== false;
     html += `<div class="bill-cat-section ${isOpen ? 'open' : ''}">
       <div class="bill-cat-header theme-row-card" onclick="billCatOpen['${cat}']=!billCatOpen['${cat}'];renderMoney()">
         <div class="bill-cat-left">
           <div class="bill-cat-name">${cat === 'Credit Card Payments' ? themeIcon('creditCard', 'bill-cat-icon') : ''}${esc(cat)}</div>
-          <div class="bill-cat-sub">${formatMoney(catTotal)} · ${catPaid}/${catBills.length} paid</div>
+          <div class="bill-cat-sub">${formatMoney(catTotal)} · ${catPaid}/${catEntries.length} paid</div>
         </div>
         ${chevron}
       </div>
@@ -7021,19 +7365,15 @@ function renderMoneyBills() {
             <div style="height:100%;width:${pct}%;background:${overBudget ? 'var(--danger)' : 'var(--success)'};border-radius:3px;transition:width 0.3s ease;"></div>
           </div>
         </div>`;
-      } else {
-        const isPaid = !!paid[b.key];
+      } else billEntries(b).forEach(({ date, index }) => {
+        const isPaid = isBillPaidOn(b.key, date);
         const isBiweekly = b.frequency === 'biweekly';
-        const occDates = billOccurrenceDatesInMonth(b, billMonth);
-        const anchorDate = occDates[0] || new Date(billMonth.getFullYear(), billMonth.getMonth(), Math.min(b.day, 28));
-        const dateKey = localDateKey(anchorDate);
-        const sched = isPaid ? '' : scheduledOn(b);
+        const dateKey = localDateKey(date);
+        const sched = isPaid ? '' : scheduledOn(b, index);
         const freqTag = (isBiweekly ? `<span class="bill-freq-tag">Biweekly</span>` : '')
           + (isPaid ? `<span class="bill-paid-tag">Paid</span>` : sched ? `<span class="bill-sched-tag">Scheduled · ${esc(sched)} paycheck</span>` : '');
         const dueLine = isBiweekly
-          ? (occDates.length
-              ? `Biweekly · ${occDates.map(d => formatShortDate(d)).join(', ')}`
-              : `Biweekly · set a first-due date`)
+          ? (b.firstDue ? `Biweekly · due ${formatShortDate(date)}` : `Biweekly · set a first-due date`)
           : `Due ${ordinal(b.day)}`;
         html += `<div class="bill-row ${isPaid ? 'paid' : ''}${dragClass}" data-bill-key="${attr(b.key)}" style="padding:10px 0;"${dragAttrs}>
           <button class="bill-check" onclick="toggleBill('${b.key}','${dateKey}')"><svg viewBox="0 0 12 12"><polyline points="2.5 6 5 8.5 9.5 3.5"/></svg></button>
@@ -7046,7 +7386,7 @@ function renderMoneyBills() {
             <button class="bill-edit-btn" onclick="openBillEditModal('${b.key}')" title="Edit bill">&#9998;</button>
           </div>
         </div>`;
-      }
+      });
     });
 
     html += `<button class="add-btn" style="margin-top:8px;" onclick="openBillEditModal(null,'${cat}')">+ Add Bill</button>
@@ -7068,7 +7408,7 @@ function renderMoneyBills() {
         ondrop="onBillToCardDrop(event,'${attr(card.key)}')">
       <div class="bill-cat-header theme-row-card" onclick="billCatOpen['${openKey}']=!billCatOpen['${openKey}'];renderMoney()">
         <div class="bill-cat-left">
-          <div class="bill-cat-name">${themeIcon('creditCard', 'bill-cat-icon')}${esc(card.label)}</div>
+          <div class="bill-cat-name">${cardIconSvg(card.key, 'card-icon lg')}${esc(card.label)}</div>
           <div class="bill-cat-sub">${formatMoney(cardTotal)} · ${cardBills.length} bill${cardBills.length===1?'':'s'} on this card</div>
         </div>
         ${chevron}
@@ -7097,16 +7437,6 @@ function renderMoneyBills() {
   return html;
 }
 
-/* ── One "paid" state for bills ──
-   A bill checked off on the Paychecks tab is checked off on the Bills tab
-   too (and the other way round): both read the month's bills-paid map,
-   keyed by the month the bill is due in. */
-function isBillPaidOn(billKey, date) { return !!getBillsPaid(date)[billKey]; }
-function setBillPaid(billKey, date, isPaid) {
-  const p = getBillsPaid(date);
-  if (isPaid) p[billKey] = true; else delete p[billKey];
-  saveBillsPaid(p, date);
-}
 /* Older paycheck-only "paid" ticks move over to the shared map once. */
 function migratePaycheckPaidFlag(paycheckId, o, instance, monthDate) {
   const ov = instance.billOverrides[o.billKey];
@@ -7153,7 +7483,7 @@ function checkingPlan(billMonth) {
     });
     inst.extras.forEach(e => {
       if (e.skip) return;
-      items.push({ name: e.name || 'Other', amount: Number(e.amount || 0), extra: true, extraId: e.id, paid: !!e.paid });
+      items.push({ name: e.name || 'Other', amount: Number(e.amount || 0), extra: true, extraId: e.id, card: e.card, paycheckId: p.id, paid: !!e.paid });
     });
     const needed = items.filter(it => !it.paid).reduce((sum, it) => sum + it.amount, 0);
     const total = items.reduce((sum, it) => sum + it.amount, 0);
@@ -7177,13 +7507,31 @@ function togglePaycheckAllPaid(paycheckId) {
   renderMoney();
 }
 
+/* A paycheck is "done" once its day has passed and either everything on it
+   is paid or a later paycheck has already come in. Done paychecks fade out. */
+function donePaycheckIds(billMonth) {
+  const todayK = todayKey();
+  const { perPaycheck } = checkingPlan(billMonth);
+  const done = new Set();
+  perPaycheck.forEach(({ paycheck, allPaid }, i) => {
+    if (paycheck.dateKey >= todayK) return;
+    const laterArrived = perPaycheck.slice(i + 1).some(r => r.paycheck.dateKey <= todayK);
+    if (allPaid || laterArrived) done.add(paycheck.id);
+  });
+  return done;
+}
+
 function buildCheckingSection(billMonth) {
   const chevron = `<svg class="collapse-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>`;
   const openKey = '@checking';
   const isOpen = billCatOpen[openKey] !== false;
   const monthName = billMonth.toLocaleDateString('en-US', { month: 'long' });
   const { paychecks, perPaycheck, unassignedItems } = checkingPlan(billMonth);
+  const doneIds = donePaycheckIds(billMonth);
   const itemRow = it => {
+    if (it.card) {
+      return `<div class="ff-item ${it.paid ? 'paid' : ''}"><span class="ff-item-name">${cardIconSvg(it.card)}${esc(it.name)} · extra</span>${extraAmtInput(it.paycheckId, { id: it.extraId, amount: it.amount })}</div>`;
+    }
     const when = it.extra ? 'other' : it.fromNextMonth ? 'early' : it.date ? it.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
     return `<div class="ff-item ${it.paid ? 'paid' : ''}"><span>${esc(it.name)}${when ? ' · ' + esc(when) : ''}</span><span>${formatMoney(it.amount)}</span></div>`;
   };
@@ -7194,7 +7542,7 @@ function buildCheckingSection(billMonth) {
   }
   perPaycheck.forEach(({ paycheck, items, needed, allPaid }) => {
     const dateLabel = paycheck.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-    body += `<div class="ff-paycheck-card ${allPaid ? 'ff-sent' : ''}">
+    body += `<div class="ff-paycheck-card ${allPaid ? 'ff-sent' : ''} ${doneIds.has(paycheck.id) ? 'ff-done' : ''}">
       <div class="ff-paycheck-head">
         <div>
           <div class="ff-paycheck-name">${esc(paycheck.label)}</div>
@@ -7209,6 +7557,7 @@ function buildCheckingSection(billMonth) {
         </div>
       </div>
       ${items.length ? `<div class="ff-item-list">${items.map(itemRow).join('')}</div>` : `<div class="ff-item-empty">No bills on this paycheck yet. Add some on the Paychecks tab.</div>`}
+      ${cardQuickButtons(paycheck.id)}
     </div>`;
   });
   if (unassignedItems.length) {
@@ -7376,6 +7725,7 @@ function renderMoneyPaychecks() {
   const plan = getPaycheckPlan(monthDate);
   const bills = BILLS.slice().filter(billBelongsOnPaychecksTab);
   const todayK = todayKey();
+  const doneIds = donePaycheckIds(monthDate);
 
   const allOccs = paycheckOccurrencesForMonth(bills, monthDate, false)
     .concat(paycheckOccurrencesForMonth(bills, next, true));
@@ -7428,21 +7778,22 @@ function renderMoneyPaychecks() {
     const isReceived = p.received;
     const isPast = p.dateKey < todayK && !isReceived;
     const stateClass = isReceived ? 'received' : isPast ? 'past' : 'upcoming';
+    const isDone = doneIds.has(p.id);
     const dateLabel = p.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 
-    html += `<div class="paycheck-card state-${stateClass} ${remaining < 0 ? 'overdraft' : ''} ${isOpen?'open':'collapsed'}" data-paycheck-id="${attr(p.id)}"
+    html += `<div class="paycheck-card state-${stateClass} ${isDone ? 'is-done' : ''} ${remaining < 0 ? 'overdraft' : ''} ${isOpen?'open':'collapsed'}" data-paycheck-id="${attr(p.id)}"
       ondragover="onPaycheckDragOver(event)" ondragleave="onPaycheckDragLeave(event)" ondrop="onPaycheckDrop(event,'${attr(p.id)}')">
       <button class="paycheck-card-toggle" type="button" onclick="togglePaycheckCardOpen('${attr(p.id)}')" aria-expanded="${isOpen?'true':'false'}">
         <div class="paycheck-card-head">
           <div>
             <div class="paycheck-card-label">${esc(p.label)}</div>
-            <div class="paycheck-card-date">${esc(dateLabel)}${isReceived ? ' · Received' : isPast ? ' · Past' : ''}</div>
+            <div class="paycheck-card-date">${esc(dateLabel)}${isDone ? ' · Done' : isReceived ? ' · Received' : isPast ? ' · Past' : ''}</div>
           </div>
           <div class="paycheck-card-amount">${formatMoney(paycheckAmt)}</div>
         </div>
         <div class="paycheck-card-stats">
           <span>Out ${formatMoney(totalOut)}${assigned.length + instance.extras.length ? ` · ${assigned.length + instance.extras.length} item${(assigned.length + instance.extras.length)===1?'':'s'}` : ''}</span>
-          <span class="${remaining < 0 ? 'over' : 'left'}">Remaining ${formatMoney(remaining)}</span>
+          <span class="paycheck-card-remaining ${remaining < 0 ? 'over' : 'left'}">Remaining ${formatMoney(remaining)}</span>
         </div>
         <svg class="paycheck-card-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
       </button>
@@ -7540,10 +7891,10 @@ function renderMoneyPaychecks() {
             <input type="checkbox" ${extra.paid?'checked':''} onchange="updatePaycheckExtra('${attr(p.id)}','${attr(extra.id)}',{paid:this.checked});renderMoney()">
           </label>
           <div class="paycheck-row-info">
-            <div class="paycheck-row-name">${esc(extra.name || 'Other')}</div>
-            <div class="paycheck-row-meta">Other · this paycheck only${extra.note ? ' · ' + esc(extra.note) : ''}</div>
+            <div class="paycheck-row-name">${extra.card ? cardIconSvg(extra.card) : ''}${esc(extra.name || 'Other')}</div>
+            <div class="paycheck-row-meta">${extra.card ? 'Extra card payment' : 'Other'} · this paycheck only${extra.note ? ' · ' + esc(extra.note) : ''}</div>
           </div>
-          <div class="paycheck-row-amt-display">${formatMoney(Number(extra.amount || 0))}</div>
+          ${extra.card ? extraAmtInput(p.id, extra) : `<div class="paycheck-row-amt-display">${formatMoney(Number(extra.amount || 0))}</div>`}
         </div>
         <div class="paycheck-row-tools">
           <button type="button" class="paycheck-tool-btn ${extra.reschedule?'on':''}"
@@ -7563,6 +7914,7 @@ function renderMoneyPaychecks() {
       <input type="number" class="text-input compact" id="ext-amt-${attr(p.id)}" step="0.01" inputmode="decimal" placeholder="$0">
       <button type="button" class="add-btn" style="margin:0;" onclick="submitPaycheckExtra('${attr(p.id)}')">+ Add other</button>
     </div>`;
+    html += cardQuickButtons(p.id);
 
     // Card totals
     html += `<div class="paycheck-card-totals">
@@ -7603,6 +7955,36 @@ function renderMoneyPaychecks() {
 }
 
 /* Add a one-off expense to a paycheck from the inline form. */
+function extraAmtInput(paycheckId, extra) {
+  return `<label class="paycheck-row-amt-edit" title="Payment amount">
+    <span class="paycheck-row-amt-currency">$</span>
+    <input type="number" step="0.01" min="0" inputmode="decimal" class="paycheck-row-amt-input"
+      data-extra-amt="${attr(extra.id)}" value="${Number(extra.amount || 0).toFixed(2)}"
+      onclick="event.stopPropagation();this.select()" onfocus="this.select()"
+      onblur="submitPaycheckExtraAmt('${attr(paycheckId)}','${attr(extra.id)}',this.value)"
+      onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}">
+  </label>`;
+}
+/* An extra credit-card payment on top of what's scheduled. Uses the amount
+   typed in the paycheck's "$" box if there is one; otherwise the new row's
+   amount field opens ready to type. */
+function addCardPaymentToPaycheck(paycheckId, card) {
+  const amtEl = document.getElementById(`ext-amt-${paycheckId}`);
+  const amount = Number(amtEl?.value || 0);
+  const id = addPaycheckExtra(paycheckId, { name: `${card} payment`, amount, card });
+  paycheckCardOpen[paycheckId] = true;
+  renderMoney();
+  if (!amount) {
+    const input = document.querySelector(`[data-extra-amt="${CSS.escape(id)}"]`);
+    if (input) { input.focus(); input.select(); }
+  }
+}
+function submitPaycheckExtraAmt(paycheckId, extraId, rawValue) {
+  const n = Number(String(rawValue == null ? '' : rawValue).trim() || 0);
+  if (Number.isNaN(n) || n < 0) return;
+  updatePaycheckExtra(paycheckId, extraId, { amount: n });
+  renderMoney();
+}
 function submitPaycheckExtra(paycheckId) {
   const nameEl = document.getElementById(`ext-name-${paycheckId}`);
   const amtEl = document.getElementById(`ext-amt-${paycheckId}`);
