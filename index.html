@@ -50,9 +50,7 @@ img.img-missing { visibility: hidden; }
   --caramel: #D4A574;
   --caramel-light: #FBF3EA;
   --mocha: #8B6F5E;
-  --cream: #F5EDE0;
   --nude: #CEBBA8;
-  --nude-light: #F0E8DC;
   --success: #7B9E87;
   --success-light: #E8F0EA;
   --danger: #C08B8F;
@@ -64,7 +62,6 @@ img.img-missing { visibility: hidden; }
   --radius: 16px;
   --radius-sm: 10px;
   --radius-xs: 6px;
-  --nav-h: 64px;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --page-pad: 20px;
@@ -84,9 +81,7 @@ img.img-missing { visibility: hidden; }
   --pal-green-strong: #B5E89A;
   --pal-yellow-strong: #E8D67E;
   --rainbow: linear-gradient(90deg, #A2BFFE 0%, #E2B3F2 28%, #FAB6DC 52%, #FFF6C2 76%, #E8FFD8 100%);
-  --rainbow-soft: linear-gradient(90deg, rgba(162,191,254,0.55) 0%, rgba(226,179,242,0.55) 28%, rgba(250,182,220,0.55) 52%, rgba(255,246,194,0.55) 76%, rgba(232,255,216,0.55) 100%);
   --rainbow-down: linear-gradient(180deg, #A2BFFE 0%, #E2B3F2 28%, #FAB6DC 52%, #FFF6C2 76%, #E8FFD8 100%);
-  --desk: #E6DACB;
   --book-max: 580px;
 }
 
@@ -105,9 +100,7 @@ img.img-missing { visibility: hidden; }
   --caramel: #D4A574;
   --caramel-light: #302418;
   --mocha: #B08E7A;
-  --cream: #2E2620;
   --nude: #8B7A6A;
-  --nude-light: #2A2420;
   --success: #8FB89A;
   --success-light: #263029;
   --danger: #D49BA0;
@@ -128,8 +121,6 @@ img.img-missing { visibility: hidden; }
   --pal-green-strong: #E8FFD8;
   --pal-yellow-strong: #FFF6C2;
   --rainbow: linear-gradient(90deg, #A2BFFE 0%, #E2B3F2 28%, #FAB6DC 52%, #FFF6C2 76%, #E8FFD8 100%);
-  --rainbow-soft: linear-gradient(90deg, rgba(162,191,254,0.32) 0%, rgba(226,179,242,0.32) 28%, rgba(250,182,220,0.32) 52%, rgba(255,246,194,0.32) 76%, rgba(232,255,216,0.32) 100%);
-  --desk: #120F0D;
   --shadow-sm: 0 1px 4px rgba(0,0,0,0.2);
   --shadow-md: 0 4px 16px rgba(0,0,0,0.25);
 }
@@ -330,10 +321,10 @@ body { background: var(--bg); }
 }
 
 /* Switching pages: a quick fade, nothing that slows you down. */
-.tab-page.turn-forward, .tab-page.turn-back { animation: pageFade 0.14s ease-out; }
+.tab-page.page-in { animation: pageFade 0.14s ease-out; }
 @keyframes pageFade { from { opacity: 0.4; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
-  .tab-page.turn-forward, .tab-page.turn-back { animation: none; }
+  .tab-page.page-in { animation: none; }
 }
 
 /* Section buttons. Wide screens (tablet, computer): two stacks of cards
@@ -409,10 +400,6 @@ body { background: var(--bg); }
   font-family: var(--font-display); font-size: 26px; color: var(--espresso);
   line-height: 1.25; letter-spacing: 0.2px;
 }
-
-/* ── Today Focus: day-view panels laid out as a page ── */
-
-/* ── Homepage Hub Nav ── */
 
 /* ── Cards & Components ── */
 .card {
@@ -551,8 +538,6 @@ body.cleaning-dragging .week-day-btn { transition: transform 0.15s ease, box-sha
 }
 .allday-chip-x:hover { color: var(--danger); }
 
-/* ── Routine anchor banner (top of Home) ── */
-
 /* ── Week at a Glance (bullet view) ── */
 .week-glance { display: flex; flex-direction: column; gap: 6px; margin: 4px 0 12px; }
 .wg-day {
@@ -589,8 +574,6 @@ body.cleaning-dragging .week-day-btn { transition: transform 0.15s ease, box-sha
 .wg-empty { font-size: 13px; color: var(--text-muted); font-style: italic; }
 .week-action-row { display: flex; gap: 8px; margin-top: 10px; }
 .week-action-btn { flex: 1; margin: 0; }
-
-/* At-a-glance day view: fixed height, no scroll, blocks are %-positioned. */
 
 /* ── Paycheck planner tab ── */
 .paycheck-row {
@@ -877,10 +860,6 @@ body.paycheck-dragging .paycheck-pool-row {
 .ring-text { font-size: 14px; color: var(--text-secondary); }
 .ring-count { font-weight: 600; color: var(--espresso); }
 
-/* ── Progress Bar ── */
-
-/* ── Streak ── */
-
 /* ── Quick Actions ── */
 .sticky-section { margin-top: 16px; }
 .sticky-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin-bottom: 14px; }
@@ -924,18 +903,6 @@ body.paycheck-dragging .paycheck-pool-row {
 /* ── Toggle ── */
 .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; }
 .toggle-label { font-size: 15px; color: var(--text); }
-.toggle-sw {
-  width: 44px; height: 26px; border-radius: 13px;
-  background: var(--border); border: none; cursor: pointer;
-  position: relative; transition: background 0.3s;
-}
-.toggle-sw.on { background: var(--espresso); }
-.toggle-knob {
-  width: 20px; height: 20px; border-radius: 50%;
-  background: #fff; position: absolute; top: 3px; left: 3px;
-  transition: transform 0.3s; box-shadow: 0 1px 3px rgba(0,0,0,0.15);
-}
-.toggle-sw.on .toggle-knob { transform: translateX(18px); }
 
 /* ── Inputs ── */
 .field-label { font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 5px; }
@@ -960,8 +927,6 @@ body.paycheck-dragging .paycheck-pool-row {
   color: var(--text); font-size: 15px; text-align: center; outline: none;
 }
 .num-input:focus { border-color: var(--latte); }
-
-/* ── Routine Time Tag ── */
 
 /* ── Schedule / Planner ── */
 .month-card { overflow: hidden; }
@@ -1072,10 +1037,6 @@ body.paycheck-dragging .paycheck-pool-row {
 [data-theme="dark"] .due-soon-class,
 [data-theme="dark"] .due-soon-link {
   background: rgba(125,168,232,0.18); color: #A2BFFE; border-color: rgba(125,168,232,0.55);
-}
-@keyframes softBob {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-2px); }
 }
 .week-day-btn {
   flex: 1; padding: 8px 4px; border-radius: var(--radius-xs);
@@ -1223,12 +1184,6 @@ body.paycheck-dragging .paycheck-pool-row {
 .acct-edit-row { margin-bottom: 12px; }
 .acct-edit-row .field-label { font-size: 13px; margin-bottom: 4px; }
 .acct-edit-row .text-input { width: 100%; }
-
-/* ── 12-Month Projection ── */
-
-/* Discover safe-spend panel (on the Discover account card body). */
-
-/* ── Money Transactions View ── */
 
 /* ── Money Bills View ── */
 .bill-cat-section { margin-bottom: 10px; }
@@ -1400,16 +1355,6 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
   border: 1px solid var(--danger); background: var(--danger-light); color: var(--danger);
   font-size: 15px; font-weight: 700; cursor: pointer;
 }
-.color-dot-row { display: flex; gap: 8px; flex-wrap: wrap; }
-.color-dot {
-  width: 30px; height: 30px; border-radius: 50%; border: 2px solid transparent;
-  cursor: pointer;
-}
-.color-dot.active { border-color: var(--espresso); box-shadow: 0 0 0 2px var(--bg-card), 0 0 0 4px var(--espresso-light); }
-.tx-note { font-size: 14px; color: var(--text); }
-.tx-amount { font-size: 15px; font-weight: 600; }
-.tx-amount.neg { color: var(--danger); }
-.tx-amount.pos { color: var(--success); }
 .tx-del {
   width: 24px; height: 24px; border-radius: 50%; border: none;
   background: var(--danger-light); color: var(--danger); font-size: 15px;
@@ -1424,8 +1369,6 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
   cursor: pointer; transition: all 0.2s; margin-bottom: 14px;
 }
 .add-btn:active { background: var(--espresso-light); }
-
-/* ── Savings ── */
 
 /* ── Health ── */
 .water-card { overflow: hidden; }
@@ -1458,10 +1401,6 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
   color: var(--text-secondary); border-radius: 999px; padding: 6px 10px;
   font-size: 12px; cursor: pointer;
 }
-@keyframes waterWave {
-  0%, 100% { transform: translateX(0); }
-  50% { transform: translateX(10px); }
-}
 .meal-choice-row { display: grid; grid-template-columns: 82px 1fr; align-items: center; gap: 8px; }
 .meal-choice-label { font-size: 13px; font-weight: 700; color: var(--espresso); }
 .meal-choice-options { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -1470,7 +1409,6 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
   border-radius: 999px; padding: 7px 10px; font-size: 13px; cursor: pointer;
 }
 .meal-choice-btn.active { background: var(--espresso); border-color: var(--espresso); color: #fff; }
-.meal-alt { font-size: 13px; color: var(--text-muted); font-style: italic; margin-top: 2px; }
 .grocery-controls {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
   margin: 10px 0 12px;
@@ -1496,8 +1434,6 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
 .grocery-item .grocery-qty { font-size: 15px; }
 .grocery-item.checked .grocery-qty { color: var(--text-muted); text-decoration: line-through; text-decoration-color: var(--nude); }
 .grocery-note { margin-top: 10px; }
-.todo-title { font-size: 15px; font-weight: 700; color: var(--text); }
-.todo-notes { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
 
 .med-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border-soft); cursor: pointer; }
 .med-row:last-child { border-bottom: none; }
@@ -1710,10 +1646,6 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
 .brain-dump-actions .cat-btn { padding: 7px 6px; }
 .brain-dump-empty { font-size: 14px; color: var(--text-muted); padding: 8px 0; }
 
-/* ── Plan Banner ── */
-
-/* ── Supabase Sync Indicator ── */
-
 /* ── Settings Panel ── */
 .settings-panel {
   position: fixed; inset: 0; z-index: 400;
@@ -1762,7 +1694,7 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
 
 /* ── iPad optimization ── */
 @media (min-width: 700px) {
-  :root { --page-pad: 32px; --nav-h: 72px; }
+  :root { --page-pad: 32px; }
   .tab-page { max-width: 680px; }
   .page-greeting { font-size: 30px; }
   .page-date { font-size: 17.5px; }
@@ -2064,82 +1996,6 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
   <nav class="book-tabs" id="book-tabs" aria-label="Planner sections"></nav>
 </div>
 
-<!-- Transaction Modal -->
-<div class="modal-overlay" id="tx-modal">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
-    <div class="modal-title">Log Transaction</div>
-    <div class="modal-field">
-      <div class="field-label">Account</div>
-      <select class="modal-input" id="tx-account" onchange="updateTxVariableOptions()"></select>
-    </div>
-    <div class="modal-field">
-      <div class="field-label">Amount</div>
-      <input type="number" class="modal-input" id="tx-amount" placeholder="0.00" step="0.01" inputmode="decimal">
-    </div>
-    <div class="modal-field">
-      <div class="field-label">Type</div>
-      <div style="display:flex;gap:8px;">
-        <button class="cat-btn active" id="tx-type-expense" onclick="setTxType('expense')">Expense</button>
-        <button class="cat-btn" id="tx-type-income" onclick="setTxType('income')">Income / Deposit</button>
-      </div>
-    </div>
-    <div class="modal-field" id="tx-variable-toggle-field">
-      <div class="toggle-row" style="padding:0;">
-        <div>
-          <div class="toggle-label">Variable Expense</div>
-          <div class="field-hint" style="margin:2px 0 0;">Counts against a Variable category budget.</div>
-        </div>
-        <button class="toggle-sw" id="tx-variable-toggle" onclick="toggleTxVariable()"><div class="toggle-knob"></div></button>
-      </div>
-    </div>
-    <div class="modal-field" id="tx-variable-bill-field" style="display:none;">
-      <div class="field-label">Which Variable Bill?</div>
-      <select class="modal-input" id="tx-variable-bill"></select>
-    </div>
-    <div class="modal-field">
-      <div class="toggle-row" style="padding:0;">
-        <div>
-          <div class="toggle-label">Schedule For Later</div>
-          <div class="field-hint" style="margin:2px 0 0;">Counts as upcoming until the date arrives.</div>
-        </div>
-        <button class="toggle-sw" id="tx-schedule-toggle" onclick="toggleTxSchedule()"><div class="toggle-knob"></div></button>
-      </div>
-    </div>
-    <div class="modal-field" id="tx-schedule-date-field" style="display:none;">
-      <div class="field-label">Scheduled Date</div>
-      <input type="date" class="modal-input" id="tx-schedule-date">
-    </div>
-    <div class="modal-field">
-      <div class="field-label">Note</div>
-      <input type="text" class="modal-input" id="tx-note" placeholder="What was it for?">
-    </div>
-    <button class="modal-submit" onclick="saveTx()">Save</button>
-  </div>
-</div>
-
-<!-- Account Modal -->
-<div class="modal-overlay" id="acct-modal">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
-    <div class="modal-title" id="acct-modal-title">Add Account</div>
-    <div class="modal-field">
-      <div class="field-label">Account Name</div>
-      <input type="text" class="modal-input" id="acct-name" placeholder="e.g. Checking, Savings, Cash">
-    </div>
-    <div class="modal-field">
-      <div class="field-label">Starting Balance</div>
-      <input type="number" class="modal-input" id="acct-balance" placeholder="0.00" step="0.01" inputmode="decimal">
-    </div>
-    <div class="modal-field">
-      <div class="field-label">Color</div>
-      <div class="color-dot-row" id="acct-color-row"></div>
-    </div>
-    <button class="modal-danger" id="acct-delete-btn" style="display:none;margin-bottom:10px;" onclick="deleteAcctEdit()">Delete Account</button>
-    <button class="modal-submit" id="acct-save-btn" onclick="saveAcct()">Add Account</button>
-  </div>
-</div>
-
 <!-- Income Add Modal -->
 <div class="modal-overlay" id="income-add-modal">
   <div class="modal-sheet">
@@ -2230,27 +2086,6 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
     </div>
     <button class="modal-danger" id="bill-edit-delete" style="display:none;margin-bottom:10px;" onclick="deleteBillEdit()">Delete Bill</button>
     <button class="modal-submit" id="bill-edit-save" onclick="saveBillEdit()">Add Bill</button>
-  </div>
-</div>
-
-<!-- Savings Goal Modal -->
-<div class="modal-overlay" id="save-modal">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
-    <div class="modal-title">Savings Goal</div>
-    <div class="modal-field">
-      <div class="field-label">Goal Name</div>
-      <input type="text" class="modal-input" id="save-name" placeholder="e.g. Emergency Fund">
-    </div>
-    <div class="modal-field">
-      <div class="field-label">Target Amount</div>
-      <input type="number" class="modal-input" id="save-target" placeholder="0.00" step="0.01" inputmode="decimal">
-    </div>
-    <div class="modal-field">
-      <div class="field-label">Already Saved</div>
-      <input type="number" class="modal-input" id="save-current" placeholder="0.00" step="0.01" inputmode="decimal">
-    </div>
-    <button class="modal-submit" onclick="saveSavingsGoal()">Save Goal</button>
   </div>
 </div>
 
@@ -2385,34 +2220,6 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
 <!-- Cleaning Day Picker Sheet -->
 <div class="cleaning-picker-sheet" id="cleaning-picker" onclick="if(event.target===this)closeCleaningPicker()"></div>
 
-<!-- Today To-Do Modal -->
-<div class="modal-overlay" id="todo-modal">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
-    <div class="modal-title" id="todo-modal-title">Add To-Do</div>
-    <div class="modal-field">
-      <div class="field-label">Task</div>
-      <input type="text" class="modal-input" id="todo-title" placeholder="What needs done?">
-    </div>
-    <div class="modal-field">
-      <div class="field-label">Urgency</div>
-      <select class="modal-input" id="todo-urgency">
-        <option value="low">Low</option>
-        <option value="medium">Medium</option>
-        <option value="high">High</option>
-      </select>
-    </div>
-    <div class="modal-field">
-      <div class="field-label">Notes</div>
-      <textarea class="text-area" id="todo-notes" rows="3" placeholder="Tiny context for future you."></textarea>
-    </div>
-    <div style="display:flex;gap:8px;align-items:stretch;">
-      <button class="add-btn" id="todo-delete" style="display:none;flex:1;margin:8px 0 0;border-style:solid;color:var(--danger);" onclick="deleteTodoEdit()">Delete</button>
-      <button class="modal-submit" style="flex:2;" onclick="saveTodoEdit()">Save To-Do</button>
-    </div>
-  </div>
-</div>
-
 <!-- Due Soon Modal -->
 <div class="modal-overlay" id="due-soon-modal">
   <div class="modal-sheet">
@@ -2444,30 +2251,6 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
     <div class="modal-title">Put chores on days</div>
     <div id="chores-modal-body"></div>
     <button class="modal-submit" onclick="document.getElementById('chores-modal').classList.remove('open')">Done</button>
-  </div>
-</div>
-
-<!-- Meal Modal -->
-<div class="modal-overlay" id="meal-modal">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
-    <div class="modal-title" id="meal-modal-title">Edit Meal</div>
-    <div class="modal-field">
-      <div class="field-label">Section</div>
-      <input type="text" class="modal-input" id="meal-title" placeholder="Breakfast, Lunch, Snack">
-    </div>
-    <div class="modal-field">
-      <div class="field-label">Meal</div>
-      <input type="text" class="modal-input" id="meal-items" placeholder="Chicken, broccoli & rice">
-    </div>
-    <div class="modal-field">
-      <div class="field-label">Optional swap</div>
-      <input type="text" class="modal-input" id="meal-alt" placeholder="or eggs and waffles">
-    </div>
-    <div style="display:flex;gap:8px;align-items:stretch;">
-      <button class="add-btn" id="meal-delete" style="display:none;flex:1;margin:8px 0 0;border-style:solid;color:var(--danger);" onclick="deleteMealEdit()">Delete</button>
-      <button class="modal-submit" style="flex:2;" onclick="saveMealEdit()">Save Meal</button>
-    </div>
   </div>
 </div>
 
@@ -2738,7 +2521,6 @@ const MEDS = {
   ]
 };
 
-
 const BILL_CATEGORIES = ['Necessities', 'Credit Card Payments', 'Subscriptions', 'Variable', 'Other'];
 const DEFAULT_BILLS = [
   { key: 'mortgage', name: 'Mortgage', amount: 1373.54, day: 1, category: 'Necessities', source: 'Checking Account', note: 'Village Capital' },
@@ -2938,24 +2720,17 @@ const RETIRED_CLEANING_TASK_IDS = ['meal-prep', 'room-reset'];
    real shifts on the calendar always win. */
 const USUAL_DAYS_OFF = [4, 6];
 
-
 /* ── Cozy sticker icons inspired by the uploaded planner art ── */
 const THEME_ICONS = {
   money: `<svg viewBox="0 -196 1416 1416" fill="none"><path d="M55.351 290.041h1038.391c18.82 0 33.211 14.391 33.211 33.211v645.397c0 18.819-14.391 33.21-33.211 33.21H55.351c-18.819 0-33.21-14.391-33.21-33.21V323.252c0-17.713 14.391-33.211 33.21-33.211z" fill="#9DBE87"/><path d="M954.257 902.227H194.837c0-52.03-43.174-95.204-95.204-95.204V472.7c52.03 0 95.204-43.174 95.204-95.204h759.42c0 52.03 43.175 95.204 95.205 95.204v334.322c-53.137 0-95.205 43.174-95.205 95.204z" fill="#D6F0C5"/><path d="M576.761 790.417c-35.425 0-73.064-13.284-99.632-47.602c-7.75-9.963-5.535-23.247 3.321-30.997c9.963-7.749 23.247-5.535 30.997 3.321c26.568 34.318 67.528 35.425 94.097 26.569c22.14-7.75 35.424-22.141 35.424-37.639c0-14.391-34.317-24.354-64.207-33.21c-46.495-14.392-105.168-30.997-105.168-86.349c0-26.568 16.606-50.923 45.388-65.314c35.425-17.713 95.205-24.355 151.663 16.605c9.963 7.749 12.177 21.034 4.428 30.997c-7.749 9.963-21.034 12.177-30.997 4.428c-37.639-27.676-79.706-26.569-105.168-13.284c-13.284 6.642-22.14 16.605-22.14 26.568c0 21.034 30.996 30.997 73.063 44.281c45.388 13.284 95.205 28.783 95.205 75.278c0 34.318-25.462 65.315-65.315 79.706c-11.07 3.321-26.568 6.642-40.96 6.642z" fill="#131313"/><path d="M574.547 549.085c-12.177 0-22.14-9.963-22.14-22.14v-48.71c0-12.177 9.963-22.14 22.14-22.14s22.14 9.963 22.14 22.14v48.71c0 13.284-9.963 22.14-22.14 22.14z" fill="#131313"/><path d="M574.547 832.484c-12.177 0-22.14-9.963-22.14-22.14v-36.532c0-12.177 9.963-22.14 22.14-22.14s22.14 9.963 22.14 22.14v36.532c0 12.177-9.963 22.14-22.14 22.14z" fill="#131313"/><circle cx="285.613" cy="653.146" r="40.96" fill="#AECD99"/><circle cx="865.695" cy="653.146" r="40.96" fill="#AECD99"/></svg>`,
-  bicep: `<svg viewBox="0 0 512 512" fill="none"><path fill="#FFD3B6" d="M472 362.5c-6.9-25.8-29.8-48.2-65-58.1c-26.4-7.4-74.2-17.3-118.6-5.5c-26.9 7.1-54.7 23.9-78.1 39.4V335c0-5.7.2-24.7.9-36.4c.4-12.5.8-25.3 1.6-38c.5-12.9 1.5-25.6 2.6-38.2c.8-12.8 2.9-24.6 4.4-36.5c1.9-10.9 5.4-21.5 9.2-31.3c12.8 8.1 30.9 14 53.8 14c30.6 0 45.1-9.4 51.2-16.3c3-3.4 8.2-9.8 3.8-21.9c-4.2-11.3-10.2-9.3-10.2-13.6c0-5.7 2.2-5.5 11-10c20-10.1 17.9-27.4 17.8-43.7c.1-1.2.1-2.3.1-3.5c0-32.8-31.9-59.4-71.1-59.4c-.8 0-1.6 0-2.4.1l-.2-.3c-32.8 0-53.6 9.7-66.1 24.2c-.6.4-1.1.8-1.7 1.3c-1.6 1.6-3.3 3.2-5.1 5c-6.7 6.8-16.8 17.7-20.8 24.6c-5.8 8-11.8 16.9-17.4 26.2c-6.4 9.4-11.8 19.5-18.5 30c-6.6 10.5-12.3 21.9-19.2 33.4c-12.5 23.3-26.7 48-38.9 73.7C83 244.1 71.2 270.3 62.2 296c-4.5 12.9-8.4 25.6-11.7 37.9c-3.1 12.6-6.5 24.1-7.9 35.9c-.2 1.5-.4 3-.5 4.5c-7.8 49.9-8.6 106.5-1.7 115.2c7.9 10.1 29.3 13.1 49.5 11.7c13.8-.9 77.9 10.5 140.5 10.5c3.6.1 7.2.2 10.9.2c47.9.2 100.9-3.3 132.2-17.2c91.6-40.5 113.2-77 98.5-132.2z"/><path fill="#EDC0A2" d="M302.4 434.1c-2.1 0-4.2-.1-6.4-.2c-27.9-1.7-53.4-14.1-71.9-35c-3.4-3.8-3.1-9.7.8-13.1c3.8-3.4 9.7-3.1 13.1.8c15.2 17.2 36.2 27.4 59.1 28.7c22.9 1.4 45-6.3 62.1-21.5c3.8-3.4 9.7-3.1 13.1.8c3.4 3.8 3.1 9.7-.8 13.1c-19.2 17.1-43.5 26.4-69.1 26.4z"/></svg>`,
-  leg: `<svg viewBox="0 0 36 36" fill="none"><path fill="#AF7E57" d="M24.854.731c3.633 1.239 4.935 8.505.991 10.297c-1.586.72-4.049 1.511-6.185 1.032c-2.737-.613-4.721-.238-4.721-.238s4.797 2.19 6.339 6.323c1.542 4.133 1.072 7.171 3.235 9.163c1.708 1.573 2.79 3.7 1.639 4.994c-1.545 1.738-3.929-.028-6.1 2.48c-1.522 1.758-4.81 1.182-7.088.142c-2.879-1.314.807-2.191 1.842-2.297c1.15-.117 5.29-2.348 3.33-5.544c-4.196-6.841-8.501-10.544-11.313-12.61c-2.514-1.846-2.772-5.313-.147-8.465c1.662-1.996 5.229-3.554 9.253-4.733c2.8-.821 5.973-1.551 8.925-.544z"/><path fill="#90603E" d="M8.267 13.047l-.042-.02a.78.78 0 0 1-.324-1.054c1.154-2.179.472-3.999.443-4.076a.783.783 0 0 1 .44-1.01a.777.777 0 0 1 1.009.432c.041.102.993 2.541-.513 5.383a.78.78 0 0 1-1.013.345z"/></svg>`,
   sleep: `<svg viewBox="0 0 512 512" fill="none"><circle fill="#F8E99B" cx="252.278" cy="255.998" r="252.278"/><path fill="#F6E27D" d="M252.278 3.724V508.28c139.329 0 252.278-112.949 252.278-252.278S391.608 3.724 252.278 3.724z"/><path fill="#A58868" d="M159.334 329.03c-30.901 0-60.762-14.752-62.018-15.381l17.772-35.648c.227.112 22.906 11.196 44.246 11.196 21.259 0 43.98-11.063 44.204-11.175l17.813 35.627C220.096 314.278 190.235 329.03 159.334 329.03z"/><path fill="#947859" d="M345.223 329.03c-30.901 0-60.762-14.752-62.018-15.381l17.772-35.648c.227.112 22.906 11.196 44.246 11.196 21.259 0 43.981-11.063 44.204-11.175l17.814 35.627C405.985 314.278 376.124 329.03 345.223 329.03z"/><path fill="#A58868" d="M252.278 435.252c-14.643 0-26.556-11.913-26.556-26.556 0-14.643 11.913-26.556 26.556-26.556 14.645 0 26.556 11.913 26.556 26.556 0 14.643-11.911 26.556-26.556 26.556z"/><polygon fill="#3862CC" points="278.834 222.81 192.528 222.81 178.446 188.811 224.112 143.143 185.889 143.143 185.889 103.31 272.195 103.31 286.277 137.31 240.611 182.977 278.834 182.977"/><polygon fill="#3862CC" points="391.695 196.252 305.389 196.252 291.307 162.253 336.973 116.585 298.751 116.585 298.751 76.752 385.056 76.752 399.139 110.752 353.472 156.418 391.695 156.418"/><polygon fill="#3862CC" points="504.556 169.696 418.251 169.696 404.168 135.697 449.835 90.029 411.612 90.029 411.612 50.196 497.918 50.196 512 84.197 466.334 129.863 504.556 129.863"/></svg>`,
   bill: `<svg viewBox="0 0 1024 1024" fill="none"><path d="M853.333333 874.666667H170.666667c-46.933333 0-85.333333-38.4-85.333334-85.333334V343.466667c0-27.733333 12.8-53.333333 36.266667-70.4L512 0l390.4 273.066667c23.466667 14.933333 36.266667 42.666667 36.266667 70.4V789.333333c0 46.933333-38.4 85.333333-85.333334 85.333334z" fill="#78909C"/><path d="M298.666667 21.333333h426.666666v661.333334H298.666667z" fill="#AED581"/><path d="M277.333333 0v704h469.333334V0H277.333333z m426.666667 661.333333H320V42.666667h384v618.666666z" fill="#558B2F"/><path d="M725.333333 64c0 36.266667-6.4 64-42.666666 64s-64-27.733333-64-64 27.733333-42.666667 64-42.666667 42.666667 6.4 42.666666 42.666667zM341.333333 21.333333c36.266667 0 64 6.4 64 42.666667s-27.733333 64-64 64-42.666667-27.733333-42.666666-64 6.4-42.666667 42.666666-42.666667z" fill="#558B2F"/><path d="M512 170.666667m-42.666667 0a42.666667 42.666667 0 1 0 85.333334 0 42.666667 42.666667 0 1 0-85.333334 0Z" fill="#558B2F"/><path d="M512 426.666667m-128 0a128 128 0 1 0 256 0 128 128 0 1 0-256 0Z" fill="#558B2F"/><path d="M853.333333 874.666667H170.666667c-46.933333 0-85.333333-38.4-85.333334-85.333334V362.666667l426.666667 277.333333 426.666667-277.333333v426.666666c0 46.933333-38.4 85.333333-85.333334 85.333334z" fill="#CFD8DC"/></svg>`,
   academic: `<svg viewBox="0 0 512 512" fill="none"><rect y="8.198" fill="#CFDCE5" width="370.957" height="495.607"/><path fill="#4EBFED" d="M432.203 93.909l39.898-85.711 39.898 85.711v385.139c0 13.673-11.083 24.756-24.756 24.756h-30.286c-13.673 0-24.756-11.083-24.756-24.756V93.909z"/><path fill="#FF6F52" d="M511.996 438.44v40.606c0 13.671-11.086 24.757-24.757 24.757h-30.287c-13.671 0-24.744-11.086-24.744-24.757V438.44h79.788z"/><rect x="473.027" y="93.909" fill="#97E1F7" width="14.845" height="344.529"/><path fill="#3BA4BC" d="M432.203 479.048c0 13.673 11.083 24.756 24.756 24.756h7.55c-6.855 0-12.414-11.083-12.414-24.756V93.909l20.007-85.711-39.898 85.711v385.139z"/><polygon fill="#FCD577" points="511.996 93.91 432.208 93.91 472.096 8.195"/><path fill="#E25749" d="M464.512 503.802h-7.559c-13.671 0-24.744-11.086-24.744-24.757V438.44h19.882v40.606c0 13.671 5.567 24.756 12.421 24.756z"/><polygon fill="#EAC36E" points="452.09 93.91 432.208 93.91 472.096 8.195"/><rect x="432.199" y="429.156" fill="#FCD577" width="79.801" height="18.558"/><rect x="76.918" y="72.858" fill="#415E72" width="217.12" height="18.558"/><rect x="268.279" y="168.287" fill="#415E72" width="56.291" height="18.558"/><rect x="46.393" y="168.287" fill="#415E72" width="209.511" height="18.558"/><rect x="46.393" y="264.395" fill="#415E72" width="278.177" height="18.558"/><rect x="121.681" y="216.341" fill="#415E72" width="202.892" height="18.558"/><rect x="46.393" y="216.341" fill="#415E72" width="62.912" height="18.558"/><rect x="46.393" y="408.556" fill="#415E72" width="278.177" height="18.558"/><rect x="244.154" y="360.502" fill="#415E72" width="80.416" height="18.558"/><rect x="46.393" y="360.502" fill="#415E72" width="185.385" height="18.558"/></svg>`,
 };
 
-THEME_ICONS.shot = `<svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill="#CCD6DD" d="M27.071 9.929a.999.999 0 0 1-.707-1.707S35.166.054 35.556.444c.391.391-7.778 9.192-7.778 9.192a.997.997 0 0 1-.707.293z"/><path fill="#ADD3E0" d="M28.839 11.404a1.5 1.5 0 0 1-2.121 0l-2.121-2.121a1.5 1.5 0 0 1 0-2.122C25.182 6.575 28.414 5.414 29 6l1 1c.586.585-.575 3.818-1.161 4.404z"/><path fill="#C1E1EA" d="M17.464 25.606a2 2 0 0 1-2.828 0l-4.243-4.242a2 2 0 0 1 0-2.829l12.021-12.02a2 2 0 0 1 2.828 0l4.243 4.243a2 2 0 0 1 0 2.829L17.464 25.606z"/><path fill="#D2ECF3" d="M10.394 21.364a2 2 0 0 1 0-2.829l12.02-12.02a2 2 0 0 1 2.828 0L10.394 21.364z"/><path fill="#CCD6DD" d="M7.272 32.971L3.03 28.728l11.777-11.777l4.243 4.241z"/><path fill="#99AAB5" d="M7.747 35.324a1.5 1.5 0 0 1-2.122 0l-4.95-4.95a1.5 1.5 0 0 1 2.122-2.121l4.95 4.95a1.5 1.5 0 0 1 0 2.121zm10.071-7.243a1.5 1.5 0 0 1-2.121 0l-7.778-7.777a1.501 1.501 0 0 1 2.122-2.122l7.778 7.778a1.5 1.5 0 0 1-.001 2.121z"/><path fill="#292F33" d="M14.322 14.607l-1.042 1.042l.04.04l7.035 7.035l1.042-1.042z"/><path fill="#66757F" d="M14.322 14.607l-1.042 1.042l.04.04l1.374 1.374l1.042-1.042zm8.291 3.333a.736.736 0 0 0 0 1.042l.742.742l1.042-1.042l-.742-.742a.736.736 0 0 0-1.042 0zm1.875-1.875a.736.736 0 0 0 0 1.042l.742.742l1.042-1.042l-.742-.742a.736.736 0 0 0-1.042 0zm2.917-1.875a.736.736 0 1 0-1.042 1.042l.742.742l1.042-1.042l-.742-.742z"/></svg>`;
-THEME_ICONS.shower = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 10h12M10 4v6M6 14v1M10 14v2M14 14v1M18 14v2M8 18v1M12 18v2M16 18v1" stroke="#B85C7A" stroke-width="1.6" stroke-linecap="round"/><path d="M4 7c0-1.5 1.5-3 4-3s4 1.5 4 3v3" stroke="#B85C7A" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>`;
-
 /* Picture icons from Assets/images/. themeIcon() checks these first, so a name
    here (e.g. 'work') wins over an inline THEME_ICONS drawing. */
 const IMG_ICONS = {
-  homeTab: 'Assets/images/home.svg',
   brainstorm: 'Assets/images/brainstorm.svg',
   work: 'Assets/images/work.svg?v=3', // ?v: same filename as the old art, skip the cached copy
   todayTab: 'Assets/images/todo.png',
@@ -2963,7 +2738,6 @@ const IMG_ICONS = {
   routinesTab: 'Assets/images/routines.png',
   clock: 'Assets/images/clock.svg',
   healthTab: 'Assets/images/health.png',
-  moneyTab: 'Assets/images/moneytab.svg',
   payday: 'Assets/images/piggy-bank.png',
   pay: 'Assets/images/pay.png',
   creditCard: 'Assets/images/credit-card.png',
@@ -2996,7 +2770,6 @@ function pngSticker(src, cls = '') {
   return `<img class="${cls}" src="${attr(src)}" alt="" aria-hidden="true">`;
 }
 
-
 function themePageHeader(title, subtitle, icons = []) {
   return `<div class="page-header theme-page-header theme-card">
     <div class="page-header-main"><div><div class="page-greeting">${esc(title)}</div><div class="page-date">${esc(subtitle)}</div></div></div>
@@ -3004,18 +2777,12 @@ function themePageHeader(title, subtitle, icons = []) {
   </div>`;
 }
 
-
 const ICONS = {
   home: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
   routines: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
-  heart: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`,
-  sun: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>`,
   moon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"/></svg>`,
-  dumbbell: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5h11M6 12h12M18 6v12M6 6v12M2 10v4M22 10v4"/></svg>`,
-  coin: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>`,
   calendar: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
   pencil: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`,
-  plus: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>`,
 };
 
 /* Global arrow icon (Assets/images/arrow.png, a curved arrow pointing
@@ -3296,7 +3063,6 @@ async function pullFromSupabase(renderAfterPull = false) {
     setSyncStatus('Could not pull latest changes. I will retry.', 'bad');
   }
 }
-
 
 async function flushSyncQueue() {
   if (!sbClient || !syncQueue.size) return;
@@ -3617,7 +3383,7 @@ function addSticky() {
   renderNotes();
   openStickyEdit(notes.length - 1);
 }
-/* New sticky from somewhere else (Today's notes, a brainstorm). */
+/* New sticky from somewhere else (Home's notes, a brainstorm). */
 function addStickyNote(text, createdAt = new Date().toISOString()) {
   const notes = getStickyNotes();
   notes.push({ text, color: STICKY_COLORS[notes.length % STICKY_COLORS.length], createdAt });
@@ -3772,9 +3538,6 @@ function ensureCreditCardAccount(name, defaultLimit) {
 }
 function getBillAccounts() { return ls('gnd-bill-accounts', {}); }
 function getTransactions() { return ls('gnd-transactions', []); }
-function saveTransactions(t) { lsSave('gnd-transactions', t); }
-function getSavings() { return ls('gnd-savings', []); }
-function saveSavings(s) { lsSave('gnd-savings', s); }
 function getEvents() { return ls('gnd-events', []); }
 function saveEvents(e) { lsSave('gnd-events', e); }
 function getAcademicAssignments() {
@@ -3859,11 +3622,9 @@ function recalcGambling() {
   if (diff > 1) { ng.current = 0; saveStreaks(s); }
 }
 
-
 function transactionDate(t) {
   return dateFromKey(t.date || todayKey());
 }
-
 
 /* ─── Credit-card payment auto-credit ──────────────────────────────
    A bill in the "Credit Card Payments" category whose name or note
@@ -3891,12 +3652,6 @@ function billPaysAccountId(bill, accounts = getAccounts()) {
   return best?.id || null;
 }
 
-
-/* Current balance is a manually-set number. Bills marked paid, income
-   received, and logged transactions are informational only — they no longer
-   move this value. Update it yourself after you actually pay everything. */
-
-
 function getTimeGreeting() {
   const h = new Date().getHours();
   if (h < 12) return 'Good morning, Kade';
@@ -3923,7 +3678,6 @@ function checkSvg() {
 function pencilBtn(label, action, cls = 'inline-edit-btn') {
   return `<button class="${cls}" type="button" title="${attr(label)}" aria-label="${attr(label)}" onclick="${action};event.stopPropagation();">${ICONS.pencil}</button>`;
 }
-
 
 function formatMoney(n) {
   const num = Number(n || 0);
@@ -3954,8 +3708,7 @@ function ring(done, total) {
 
 let currentTab = 'home';
 
-/* The planner reads like a book: Home is the open index page, and every
-   section is a page you turn to. Order decides which way a page turns. */
+/* The sections, in the order their buttons appear (Home is added first). */
 const BOOK_SECTIONS = [
   { tab: 'calendar', label: 'Calendar', img: 'Assets/images/calendar.svg', color: 'var(--pal-blue-strong)' },
   { tab: 'routines', label: 'Routines', img: 'Assets/images/routines.png', color: 'var(--pal-purple-strong)' },
@@ -3963,21 +3716,20 @@ const BOOK_SECTIONS = [
   { tab: 'money', label: 'Money', img: 'Assets/images/money.png', color: 'var(--pal-green-strong)' },
   { tab: 'notes', label: 'Notes', img: 'Assets/images/notes.svg', color: 'var(--rainbow-down)' },
 ];
-/* Pages that aren't in the index belong to a section: its tab stays lit,
-   and the page turns as if it sits right after that section. */
+/* Pages without their own button belong to a section, whose button stays lit. */
 const SUB_PAGES = { grocery: 'routines' };
-const PAGE_ORDER = ['home', ...BOOK_SECTIONS.flatMap(s => [s.tab, ...Object.keys(SUB_PAGES).filter(p => SUB_PAGES[p] === s.tab)])];
+const PAGES = ['home', ...BOOK_SECTIONS.map(s => s.tab), ...Object.keys(SUB_PAGES)];
 
 function switchTab(t) {
-  if (!PAGE_ORDER.includes(t)) t = 'home';
+  if (!PAGES.includes(t)) t = 'home';
   const prev = currentTab;
   currentTab = t;
-  document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active', 'turn-forward', 'turn-back'));
+  document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active', 'page-in'));
   const page = document.getElementById('page-' + t);
   page.classList.add('active');
   if (prev !== t) {
-    void page.offsetWidth; // restart the page-turn animation
-    page.classList.add(PAGE_ORDER.indexOf(t) > PAGE_ORDER.indexOf(prev) ? 'turn-forward' : 'turn-back');
+    void page.offsetWidth; // restart the fade
+    page.classList.add('page-in');
   }
   updateBookTabs();
   render(t);
@@ -4397,8 +4149,6 @@ function billBelongsOnPaychecksTab(bill) {
   return true;
 }
 
-/* Home is the open page of the book: the routine times at a glance and
-   one button for every section. Nothing else lives here. */
 /* Home: the day at a glance. What to do when stays open at the top; the
    to-do list, bills due this week, the week view and notes fold up like
    the Routines page. */
@@ -4602,7 +4352,7 @@ function buildTodayTodoBody(dateKey) {
   return { html, done, total: all.length };
 }
 
-/* Which icon a schedule block gets in lists (Today, This Week). */
+/* Which icon a schedule block gets in lists (What to do when, This week). */
 function blockIconName(b) {
   if (b.source === 'cleaning') return cleaningIconKey({ id: b.cleaningTaskId, title: b.title });
   if (b.source === 'mealprep') return b.mealPrepKind === 'grocery' ? 'chef' : 'mealPrep';
@@ -4837,7 +4587,6 @@ function nowMinutes() {
   return n.getHours() * 60 + n.getMinutes();
 }
 
-
 /* Morning routine starts at its set time (4:00 AM on early-shift days — see
    adaptMorningRoutineBlockForDate). Evening routine starts at its set time
    every day. Each block lasts as long as its steps. */
@@ -5063,13 +4812,8 @@ function deleteDueSoonItem() {
    week-at-a-glance so it stays a quick "what's notable" list. */
 const WEEK_GLANCE_HIDDEN_BLOCKS = ['sleep', 'evening', 'morning'];
 
-/* Routine anchors at the top of Home: morning routine on the left (today's
-   until it's over, then tomorrow's — auto-adjusted for that day's shift)
-   and tonight's evening routine on the right. */
-
-
-/* This Week (top of the Calendar page): each day's time blocks with their
-   icons and details, plus that day's lunch and dinner. The routines that
+/* This week (on Home): each day's time blocks with their icons and details,
+   plus that day's meal-plan breakfast, lunch and dinner. The routines that
    are the same every day stay out, except an early (4 AM) morning. */
 function buildScheduleSection() {
   if (scheduleDay === null) scheduleDay = new Date().getDay();
@@ -5137,7 +4881,7 @@ function weekItemHtml(b, dateKey) {
   </div>`;
 }
 
-/* Lunch and dinner from the Health meal plan (weekdays only). */
+/* Breakfast, lunch and dinner from the Health meal plan (weekdays only). */
 const MEAL_DAY_BY_DOW = { 1: 'mon', 2: 'tue', 3: 'wed', 4: 'thu', 5: 'fri' };
 function weekMealsHtml(date, settings = getMealSettings()) {
   const dayKey = MEAL_DAY_BY_DOW[date.getDay()];
@@ -5317,7 +5061,6 @@ function getShotBlockForDate(dateKey) {
     editable: false
   };
 }
-
 
 function timeToMinutes(t) {
   if (!t) return 0;
@@ -5586,7 +5329,6 @@ function refreshDayModalIfOpen() {
   if (currentTab === 'home') renderHome();
 }
 
-
 function getEventsForDateFromList(dateKey, events = getEvents()) {
   const dow = new Date(dateKey + 'T00:00:00').getDay();
   return events.filter(e => {
@@ -5612,7 +5354,6 @@ function formatTime(t) {
   const ampm = h >= 12 ? 'PM' : 'AM';
   return `${h % 12 || 12}:${String(m).padStart(2,'0')} ${ampm}`;
 }
-
 
 function openShiftImportModal() {
   const d = getScheduleViewDate();
@@ -6109,7 +5850,6 @@ function resetWater() {
   saveDayData('health', h);
   renderHealth();
 }
-
 
 /* ═══════════════════════ ROUTINES ═══════════════════════ */
 
@@ -6840,7 +6580,6 @@ function autoRescheduleAll() {
   alert(`${school}\n${chores}`);
 }
 
-
 function toggleRoutine(type, key) {
   const d = dayData(type) || defRoutine(type);
   d[key] = !d[key];
@@ -6848,42 +6587,9 @@ function toggleRoutine(type, key) {
   renderActivePage();
 }
 
-
-let editingTodoIndex = null;
-
-
-function saveTodoEdit() {
-  const title = document.getElementById('todo-title').value.trim();
-  const urgency = document.getElementById('todo-urgency').value;
-  const notes = document.getElementById('todo-notes').value.trim();
-  if (!title) return;
-  const todos = getTodos();
-  const next = { id: editingTodoIndex === null ? 'td' + Date.now() : (todos[editingTodoIndex]?.id || 'td' + Date.now()), title, urgency, notes, done: todos[editingTodoIndex]?.done || false };
-  if (editingTodoIndex === null) todos.push(next); else todos[editingTodoIndex] = next;
-  saveTodos(todos);
-  document.getElementById('todo-modal').classList.remove('open');
-  renderActivePage();
-}
-
-function deleteTodoEdit() {
-  if (editingTodoIndex === null) return;
-  const todos = getTodos();
-  todos.splice(editingTodoIndex, 1);
-  saveTodos(todos);
-  document.getElementById('todo-modal').classList.remove('open');
-  renderActivePage();
-}
-
-
 /* ═══════════════════════ MONEY ═══════════════════════ */
 
-let selectedAcct = null;
-let selectedMoneyFolder = null;
-let editingAcctId = null;
-let acctColor = 'blue';
 let editingBillKey = null;
-let txType = 'expense';
-let txCat = 'transaction';
 
 function moneyNameKey(name = '') {
   return String(name).trim().toLowerCase();
@@ -6896,7 +6602,6 @@ function getDiscoverAccount(accounts = getAccounts()) {
 function getDiscoverAccountId(accounts = getAccounts()) {
   return getDiscoverAccount(accounts)?.id || null;
 }
-
 
 function clampMonthDate(monthDate, day) {
   const y = monthDate.getFullYear();
@@ -6961,7 +6666,6 @@ function incomeOccurrencesForDate(date) {
   return incomeOccurrencesForMonth(null, monthDate).filter(occ => occ.dateKey === key);
 }
 
-
 function getIncomeSources() {
   const accts = getAccounts();
   const defaultAcct = accts[0]?.id || '';
@@ -6983,7 +6687,6 @@ function getIncomeSources() {
   return sources;
 }
 function saveIncomeSources(s) { lsSave('gnd-income-sources', s); }
-
 
 function updateIncomeSource(id, field, value) {
   const sources = getIncomeSources();
@@ -7009,15 +6712,7 @@ function removeIncomeSource(id) {
   renderMoney();
 }
 
-
 let moneySubTab = 'bills';
-
-/* Project a single account's income vs bills for a given month. Numbers
-   ignore paid/received flags — this is a forward-looking plan, so all
-   scheduled bills and expected income count. Whenever a paycheck-instance
-   override exists (bill amount, bill skip, paycheck amount, or extras),
-   the projection reflects the budgeted number instead of the raw one. */
-
 
 let moneyIncomeOpen = null;
 let billCatOpen = { Necessities: true, 'Credit Card Payments': false, Subscriptions: false, Variable: false, Other: false };
@@ -7046,17 +6741,6 @@ function renderMoney() {
 
   document.getElementById('page-money').innerHTML = html;
 }
-
-
-/* Discover reserve = every recurring bill charged to the Discover card each
-   month. The user pays with cash-substitute income going into other accounts,
-   so the Discover balance must always keep enough headroom to cover subs. */
-
-
-/* Gas-reserve info for any non-Discover credit card. The idea: never let
-   the balance climb high enough that you don't have room left for gas.
-   Set the reserve to your typical monthly gas spend. */
-
 
 const BILL_CARD_SECTIONS = [
   { key: 'Discover',    label: 'Discover' },
@@ -7226,7 +6910,6 @@ function renderMoneyBills() {
     });
     html += `</div></div>`;
   });
-
 
   return html;
 }
@@ -8134,107 +7817,6 @@ function deleteBillEdit() {
   renderMoney();
 }
 
-function renderAccountColorPicker() {
-  document.getElementById('acct-color-row').innerHTML = ACCOUNT_COLORS.map(c => `<button class="color-dot ${acctColor===c.id?'active':''}" style="background:${c.bg};border-color:${acctColor===c.id?'var(--espresso)':'transparent'}" title="${attr(c.label)}" onclick="acctColor='${c.id}';renderAccountColorPicker()" type="button"></button>`).join('');
-}
-
-
-function saveAcct() {
-  const name = document.getElementById('acct-name').value.trim();
-  const bal = parseFloat(document.getElementById('acct-balance').value) || 0;
-  if (!name) return;
-  const accts = getAccounts();
-  if (editingAcctId) {
-    const idx = accts.findIndex(a => a.id === editingAcctId);
-    if (idx > -1) accts[idx] = { ...accts[idx], name, startingBalance: bal, color: acctColor };
-  } else {
-    accts.push({ id: 'a' + Date.now(), name, startingBalance: bal, color: acctColor });
-  }
-  saveAccounts(accts);
-  document.getElementById('acct-modal').classList.remove('open');
-  renderMoney();
-}
-
-function deleteAcctEdit() {
-  if (!editingAcctId) return;
-  if (!confirm('Delete this account and its transactions?')) return;
-  const accts = getAccounts().filter(a => a.id !== editingAcctId);
-  const txs = getTransactions().filter(t => t.accountId !== editingAcctId);
-  saveAccounts(accts);
-  if (!accts.length) lsSave('gnd-accounts-user-cleared', true);
-  saveTransactions(txs);
-  if (selectedAcct === editingAcctId) selectedAcct = null;
-  if (selectedMoneyFolder === `acct:${editingAcctId}`) selectedMoneyFolder = null;
-  document.getElementById('acct-modal').classList.remove('open');
-  renderMoney();
-}
-
-let txIsVariable = false;
-let txIsScheduled = false;
-
-
-function toggleTxSchedule() {
-  txIsScheduled = !txIsScheduled;
-  document.getElementById('tx-schedule-toggle').classList.toggle('on', txIsScheduled);
-  document.getElementById('tx-schedule-date-field').style.display = txIsScheduled ? '' : 'none';
-}
-
-function setTxType(t) {
-  txType = t;
-  document.getElementById('tx-type-expense').classList.toggle('active', t==='expense');
-  document.getElementById('tx-type-income').classList.toggle('active', t==='income');
-  document.getElementById('tx-variable-toggle-field').style.display = t === 'expense' ? '' : 'none';
-  if (t !== 'expense') {
-    txIsVariable = false;
-    document.getElementById('tx-variable-toggle').classList.remove('on');
-    document.getElementById('tx-variable-bill-field').style.display = 'none';
-  }
-}
-
-function toggleTxVariable() {
-  txIsVariable = !txIsVariable;
-  document.getElementById('tx-variable-toggle').classList.toggle('on', txIsVariable);
-  document.getElementById('tx-variable-bill-field').style.display = txIsVariable ? '' : 'none';
-  if (txIsVariable) updateTxVariableOptions();
-}
-
-function updateTxVariableOptions() {
-  const select = document.getElementById('tx-variable-bill');
-  if (!select) return;
-  const acctId = document.getElementById('tx-account')?.value || '';
-  const accts = getAccounts();
-  const acct = accts.find(a => a.id === acctId);
-  const acctName = (acct?.name || '').toLowerCase();
-  const variableBills = (getBillsList()).filter(b => b.category === 'Variable');
-  const matching = variableBills.filter(b => (b.source || '').toLowerCase() === acctName);
-  const list = matching.length ? matching : variableBills;
-  select.innerHTML = list.length
-    ? list.map(b => `<option value="${attr(b.key)}">${esc(b.name)}${b.source ? ' · ' + esc(b.source) : ''}</option>`).join('')
-    : `<option value="">No Variable bills set up</option>`;
-}
-
-function saveTx() {
-  const amt = parseFloat(document.getElementById('tx-amount').value) || 0;
-  const note = document.getElementById('tx-note').value.trim();
-  if (amt <= 0) return;
-  const acctId = document.getElementById('tx-account').value;
-  if (!acctId) { alert('Add an account first.'); return; }
-  const date = txIsScheduled
-    ? (document.getElementById('tx-schedule-date').value || todayKey())
-    : todayKey();
-  const txs = getTransactions();
-  const tx = { id: 't'+Date.now(), accountId: acctId, amount: txType==='expense' ? -amt : amt, category: txCat || 'transaction', note, date };
-  if (txType === 'expense' && txIsVariable) {
-    const billKey = document.getElementById('tx-variable-bill').value;
-    if (billKey) tx.variableBillKey = billKey;
-  }
-  txs.push(tx);
-  saveTransactions(txs);
-  document.getElementById('tx-modal').classList.remove('open');
-  renderMoney();
-}
-
-
 function getSpentAgainstVariableBill(billKey, monthDate = getBillMonthDate()) {
   const y = monthDate.getFullYear();
   const m = monthDate.getMonth();
@@ -8260,20 +7842,6 @@ function daysSinceLastPurchase(billKey) {
   const diff = Math.floor((dateFromKey(todayKey()) - transactionDate(last)) / 86400000);
   return Math.max(0, diff);
 }
-
-
-function saveSavingsGoal() {
-  const name = document.getElementById('save-name').value.trim();
-  const target = parseFloat(document.getElementById('save-target').value) || 0;
-  const saved = parseFloat(document.getElementById('save-current').value) || 0;
-  if (!name || target <= 0) return;
-  const goals = getSavings();
-  goals.push({ name, target, saved });
-  saveSavings(goals);
-  document.getElementById('save-modal').classList.remove('open');
-  renderMoney();
-}
-
 
 /* ═══════════════════════ HEALTH ═══════════════════════ */
 
@@ -8312,7 +7880,7 @@ function buildWaterBottle(h) {
   </div>`;
 }
 
-/* Inline water-bottle SVG (from Assets/images/water-bottle.svg). Scripts stripped;
+/* Inline water-bottle SVG. Scripts stripped;
    the water fill rect is parameterized by fillFraction (0..1) so the app
    can drive it from h.water instead of the SVG's own tap counter. */
 function waterBottleSvg(fillFraction) {
@@ -8481,7 +8049,6 @@ function getGroceryPlanData() {
   };
 }
 
-
 function addGrocery(map, item, qty, unit) {
   const key = `${item}|${unit}`;
   const existing = map.get(key) || { item, qty: 0, unit };
@@ -8496,30 +8063,6 @@ function formatGroceryQty(qty, unit) {
   if (unit === 'oz' && rounded >= 16) return `${short} oz (${(rounded / 16).toFixed(2).replace(/\.?0+$/, '')} lb)`;
   if (unit === 'tbsp' && rounded >= 16) return `${short} tbsp (${(rounded / 16).toFixed(2).replace(/\.?0+$/, '')} cups)`;
   return `${short} ${unit}`;
-}
-
-
-let editingMealIndex = null;
-
-
-function saveMealEdit() {
-  const h = getHealthData();
-  if (!Array.isArray(h.meals) || editingMealIndex === null || !h.meals[editingMealIndex]) return;
-  h.meals[editingMealIndex].title = document.getElementById('meal-title').value.trim() || 'Meal';
-  h.meals[editingMealIndex].items = document.getElementById('meal-items').value.trim();
-  h.meals[editingMealIndex].alt = document.getElementById('meal-alt').value.trim();
-  saveDayData('health', h);
-  document.getElementById('meal-modal').classList.remove('open');
-  renderHealth();
-}
-
-function deleteMealEdit() {
-  const h = getHealthData();
-  if (!Array.isArray(h.meals) || editingMealIndex === null) return;
-  h.meals.splice(editingMealIndex, 1);
-  saveDayData('health', h);
-  document.getElementById('meal-modal').classList.remove('open');
-  renderHealth();
 }
 
 function buildMedCard(title, meds, healthData) {
