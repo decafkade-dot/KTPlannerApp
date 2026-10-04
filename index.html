@@ -160,7 +160,7 @@ select:focus-visible {
   background: var(--bg);
   transition: opacity 0.25s ease, visibility 0.25s ease;
 }
-.loading-screen img { width: 180px; height: 180px; }
+.loading-screen img { width: min(260px, 65vw); height: min(260px, 65vw); }
 .loading-screen.done { opacity: 0; visibility: hidden; pointer-events: none; }
 
 /* ── Celebration overlay (confetti) ── */
@@ -1241,7 +1241,8 @@ body.paycheck-dragging .paycheck-pool-row {
 }
 .bill-cat-section.open .bill-cat-header { border-radius: var(--radius) var(--radius) 0 0; border-bottom-color: transparent; }
 .bill-cat-left { flex: 1; }
-.bill-cat-name { font-size: 16px; font-weight: 700; color: var(--espresso); }
+.bill-cat-name { font-size: 16px; font-weight: 700; color: var(--espresso); display: flex; align-items: center; gap: 7px; }
+.bill-cat-icon { --sticker-size: 24px; }
 .bill-cat-sub { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
 .bill-cat-header .collapse-chevron { width: 18px; height: 18px; color: var(--text-muted); transition: transform 0.25s ease; flex-shrink: 0; }
 .bill-cat-section.open .bill-cat-header .collapse-chevron { transform: rotate(180deg); }
@@ -2935,6 +2936,8 @@ const IMG_ICONS = {
   healthTab: 'Assets/images/health.png',
   moneyTab: 'Assets/images/moneytab.svg',
   payday: 'Assets/images/piggy-bank.png',
+  pay: 'Assets/images/pay.png',
+  creditCard: 'Assets/images/credit-card.png',
   notesTab: 'Assets/images/notes.svg',
   moon: 'Assets/images/evening-routine.png',
   morning: 'Assets/images/morning-routine.png',
@@ -3928,7 +3931,7 @@ const BOOK_SECTIONS = [
   { tab: 'calendar', label: 'Calendar', img: 'Assets/images/calendar.svg', color: 'var(--pal-blue-strong)' },
   { tab: 'routines', label: 'Routines', img: 'Assets/images/routines.png', color: 'var(--pal-purple-strong)' },
   { tab: 'health', label: 'Health', img: 'Assets/images/health.png', color: 'var(--pal-yellow-strong)' },
-  { tab: 'money', label: 'Money', img: 'Assets/images/moneytab.svg', color: 'var(--pal-green-strong)' },
+  { tab: 'money', label: 'Money', img: 'Assets/images/money.png', color: 'var(--pal-green-strong)' },
   { tab: 'notes', label: 'Notes', img: 'Assets/images/notes.svg', color: 'var(--rainbow-down)' },
 ];
 /* Pages that aren't in the index belong to a section: its tab stays lit,
@@ -4406,7 +4409,7 @@ function renderHome() {
   </div>`;
   html += buildTodayTimeList(dk);
   html += homeSection('todo', 'To do', `${todo.done}/${todo.total} done`, todo.html, 'todayTab');
-  html += homeSection('bills', 'Bills this week', bills.sub, bills.html, 'moneyTab');
+  html += homeSection('bills', 'Bills this week', bills.sub, bills.html, 'pay');
   html += homeSection('week', 'This week', '', buildScheduleSection(), 'calendarTab');
   html += homeSection('notes', 'Notes', '', buildTodayNotesCard(dk), 'notesTab');
   document.getElementById('page-home').innerHTML = html;
@@ -5034,12 +5037,10 @@ function weekMealsHtml(date, settings = getMealSettings()) {
   const dayKey = MEAL_DAY_BY_DOW[date.getDay()];
   if (!dayKey) return '';
   const day = settings.days[dayKey] || {};
-  const meal = (label, choice) => {
-    const kind = choice === 'beef' ? 'beef' : 'chicken';
-    const name = MEAL_OPTIONS.entree[kind].label;
-    return `<span class="wg-meal" title="${attr(`${label}: ${name}`)}">${themeIcon(kind, 'wg-meal-icon')}${label}</span>`;
-  };
-  return `<div class="wg-meals">${meal('Lunch', day.lunch)}${meal('Dinner', day.dinner)}</div>`;
+  const meal = (label, kind, name) => `<span class="wg-meal" title="${attr(`${label}: ${name}`)}">${themeIcon(kind, 'wg-meal-icon')}${label}</span>`;
+  const breakfast = MEAL_OPTIONS.breakfast[day.breakfast] ? day.breakfast : 'oatmeal';
+  const entree = choice => choice === 'beef' ? 'beef' : 'chicken';
+  return `<div class="wg-meals">${meal('Breakfast', breakfast, MEAL_OPTIONS.breakfast[breakfast].label)}${meal('Lunch', entree(day.lunch), MEAL_OPTIONS.entree[entree(day.lunch)].label)}${meal('Dinner', entree(day.dinner), MEAL_OPTIONS.entree[entree(day.dinner)].label)}</div>`;
 }
 
 /* "Glance" timeline — the entire day fits inside a fixed-height container.
@@ -6978,7 +6979,7 @@ function renderMoneyBills() {
     html += `<div class="bill-cat-section ${isOpen ? 'open' : ''}">
       <div class="bill-cat-header theme-row-card" onclick="billCatOpen['${cat}']=!billCatOpen['${cat}'];renderMoney()">
         <div class="bill-cat-left">
-          <div class="bill-cat-name">${esc(cat)}</div>
+          <div class="bill-cat-name">${cat === 'Credit Card Payments' ? themeIcon('creditCard', 'bill-cat-icon') : ''}${esc(cat)}</div>
           <div class="bill-cat-sub">${formatMoney(catTotal)} · ${catPaid}/${catBills.length} paid</div>
         </div>
         ${chevron}
@@ -7073,7 +7074,7 @@ function renderMoneyBills() {
         ondrop="onBillToCardDrop(event,'${attr(card.key)}')">
       <div class="bill-cat-header theme-row-card" onclick="billCatOpen['${openKey}']=!billCatOpen['${openKey}'];renderMoney()">
         <div class="bill-cat-left">
-          <div class="bill-cat-name">${esc(card.label)}</div>
+          <div class="bill-cat-name">${themeIcon('creditCard', 'bill-cat-icon')}${esc(card.label)}</div>
           <div class="bill-cat-sub">${formatMoney(cardTotal)} · ${cardBills.length} bill${cardBills.length===1?'':'s'} on this card</div>
         </div>
         ${chevron}
