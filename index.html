@@ -21,6 +21,8 @@
 document.addEventListener('error', e => {
   if (e.target instanceof HTMLImageElement) e.target.classList.add('img-missing');
 }, true);
+/* Dark mode goes on before anything is drawn, so the page doesn't flash light first. */
+try { if (localStorage.getItem('device-theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark'); } catch (e) {}
 </script>
 <style>
 img.img-missing { visibility: hidden; }
@@ -92,7 +94,7 @@ img.img-missing { visibility: hidden; }
   --bg-hover: #3D342C;
   --text: #E8E2D8;
   --text-secondary: #A89B90;
-  --text-muted: #7D6E63;
+  --text-muted: #9A8A7E;
   --espresso: #D4A574;
   --espresso-light: #342A20;
   --latte: #C4A882;
@@ -124,6 +126,15 @@ img.img-missing { visibility: hidden; }
   --shadow-sm: 0 1px 4px rgba(0,0,0,0.2);
   --shadow-md: 0 4px 16px rgba(0,0,0,0.25);
 }
+/* Dark mode: the caramel accent turns light, so text and check marks
+   sitting on it (and on the pastel chips) turn dark to stay readable. */
+[data-theme="dark"] :is(.modal-submit, .money-tab.active, .cat-btn.active, .meal-choice-btn.active, .meal-log-btn.on,
+  .paycheck-tool-btn.on, .paycheck-drag-ghost, .day-todo-add button, .care-person-add button, .care-scale button.active,
+  .time-row-now, .chore-day-btn.active, .chore-day-btn.active b, .home-water-add, .bill-sched-tag, .meal-prep-when) { color: var(--bg); }
+[data-theme="dark"] .meal-prep-when.warn { color: var(--danger); }
+[data-theme="dark"] :is(.check-box, .day-todo-check, .bill-check, .med-check) svg { stroke: var(--bg); }
+[data-theme="dark"] .paycheck-card.overdraft { background: linear-gradient(180deg, var(--bg-card), var(--danger-light)); }
+[data-theme="dark"] .paycheck-pool-row.next-month { background: var(--caramel-light); }
 
 html { height: 100%; overscroll-behavior: none; }
 body {
@@ -202,7 +213,6 @@ select:focus-visible {
 .arrow-icon.dir-left  { transform: scaleX(-1); }
 .arrow-icon.dir-up    { transform: rotate(-90deg); }
 .arrow-icon.dir-down  { transform: rotate(90deg); }
-.arrow-icon.large { width: 22px; height: 22px; }
 .arrow-icon.small { width: 12px; height: 12px; }
 
 .mop-icon {
@@ -212,7 +222,6 @@ select:focus-visible {
 }
 .mop-icon.small  { width: 20px; height: 20px; }
 .mop-icon.medium { width: 28px; height: 28px; }
-.mop-icon.large  { width: 36px; height: 36px; }
 
 /* ── Cozy Theme Stickers ── */
 .theme-sticker {
@@ -228,7 +237,6 @@ select:focus-visible {
 .theme-sticker.tiny { --sticker-size: 20px; }
 .theme-sticker.small { --sticker-size: 28px; }
 .theme-sticker.medium { --sticker-size: 44px; }
-.theme-sticker.large { --sticker-size: 70px; }
 .theme-card,
 .theme-row-card {
   position: relative; overflow: visible;
@@ -238,7 +246,6 @@ select:focus-visible {
   position: absolute; right: 14px; top: 12px;
   opacity: 0.82; transform: rotate(8deg); z-index: 2;
 }
-.theme-corner.bottom-left { left: 14px; right: auto; top: auto; bottom: 12px; transform: rotate(-8deg); }
 .theme-corner.bottom-right { top: auto; bottom: 12px; transform: rotate(-8deg); }
 .theme-row-card > .theme-corner {
   position: static; opacity: 0.9; transform: none;
@@ -297,6 +304,8 @@ select:focus-visible {
   background: #DEF1FF;
   border-color: #A8D7FB;
 }
+.top-btn.theme-btn { background: #EFE8FF; border-color: #CDBDF2; }
+.top-btn.theme-btn.on { background: #2E2742; border-color: #E8D67E; box-shadow: 0 0 0 2px rgba(232,214,126,0.3); }
 .brain-count {
   position: absolute; right: -3px; top: -3px;
   min-width: 15px; height: 15px; padding: 0 4px;
@@ -389,16 +398,6 @@ body { background: var(--bg); }
   .book-tab-label { font-size: 15px; }
 }
 
-/* A little stack of sticky notes, in the sticky-note colors. */
-.sticky-stack-icon { position: relative; display: inline-block; }
-.sticky-stack-icon i {
-  position: absolute; width: 62%; height: 62%; border-radius: 3px;
-  box-shadow: 0 2px 3px rgba(60,40,25,0.16);
-}
-.sticky-stack-icon i:nth-child(1) { left: 4%; top: 6%; background: #A2BFFE; transform: rotate(-10deg); }
-.sticky-stack-icon i:nth-child(2) { left: 20%; top: 20%; background: #FAB6DC; transform: rotate(7deg); }
-.sticky-stack-icon i:nth-child(3) { left: 34%; top: 32%; background: #FFF6C2; transform: rotate(-3deg); }
-
 /* ── Home ── */
 .home-water { display: flex; align-items: center; gap: 12px; padding: 10px 14px; margin-bottom: 14px; }
 .home-water-bottle { width: 34px; height: 56px; flex-shrink: 0; border: none; background: none; padding: 0; cursor: pointer; }
@@ -476,15 +475,7 @@ body { background: var(--bg); }
 .cleaning-add-row .modal-submit {
   padding: 8px 14px; margin: 0; white-space: nowrap;
 }
-/* ── Cleaning task drag-and-drop ── */
-.cleaning-task-row { cursor: grab; position: relative; }
-.cleaning-task-row:active { cursor: grabbing; }
-.cleaning-drag-grip {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 18px; flex-shrink: 0; font-size: 15px; letter-spacing: -1px;
-  color: var(--text-muted); opacity: 0.55; cursor: grab; user-select: none;
-}
-.cleaning-task-row:hover .cleaning-drag-grip { opacity: 0.9; }
+.cleaning-task-row { position: relative; }
 .cleaning-day-badge, .cleaning-assign-btn {
   margin-left: auto; flex-shrink: 0;
   font-size: 12px; font-weight: 700; letter-spacing: 0.02em;
@@ -501,12 +492,6 @@ body { background: var(--bg); }
   border-color: var(--border-soft); border-style: dashed;
 }
 .cleaning-assign-btn:hover { color: var(--espresso); border-color: var(--espresso); }
-body.cleaning-dragging { cursor: grabbing; }
-body.cleaning-dragging .week-day-btn { transition: transform 0.15s ease, box-shadow 0.15s ease; }
-.week-day-btn.drop-target {
-  transform: translateY(-3px); box-shadow: 0 10px 18px -10px rgba(92,61,46,0.45);
-  border-color: var(--espresso) !important; background: var(--caramel-light, #f3d9c1) !important;
-}
 .cleaning-picker-sheet {
   position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%) translateY(calc(100% + 40px));
   width: min(420px, calc(100% - 24px)); padding: 18px;
@@ -558,14 +543,8 @@ body.cleaning-dragging .week-day-btn { transition: transform 0.15s ease, box-sha
   display: flex; gap: 10px; align-items: stretch;
   padding: 8px; border-radius: 12px;
   border: 1px solid var(--border-soft); background: var(--bg-card);
-  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease;
 }
 .wg-day.today { border-color: var(--espresso); background: var(--bg-hover); }
-.wg-day.drop-target {
-  transform: translateY(-2px);
-  border-color: var(--espresso) !important; background: var(--caramel-light, #f3d9c1) !important;
-  box-shadow: 0 10px 18px -10px rgba(92,61,46,0.45);
-}
 .wg-daycol {
   flex: 0 0 46px; display: flex; flex-direction: column; align-items: center; justify-content: center;
   border: none; background: none; cursor: pointer; padding: 2px 0;
@@ -653,10 +632,6 @@ body.cleaning-dragging .week-day-btn { transition: transform 0.15s ease, box-sha
   background: #FFF6C2; color: #6b5400;
   border: 1px solid rgba(170,130,40,0.25);
 }
-.paycheck-bill-chip-tag.cc {
-  background: #E2B3F2; color: #5a2b6b;
-  border-color: rgba(110,55,140,0.3);
-}
 .paycheck-pool-row.next-month {
   background: #fff8e8; border-color: rgba(170,130,40,0.35);
 }
@@ -692,7 +667,6 @@ body.cleaning-dragging .week-day-btn { transition: transform 0.15s ease, box-sha
 }
 .paycheck-picker-btn { flex-direction: column; align-items: stretch; gap: 4px; padding: 12px; }
 .paycheck-picker-amt { font-size: 14px; font-weight: 800; color: var(--espresso); }
-body.bill-dragging .paycheck-card { transition: transform 0.15s ease, box-shadow 0.15s ease; }
 
 /* Paycheck card state accents (colored left border). */
 .paycheck-card { border-left: 4px solid var(--caramel, #d9b48a); }
@@ -892,13 +866,17 @@ body.bill-dragging .paycheck-card { transition: transform 0.15s ease, box-shadow
 .credit-row.is-payment .credit-row-amt { color: var(--success); }
 .credit-row-avail { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 .credit-row-avail.over { color: var(--danger); font-weight: 700; }
+.credit-skip-btn { margin-top: 5px; padding: 3px 10px; font-size: 11px; }
+.credit-row.skipped .credit-row-name,
+.credit-row.skipped .credit-row-amt { text-decoration: line-through; opacity: 0.5; }
 .credit-empty { font-size: 13px; color: var(--text-muted); font-style: italic; padding: 8px 0; }
 .credit-est-row {
   display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
   padding: 10px 0; border-top: 1px solid var(--border-soft);
 }
 .credit-est-name { flex: 1 1 100%; min-width: 0; }
-.credit-est-card { flex: 1 1 120px; min-width: 0; width: auto; }
+.credit-est-card,
+.credit-est-freq { flex: 1 1 120px; min-width: 0; width: auto; }
 .credit-est-start { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); font-weight: 700; }
 .credit-est-start input { width: auto; }
 @media (min-width: 481px) { .credit-est-name { flex: 1 1 160px; } }
@@ -1122,20 +1100,10 @@ body.paycheck-dragging .paycheck-pool-row {
 }
 .due-soon-link:active { transform: scale(0.96); }
 .due-soon-muted { color: var(--text-muted); font-size: 12px; font-weight: 700; }
-.timeline-block.highlighted {
-  border-color: #37679E; box-shadow: 0 0 0 2px rgba(55,103,158,0.24), var(--shadow-sm);
-}
 [data-theme="dark"] .due-soon-class,
 [data-theme="dark"] .due-soon-link {
   background: rgba(125,168,232,0.18); color: #A2BFFE; border-color: rgba(125,168,232,0.55);
 }
-.week-day-btn {
-  flex: 1; padding: 8px 4px; border-radius: var(--radius-xs);
-  border: 1px solid var(--border-soft); background: var(--bg-input);
-  cursor: pointer; text-align: center; transition: all 0.2s;
-}
-.week-day-btn.today { border-color: var(--espresso); }
-.week-day-btn.active { background: var(--espresso); border-color: var(--espresso); }
 .agenda-day-title {
   display: flex; justify-content: space-between; align-items: baseline; gap: 8px;
   margin: 2px 0 6px;
@@ -2395,6 +2363,9 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
   <button class="top-btn sync-btn" id="btn-force-sync" title="Force sync now" aria-label="Force sync now" onclick="forceSyncAll()">
     <img class="top-btn-sticker" src="Assets/images/save.svg" alt="" aria-hidden="true">
   </button>
+  <button class="top-btn theme-btn" id="btn-theme" type="button" title="Dark mode" aria-label="Dark mode" aria-pressed="false" onclick="toggleTheme()">
+    <img class="top-btn-sticker" src="Assets/images/moon.svg" alt="" aria-hidden="true">
+  </button>
   <button class="top-btn" id="btn-settings" title="Settings" onclick="openSettings()">
     <img class="top-btn-sticker" src="Assets/images/gears.svg" alt="" aria-hidden="true">
   </button>
@@ -2685,6 +2656,14 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
     <div id="dopamine-body"></div>
   </div>
 </div>
+<!-- "Rough day?" sheet (the button beside the section buttons) — filled in by renderRoughDay() -->
+<div class="modal-overlay" id="rough-day-modal">
+  <div class="modal-sheet" role="dialog" aria-modal="true" aria-labelledby="rough-day-title">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="rough-day-title">How's today going?</div>
+    <div class="day-modal-actions" id="rough-day-body"></div>
+  </div>
+</div>
 <!-- Quiet message along the bottom (dessert timer) -->
 <div class="care-toast" id="care-toast" role="status" aria-live="polite"></div>
 
@@ -2960,7 +2939,7 @@ const DEFAULT_BILLS = [
   { key: 'mortgage', name: 'Mortgage', amount: 1373.54, day: 1, category: 'Necessities', source: 'Checking Account', note: 'Village Capital' },
   { key: 'insurance', name: 'Insurance', amount: 206.66, day: 1, category: 'Necessities', source: 'Checking Account', note: 'Progressive' },
   { key: 'personalLoan1', name: 'Personal Loan 1', amount: 658.30, day: 1, category: 'Other', source: 'Checking Account', note: 'One Main' },
-  { key: 'lineOfCredit', name: 'Line of Credit', amount: 356.00, day: 1, category: 'Other', source: 'Cash App Debit', note: 'Credit Fresh' },
+  { key: 'lineOfCredit', name: 'Line of Credit', amount: 356.00, day: 1, category: 'Other', source: 'Checking Account', note: 'Credit Fresh' },
   { key: 'youtube', name: 'YouTube Premium', amount: 9.60, day: 2, category: 'Subscriptions', source: 'Discover' },
   { key: 'water', name: 'Water', amount: 100.00, day: 3, category: 'Necessities', source: 'Checking Account', note: 'Akron Utilities' },
   { key: 'wifi', name: 'WiFi', amount: 55.64, day: 4, category: 'Necessities', source: 'Checking Account', note: 'AT&T' },
@@ -2986,6 +2965,11 @@ function normalizeBillCategory(bill) {
   return 'Other';
 }
 
+/* Accounts that aren't used any more: they're taken off the accounts list,
+   and a bill still marked as paid from one is paid from checking. */
+const RETIRED_ACCOUNTS = /huntington|cash\s*app/i;
+const CHECKING_ACCOUNT_NAME = 'Checking Account';
+
 function normalizeBillRecord(bill) {
   const frequency = bill.frequency === 'biweekly' ? 'biweekly' : 'monthly';
   const firstDue = frequency === 'biweekly'
@@ -2998,13 +2982,33 @@ function normalizeBillRecord(bill) {
     amount: Number(bill.amount || 0),
     day: Math.max(1, Math.min(31, parseInt(bill.day, 10) || 1)),
     category: normalizeBillCategory(bill),
-    source: bill.source || '',
+    source: RETIRED_ACCOUNTS.test(bill.source || '') ? CHECKING_ACCOUNT_NAME : (bill.source || ''),
     note: bill.note || '',
     paysAccountId: bill.paysAccountId || '',
     frequency,
     firstDue,
   };
 }
+
+/* ── Removed things stay removed across devices ──
+   Some lists sync as one value, so a phone or tab holding an older copy
+   could bring back something deleted elsewhere. What's removed is
+   remembered by id in a list that only ever grows (merged on every pull),
+   and those ids are dropped wherever the list is read or merged. */
+function getTombstones(key) {
+  const v = ls(key, {});
+  return v && typeof v === 'object' && !Array.isArray(v) ? v : {};
+}
+function rememberTombstone(key, id) {
+  if (!id) return;
+  const removed = getTombstones(key);
+  if (removed[id]) return;
+  removed[id] = new Date().toISOString();
+  lsSave(key, removed);
+}
+/* Deleted bills, by bill key. */
+const REMOVED_BILLS_KEY = 'gnd-bills-removed';
+function getRemovedBills() { return getTombstones(REMOVED_BILLS_KEY); }
 
 function getBillsList() {
   const stored = ls('gnd-bills-list', null);
@@ -3017,6 +3021,9 @@ function getBillsList() {
   if (!Array.isArray(bills)) bills = DEFAULT_BILLS.map(b => ({ ...b }));
 
   let changed = false;
+  const removed = getRemovedBills();
+  const kept = bills.filter(b => !(b && b.key && removed[b.key]));
+  if (kept.length !== bills.length) { bills = kept; changed = true; }
   bills = bills.map(b => {
     const normalized = normalizeBillRecord(b);
     if (JSON.stringify(normalized) !== JSON.stringify(b)) changed = true;
@@ -3248,10 +3255,6 @@ function themePageHeader(title, subtitle, icons = []) {
 }
 
 const ICONS = {
-  home: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
-  routines: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
-  moon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"/></svg>`,
-  calendar: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
   pencil: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`,
 };
 
@@ -3293,6 +3296,7 @@ const PRIORITY_SYNC_KEYS = new Set([
   'gnd-academic-balance-status',
   'gnd-schedule-custom',
   'gnd-bills-list',
+  'gnd-bills-removed',
   'gnd-transactions',
   'gnd-accounts',
   'gnd-paycheck-instances',
@@ -3413,16 +3417,18 @@ function shouldKeepLocalInsteadOfRemote(key, localRaw, remoteValue) {
   return false;
 }
 
-function mergeLocalOnlyRecords(remoteValue, localValue, idField) {
+/* Records only this device has get added to the remote copy, unless they
+   were deleted (`removed`, by id) on some device. */
+function mergeLocalOnlyRecords(remoteValue, localValue, idField, removed = {}) {
   if (!Array.isArray(remoteValue) || !Array.isArray(localValue)) return null;
   const remoteIds = new Set(remoteValue.map(item => item && item[idField]).filter(Boolean));
-  const localOnly = localValue.filter(item => item && item[idField] && !remoteIds.has(item[idField]));
+  const localOnly = localValue.filter(item => item && item[idField] && !remoteIds.has(item[idField]) && !removed[item[idField]]);
   return localOnly.length ? remoteValue.concat(localOnly) : null;
 }
 
 function mergedRemoteValueWithLocalWork(key, localRaw, remoteValue) {
   const localValue = readStorageJson(localRaw, null);
-  if (key === 'gnd-bills-list') return mergeLocalOnlyRecords(remoteValue, localValue, 'key');
+  if (key === 'gnd-bills-list') return mergeLocalOnlyRecords(remoteValue, localValue, 'key', getRemovedBills());
   if (key === 'gnd-transactions') return mergeLocalOnlyRecords(remoteValue, localValue, 'id');
   return null;
 }
@@ -3496,11 +3502,13 @@ async function pullFromSupabase(renderAfterPull = false) {
     if (!rows) return;
     let changed = false;
     const changedKeys = new Set();
-    // Removed paycheck extras first, so the paycheck merge below can honor them.
-    const removedRow = rows.find(r => r.data_key === REMOVED_EXTRAS_KEY);
-    if (removedRow && absorbRemoteRemovedExtras(removedRow)) { changed = true; changedKeys.add(REMOVED_EXTRAS_KEY); }
+    // Removed paycheck extras and deleted bills first, so the merges below can honor them.
+    TOMBSTONE_KEYS.forEach(key => {
+      const removedRow = rows.find(r => r.data_key === key);
+      if (removedRow && absorbRemoteTombstones(key, removedRow)) { changed = true; changedKeys.add(key); }
+    });
     rows.forEach(row => {
-      if (row.data_key === REMOVED_EXTRAS_KEY) return;
+      if (TOMBSTONE_KEYS.includes(row.data_key)) return;
       const local = localStorage.getItem(row.data_key);
       const remoteTime = new Date(row.updated_at);
       const localTime = new Date(localStorage.getItem(row.data_key + '_ts') || 0);
@@ -3534,7 +3542,7 @@ async function pullFromSupabase(renderAfterPull = false) {
         changedKeys.add(row.data_key);
       }
     });
-    if (changedKeys.has('gnd-bills-list')) BILLS = getBillsList();
+    if (changedKeys.has('gnd-bills-list') || changedKeys.has(REMOVED_BILLS_KEY)) BILLS = getBillsList();
     if (changed && renderAfterPull) {
       render(currentTab);
       refreshDayModalIfOpen();
@@ -3713,7 +3721,7 @@ function getCleaningWeek(date = new Date()) {
 }
 function saveCleaningWeek(data) { lsSave(cleaningWeekKey(), { done: data.done || {} }); }
 
-/* ─── Cleaning task day assignments (drag-and-drop onto planner) ─── */
+/* ─── Cleaning task day assignments ─── */
 function getCleaningAssignments() {
   const data = ls('gnd-cleaning-assignments', null);
   if (!data || typeof data !== 'object') return {};
@@ -4018,9 +4026,9 @@ function getAccounts() {
     lsSeed('gnd-accounts', accounts);
     lsSeed('gnd-accounts-seeded', true);
   }
-  // Huntington is no longer used.
-  if (Array.isArray(accounts) && accounts.some(a => /huntington/i.test(a?.name || ''))) {
-    accounts = accounts.filter(a => !/huntington/i.test(a?.name || ''));
+  // Huntington and Cash App are no longer used.
+  if (Array.isArray(accounts) && accounts.some(a => RETIRED_ACCOUNTS.test(a?.name || ''))) {
+    accounts = accounts.filter(a => !RETIRED_ACCOUNTS.test(a?.name || ''));
     saveAccounts(accounts);
   }
   return accounts;
@@ -4054,8 +4062,6 @@ function ensureCreditCardAccount(name, defaultLimit) {
   }
   if (changed) saveAccounts(accounts);
 }
-function getBillAccounts() { return ls('gnd-bill-accounts', {}); }
-function getTransactions() { return ls('gnd-transactions', []); }
 function getEvents() { return ls('gnd-events', []); }
 function saveEvents(e) { lsSave('gnd-events', e); }
 function getAcademicAssignments() {
@@ -4122,28 +4128,6 @@ function getMealSettings() {
 }
 function saveMealSettings(s) { lsSave('gnd-meal-settings', s); }
 
-function getStreaks() {
-  let s = ls('gnd-streaks', null);
-  if (!s) {
-    const old = ls('gs-streaks', null);
-    s = { noGambling: old ? old.noGambling : { current: 0, best: 0, lastDate: null } };
-    lsSave('gnd-streaks', s);
-  }
-  return s;
-}
-function saveStreaks(s) { lsSave('gnd-streaks', s); }
-
-function recalcGambling() {
-  const s = getStreaks(), ng = s.noGambling;
-  if (!ng.lastDate) return;
-  const diff = Math.round((new Date(todayKey()+'T00:00:00') - new Date(ng.lastDate+'T00:00:00')) / 86400000);
-  if (diff > 1) { ng.current = 0; saveStreaks(s); }
-}
-
-function transactionDate(t) {
-  return dateFromKey(t.date || todayKey());
-}
-
 /* ─── Credit-card payment auto-credit ──────────────────────────────
    A bill in the "Credit Card Payments" category whose name or note
    text contains an account's name (case-insensitive) is treated as
@@ -4158,7 +4142,7 @@ function billPaysAccountId(bill, accounts = getAccounts()) {
   const haystack = ((bill.name || '') + ' ' + (bill.note || '')).toLowerCase();
   if (!haystack.trim()) return null;
   // Fallback: name/note substring match. Prefer the longest-matching account
-  // name so e.g. "Cash App Debit" isn't shadowed by a "Cash" account.
+  // name so e.g. "Capital One Savor" isn't shadowed by a "Capital One" account.
   let best = null;
   accounts.forEach(a => {
     const needle = String(a.name || '').toLowerCase().trim();
@@ -4178,8 +4162,8 @@ function getTimeGreeting() {
 }
 
 function formatDate(d) { return (d || new Date()).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }); }
-/* Injection day for the weekly testosterone shot (0=Sun … 4=Thu). */
-const SHOT_DOW = 5; // testosterone shot: Fridays
+/* Injection day for the weekly testosterone shot (0=Sun … 6=Sat): Fridays. */
+const SHOT_DOW = 5;
 function isShotDay(date = new Date()) { return date.getDay() === SHOT_DOW; }
 
 function ordinal(n) { const s = ['th','st','nd','rd']; const v = n % 100; return n + (s[(v-20)%10] || s[v] || s[0]); }
@@ -4263,7 +4247,6 @@ function render(t) {
 function renderActivePage() { render(currentTab); }
 
 function bookSectionIcon(section, cls) {
-  if (!section.img) return `<span class="${cls} sticky-stack-icon" aria-hidden="true"><i></i><i></i><i></i></span>`;
   return pngSticker(section.img, cls);
 }
 
@@ -4283,14 +4266,49 @@ function updateBookTabs() {
     water = `<button class="book-tab water-tab" type="button" style="--tab-color:#7CB8F0" onclick="chgWater(1)" title="Add one glass of water" aria-label="Water: ${w.water} of 8 glasses. Add one glass">
       <span class="water-tab-bottle">${waterBottleSvg(w.frac)}</span><span class="book-tab-label">${w.water}/8 water</span></button>`;
   }
-  // Bare Minimum Day + Hard Day under the left stack, Dopamine Menu under
-  // the right one; on phones the same three sit in a row above the bar.
-  const care = careNavItems();
-  nav.innerHTML = `<div class="nav-group nav-group-a">${tabs.slice(0, half).map(tabHtml).join('')}${careTabHtml(care[0], true)}${careTabHtml(care[1])}</div>`
-    + `<div class="nav-group nav-group-b">${tabs.slice(half).map(tabHtml).join('')}${water}${careTabHtml(care[2], true)}</div>`;
+  // One "Rough day?" button under the left stack; on phones it fills the
+  // row above the bar. It opens the sheet with the gentle tools.
+  const rough = roughDayNavItem();
+  nav.innerHTML = `<div class="nav-group nav-group-a">${tabs.slice(0, half).map(tabHtml).join('')}${careTabHtml(rough, true)}</div>`
+    + `<div class="nav-group nav-group-b">${tabs.slice(half).map(tabHtml).join('')}${water}</div>`;
   const dock = document.getElementById('care-dock');
-  if (dock) dock.innerHTML = care.map(careDockBtnHtml).join('');
-  if (care[0].on) bareMinimumShownOn = todayKey();
+  if (dock) dock.innerHTML = careDockBtnHtml(rough).replace('style="', 'style="grid-column:1 / -1;');
+  if (rough.on) bareMinimumShownOn = todayKey();
+  if (isRoughDayOpen()) renderRoughDay();
+}
+
+/* ── "Rough day?" sheet ──
+   Bare Minimum Day, Hard Day, Dopamine Menu and Thought Reset in one
+   place. Each button closes the sheet, then does what it always did. */
+function roughDayNavItem() {
+  const on = isBareMinimumToday();
+  return {
+    label: 'Rough day?', short: 'Rough day?', color: 'var(--pal-purple-strong)', icon: 'hardDay', on,
+    sub: dessertTimer ? dessertTimeLeftText() : on ? 'Bare Minimum on' : '', timer: !!dessertTimer,
+    onclick: 'openRoughDay()', aria: 'Rough day? Open Bare Minimum Day, Hard Day, Dopamine Menu and Thought Reset',
+  };
+}
+function isRoughDayOpen() { return !!document.getElementById('rough-day-modal')?.classList.contains('open'); }
+function renderRoughDay() {
+  const body = document.getElementById('rough-day-body');
+  if (!body) return;
+  const items = careNavItems().concat({
+    label: 'Thought Reset', short: 'Thought Reset', color: 'var(--pal-blue-strong)', icon: 'thoughtReset',
+    onclick: 'openThoughtResetFromSheet()', aria: 'Open Thought Reset in Notes',
+  });
+  body.innerHTML = items.map(item => careDockBtnHtml({ ...item, onclick: `closeRoughDay();${item.onclick}` })).join('');
+}
+function openRoughDay() {
+  renderRoughDay();
+  document.getElementById('rough-day-modal').classList.add('open');
+}
+function closeRoughDay() { document.getElementById('rough-day-modal')?.classList.remove('open'); }
+function openThoughtResetFromSheet() {
+  switchTab('notes');
+  if (!getNotesCareOpen().thought) toggleNotesCareSection('thought');
+  setTimeout(() => {
+    document.querySelector('.notes-care-section[data-id="thought"]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 80);
 }
 
 /* ═══════════════════════ HOME / TODAY ═══════════════════════ */
@@ -4299,7 +4317,6 @@ let scheduleDay = null;
 let scheduleWeekOffset = 0;
 let calendarMonthOffset = 0;
 let billMonthOffset = 0;
-let highlightedAcademicEventId = null;
 
 /* The week view runs Monday → Sunday. */
 function getScheduleWeekStart() {
@@ -4345,11 +4362,11 @@ function moveCalendarMonth(delta) {
   renderCalendar();
 }
 
+/* Midnight on the 1st, so bills and charges due on the 1st count as
+   part of the month (the Credit tab compares exact dates). */
 function getBillMonthDate() {
-  const d = new Date();
-  d.setDate(1);
-  d.setMonth(d.getMonth() + billMonthOffset);
-  return d;
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth() + billMonthOffset, 1);
 }
 
 const MAX_BILL_MONTH_OFFSET = 24;
@@ -4662,18 +4679,11 @@ function removePaycheckExtra(paycheckId, extraId, monthDate = getBillMonthDate()
    pull the two copies are merged extra by extra: removed ones stay gone,
    ones added on either device are kept. */
 const REMOVED_EXTRAS_KEY = 'gnd-paycheck-removed-extras';
-function getRemovedExtras() {
-  const v = ls(REMOVED_EXTRAS_KEY, {});
-  return v && typeof v === 'object' && !Array.isArray(v) ? v : {};
-}
-function rememberRemovedExtra(extraId) {
-  if (!extraId) return;
-  const removed = getRemovedExtras();
-  if (removed[extraId]) return;
-  removed[extraId] = new Date().toISOString();
-  lsSave(REMOVED_EXTRAS_KEY, removed);
-}
-function mergeRemovedExtras(a, b) {
+/* Every "removed" list, merged first on each pull (see getTombstones). */
+const TOMBSTONE_KEYS = [REMOVED_EXTRAS_KEY, REMOVED_BILLS_KEY];
+function getRemovedExtras() { return getTombstones(REMOVED_EXTRAS_KEY); }
+function rememberRemovedExtra(extraId) { rememberTombstone(REMOVED_EXTRAS_KEY, extraId); }
+function mergeTombstones(a, b) {
   const out = { ...(a && typeof a === 'object' ? a : {}) };
   Object.entries(b && typeof b === 'object' ? b : {}).forEach(([id, t]) => {
     if (!out[id] || String(t) < String(out[id])) out[id] = t;
@@ -4709,20 +4719,21 @@ function mergePaycheckInstanceMaps(primary, secondary, removed) {
   });
   return out;
 }
-/* Pull-side handling for the two keys above. Returns true if local data changed. */
-function absorbRemoteRemovedExtras(row) {
-  const local = getRemovedExtras();
-  const merged = mergeRemovedExtras(local, row.data_value);
+/* Pull-side handling for a "removed" list (TOMBSTONE_KEYS) and the
+   paycheck map. Each returns true if local data changed. */
+function absorbRemoteTombstones(key, row) {
+  const local = getTombstones(key);
+  const merged = mergeTombstones(local, row.data_value);
   const remoteIds = Object.keys(row.data_value && typeof row.data_value === 'object' ? row.data_value : {});
   const localChanged = Object.keys(merged).length !== Object.keys(local).length;
-  if (localChanged) localStorage.setItem(REMOVED_EXTRAS_KEY, JSON.stringify(merged));
+  if (localChanged) localStorage.setItem(key, JSON.stringify(merged));
   if (Object.keys(merged).length !== remoteIds.length) {
-    localStorage.setItem(dirtyFlagKey(REMOVED_EXTRAS_KEY), '1');
-    syncDebounced(REMOVED_EXTRAS_KEY, merged);
+    localStorage.setItem(dirtyFlagKey(key), '1');
+    syncDebounced(key, merged);
   } else {
-    localStorage.setItem(REMOVED_EXTRAS_KEY + '_ts', row.updated_at);
-    localStorage.removeItem(dirtyFlagKey(REMOVED_EXTRAS_KEY));
-    syncQueue.delete(REMOVED_EXTRAS_KEY);
+    localStorage.setItem(key + '_ts', row.updated_at);
+    localStorage.removeItem(dirtyFlagKey(key));
+    syncQueue.delete(key);
   }
   return localChanged;
 }
@@ -4766,14 +4777,7 @@ function moveExtraToPaycheck(fromPaycheckId, extraId, toPaycheckId, monthDate = 
 // tab — only the credit-card payment bill itself should.
 const PAYCHECK_TAB_EXCLUDED_CATEGORIES = new Set(['Variable', 'Subscriptions']);
 function billIsDiscoverSourced(bill) {
-  if (!bill) return false;
-  if (String(bill.source || '').toLowerCase() === 'discover') return true;
-  // If the bill has been folder-assigned to the Discover account, also treat it as Discover-sourced.
-  const map = (typeof getBillAccounts === 'function') ? getBillAccounts() : {};
-  const folder = map[bill.key];
-  if (!folder) return false;
-  const discoverId = (typeof getDiscoverAccountId === 'function') ? getDiscoverAccountId() : null;
-  return !!discoverId && folder === `acct:${discoverId}`;
+  return !!bill && String(bill.source || '').toLowerCase() === 'discover';
 }
 function billBelongsOnPaychecksTab(bill) {
   if (!bill) return false;
@@ -4811,23 +4815,336 @@ function homeSection(id, title, sub, content, icon = '') {
   </div>`;
 }
 
+/* Home shows one of three modes, picked by the clock (see Home modes
+   below). While Bare Minimum Day is on, modes pause: the checklist, water
+   and everything else folded into one row. */
 function renderHome() {
   const dk = todayKey();
-  const todo = buildTodayTodoBody(dk);
-  const bills = buildWeekBillsBody();
+  const bmd = isBareMinimumToday();
+  const mode = getHomeMode();
   let html = `<div class="home-index-head">
     <div class="home-index-title">${esc(getTimeGreeting())}</div>
     <div class="page-date">${esc(formatDate())}</div>
+    ${bmd ? '' : homeModeLabelHtml(mode)}
   </div>`;
-  html += buildHomeCareTop(dk);
-  html += buildHomeWater();
-  html += buildTodayTimeList(dk);
-  html += homeSection('todo', 'To do', `${todo.done}/${todo.total} done`, todo.html, 'todayTab');
-  html += homeSection('bills', 'Bills this week', bills.sub, bills.html, 'pay');
-  html += homeSection('week', 'This week', '', buildScheduleSection(), 'calendarTab');
-  html += homeSection('notes', 'Notes', '', buildTodayNotesCard(dk), 'notesTab');
+  if (bmd) {
+    html += buildBareMinimumCard(dk);
+    html += buildHomeWater();
+    html += homeSection('everything', 'Everything else', '', buildTodayTodoBody(dk).html + buildTodayTimeList(dk) + buildTodayNotesCard(dk), 'todayTab');
+  } else {
+    html += buildHomeWater();
+    html += buildHomeHomework(dk);
+    html += mode === 'morning' ? buildHomeMorning(dk) : mode === 'day' ? buildHomeDay(dk) : buildHomeEvening(dk);
+    html += buildHomeMealLog(dk);
+    html += buildHomeAddTodo(dk);
+    html += buildHomeRest(mode, dk);
+  }
   document.getElementById('page-home').innerHTML = html;
+  homeShown = { mode: bmd ? 'bmd' : mode, day: dk };
   afterHomeRenderCare();
+}
+
+/* ── Home modes ──
+   Morning, Day and Evening, picked by the device clock. Tapping the label
+   under the date steps to the next mode until the next switch time. The
+   override, skipped routine steps and "Show full list" live in memory
+   only and reset on reload. */
+const HOME_MORNING_START = 4 * 60;   // 4:00 AM
+const HOME_DAY_START = 13 * 60;      // 1:00 PM
+const HOME_EVENING_START = 20 * 60;  // 8:00 PM
+/* Missed to-dos, study blocks and chores carry over from this day on. */
+const CARRYOVER_START = '2026-10-12';
+/* The meal log stays on Home this long after a meal's half hour ends. */
+const HOME_MEAL_LOG_AFTER = 120;
+/* Shortest gap listed under Open time today, and where the day ends
+   when there's no evening routine block. */
+const HOME_OPEN_TIME_MIN = 15;
+const HOME_DAY_END_FALLBACK = 21 * 60;
+/* Events that count as the day having started, and as commitments. */
+const HOME_TIMED_TYPES = ['work', 'academic', 'appointment'];
+const HOME_COMMITMENT_TYPES = ['work', 'appointment'];
+const HOME_MODES = ['morning', 'day', 'evening'];
+const HOME_MODE_LABELS = { morning: 'Morning', day: 'Day', evening: 'Evening' };
+
+let homeModeOverride = null; // { mode, until } (until = ms timestamp)
+let homeShown = { mode: null, day: null };
+let homeSkipped = { day: null, morning: [], evening: [] };
+const homeFullList = { morning: false, evening: false };
+
+function homeClockMode(mins = nowMinutes()) {
+  if (mins >= HOME_MORNING_START && mins < HOME_DAY_START) return 'morning';
+  if (mins >= HOME_DAY_START && mins < HOME_EVENING_START) return 'day';
+  return 'evening';
+}
+/* The next time the clock mode changes. */
+function homeNextSwitch(now = new Date()) {
+  const mins = now.getHours() * 60 + now.getMinutes();
+  const starts = [HOME_MORNING_START, HOME_DAY_START, HOME_EVENING_START].sort((a, b) => a - b);
+  const next = starts.find(s => s > mins);
+  const d = new Date(now);
+  if (next === undefined) { d.setDate(d.getDate() + 1); d.setHours(0, starts[0], 0, 0); }
+  else d.setHours(0, next, 0, 0);
+  return d;
+}
+function getHomeMode() {
+  if (homeModeOverride && Date.now() < homeModeOverride.until) return homeModeOverride.mode;
+  homeModeOverride = null;
+  return homeClockMode();
+}
+function cycleHomeMode() {
+  const next = HOME_MODES[(HOME_MODES.indexOf(getHomeMode()) + 1) % HOME_MODES.length];
+  homeModeOverride = next === homeClockMode() ? null : { mode: next, until: homeNextSwitch().getTime() };
+  renderHome();
+}
+function homeModeLabelHtml(mode) {
+  const until = homeNextSwitch();
+  const time = formatTime(minutesToClock(until.getHours() * 60 + until.getMinutes())).replace(':00 ', ' ');
+  return `<div class="page-date" role="button" tabindex="0" aria-label="Showing ${HOME_MODE_LABELS[mode]} until ${time}. Tap to switch"
+    onclick="cycleHomeMode()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();cycleHomeMode()}">${HOME_MODE_LABELS[mode]} · until ${time}</div>`;
+}
+/* Every minute (and on coming back to the app): redraw Home if the mode or
+   the day changed, unless something on Home is being typed in. */
+function homeModeTick() {
+  if (currentTab !== 'home' || isBareMinimumToday()) return;
+  if (getHomeMode() === homeShown.mode && todayKey() === homeShown.day) return;
+  const focused = document.activeElement;
+  if (focused && /^(INPUT|TEXTAREA)$/.test(focused.tagName) && focused.closest('#page-home')) return;
+  renderHome();
+}
+setInterval(homeModeTick, 60000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) homeModeTick(); });
+
+/* A block's start and end in minutes, the way the timeline reads them
+   (no end = one minute), except a block ending before it starts runs on
+   past midnight. */
+function homeBlockSpan(b) {
+  const start = timeToMinutes(b.time);
+  const end = b.end && b.end !== b.time ? timeToMinutes(b.end) : null;
+  if (end !== null && end > start) return { start, hasEnd: true, end };
+  if (end !== null && end < start) return { start, hasEnd: true, end: 24 * 60 };
+  return { start, hasEnd: false, end: start + 1 };
+}
+function homeRoutineData(type, dk) { return ls(`gnd-${dk}-${type}`, null) || defRoutine(type); }
+function homeTimedBlocks(dk) { return getScheduleBlocksForDate(dk).filter(b => !b.allDay && b.time); }
+/* "from yesterday", "from Tue", or a date when it's over a week old. */
+function homeFromTag(dk) {
+  const days = Math.round((dateFromKey(todayKey()) - dateFromKey(dk)) / 86400000);
+  if (days === 1) return 'from yesterday';
+  return days < 7 ? `from ${DAY_NAMES[dateFromKey(dk).getDay()]}` : `from ${formatShortDate(dateFromKey(dk))}`;
+}
+function homeTodoRows(dk, meta = '') {
+  return getTodosForDate(dk).map(t => ({
+    title: t.title, done: !!t.done, meta,
+    toggle: `toggleTodoForDate('${attr(dk)}','${attr(t.id)}');renderActivePage()`,
+  }));
+}
+function homeRowsCard(title, rows) {
+  return `<div class="card theme-card"><div class="card-title-row"><div class="card-title">${esc(title)}</div></div>${rows.map(todoRowHtml).join('')}</div>`;
+}
+
+/* Homework due today or tomorrow, or past due, until it's checked off. */
+function buildHomeHomework(dk) {
+  const tomorrow = localDateKey(addDays(dateFromKey(dk), 1));
+  const rows = getAcademicAssignments()
+    .filter(a => a && !a.done && a.dueDate && a.dueDate <= tomorrow)
+    .sort(academicAssignmentSort)
+    .map(a => {
+      const late = Math.round((dateFromKey(dk) - dateFromKey(a.dueDate)) / 86400000);
+      return {
+        title: [a.className, a.title].filter(Boolean).join(': ') || 'School work',
+        done: false,
+        meta: a.dueDate === dk ? 'Due today' : a.dueDate === tomorrow ? 'Due tomorrow' : `${late} day${late === 1 ? '' : 's'} late`,
+        toggle: `toggleDueSoonDone(${jsArg(a.id)})`,
+        icon: themeIcon('academic', 'todo-icon'),
+      };
+    });
+  return rows.length ? homeRowsCard('Homework', rows) : '';
+}
+
+/* One routine step at a time: Done checks it off, Skip shows the next one
+   for now, and the full list is there when wanted. */
+function skipHomeRoutineStep(type, key) {
+  homeSkipped[type].push(key);
+  renderHome();
+}
+function toggleHomeFullList(type) {
+  homeFullList[type] = !homeFullList[type];
+  renderHome();
+}
+function buildHomeRoutineStep(type, dk) {
+  const items = type === 'morning' ? getMorningItemsForDate(dk) : EVENING_ITEMS;
+  const data = homeRoutineData(type, dk);
+  const name = TODO_GROUPS[type].label;
+  const open = items.filter(i => !data[i.key]);
+  if (!open.length) return `<div class="card theme-card"><div class="card-title-row"><div class="card-title">${esc(name)} done.</div></div></div>`;
+  if (homeSkipped.day !== dk) homeSkipped = { day: dk, morning: [], evening: [] };
+  homeSkipped[type] = homeSkipped[type].filter(k => open.some(i => i.key === k));
+  let left = open.filter(i => !homeSkipped[type].includes(i.key));
+  if (!left.length) { homeSkipped[type] = []; left = open; }
+  const step = left[0];
+  let html = `<div class="card theme-card">
+    <div class="card-title-row"><div class="card-title">${esc(name)} · step ${items.indexOf(step) + 1} of ${items.length}</div></div>
+    <div class="modal-title">${esc(step.label)}</div>
+    ${step.detail ? `<div class="collapse-sub">${esc(step.detail)}</div>` : ''}
+    <div class="care-choice">
+      <button class="add-btn" type="button" onclick="toggleRoutine('${type}',${jsArg(step.key)})">Done</button>
+      <button class="add-btn" type="button" onclick="skipHomeRoutineStep('${type}',${jsArg(step.key)})">Skip</button>
+    </div>
+    <button class="add-btn" type="button" onclick="toggleHomeFullList('${type}')">${homeFullList[type] ? 'Hide full list' : 'Show full list'}</button>`;
+  if (homeFullList[type]) {
+    const group = getTodayTodoGroups(dk).find(g => g.key === type);
+    if (group) html += `<div class="today-todo-card"><div class="todo-group" style="--group-color:${TODO_GROUPS[type].color}">
+      <div class="todo-group-label">${esc(name)}</div>${group.rows.map(todoRowHtml).join('')}</div></div>`;
+  }
+  return html + `</div>`;
+}
+
+/* The first work shift or appointment on a day (after a time, if given),
+   with the leave-by time the schedule already works out for commutes. */
+function buildHomeCommitmentLine(title, dk, afterMins = -1) {
+  const ev = getEventsForDateFromList(dk)
+    .filter(e => HOME_COMMITMENT_TYPES.includes(e.type) && e.start && timeToMinutes(e.start) > afterMins)
+    .sort((a, b) => timeToMinutes(a.start) - timeToMinutes(b.start))[0];
+  if (!ev) return '';
+  const block = getScheduleBlocksForDate(dk).find(b => b.id === ev.id);
+  const leave = block && block.time !== ev.start ? ` (leave by ${formatTime(block.time)})` : '';
+  return `<div class="card theme-card"><div class="card-title-row"><div class="card-title">${esc(title)}</div></div>
+    <div class="collapse-sub">${esc(ev.title)} · ${formatTime(ev.start)}${leave}</div></div>`;
+}
+
+/* Morning: the routine one step at a time, until it's done or the day's
+   first work / class / appointment block starts; then the Day view. */
+function buildHomeMorning(dk) {
+  const data = homeRoutineData('morning', dk);
+  const routineDone = getMorningItemsForDate(dk).every(i => data[i.key]);
+  const now = nowMinutes();
+  const started = homeTimedBlocks(dk).some(b => b.source === 'event' && HOME_TIMED_TYPES.includes(b.type) && timeToMinutes(b.time) <= now);
+  if (routineDone || started) return buildHomeDay(dk);
+  return buildHomeRoutineStep('morning', dk) + buildHomeCommitmentLine('Next up', dk);
+}
+
+/* Day: what's on now (picked the way the timeline picks "Now" / "Up
+   next"), and the open stretches before the evening routine. */
+function buildHomeDay(dk) {
+  const timed = homeTimedBlocks(dk);
+  const now = nowMinutes();
+  let focusIdx = timed.findIndex(b => { const t = homeBlockSpan(b); return t.hasEnd && now >= t.start && now < t.end; });
+  const isNow = focusIdx > -1;
+  if (!isNow) focusIdx = timed.findIndex(b => homeBlockSpan(b).start > now);
+
+  let html = `<div class="card theme-card"><div class="card-title-row"><div class="card-title">Right now</div></div>`;
+  if (focusIdx === -1) {
+    html += `<div class="day-panel-empty">Nothing else scheduled.</div>`;
+  } else {
+    const b = timed[focusIdx];
+    const t = homeBlockSpan(b);
+    const range = t.hasEnd ? `${formatTime(b.time)} – ${formatTime(minutesToClock(t.end))}` : formatTime(b.time);
+    const when = isNow ? `${range} · ${minutesLabel(t.end - now)} left` : `Starts at ${formatTime(b.time)}`;
+    const next = timed.slice(focusIdx + 1).find(n => homeBlockSpan(n).start > now);
+    html += `<div class="collapse-title">${esc(b.title)}</div>
+      <div class="collapse-sub">${esc(when)}</div>
+      ${next ? `<div class="collapse-sub">Then: ${esc(next.title)} at ${formatTime(next.time)}</div>` : ''}`;
+  }
+  html += `</div>`;
+
+  const evening = timed.find(b => b.blockKey === 'evening');
+  const dayEnd = evening ? timeToMinutes(evening.time) : HOME_DAY_END_FALLBACK;
+  const busy = timed.map(homeBlockSpan).sort((a, b) => a.start - b.start);
+  const gaps = [];
+  let cursor = now;
+  busy.forEach(iv => {
+    if (iv.start >= dayEnd) return;
+    if (iv.start - cursor >= HOME_OPEN_TIME_MIN) gaps.push([cursor, iv.start - cursor]);
+    cursor = Math.max(cursor, iv.end);
+  });
+  if (dayEnd - cursor >= HOME_OPEN_TIME_MIN) gaps.push([cursor, dayEnd - cursor]);
+  html += `<div class="card theme-card"><div class="card-title-row"><div class="card-title">Open time today</div></div>
+    ${gaps.length ? gaps.map(([start, len]) => `<div class="collapse-sub">${formatTime(minutesToClock(start))} · ${minutesLabel(len)}</div>`).join('') : '<div class="day-panel-empty">No open time left today.</div>'}
+  </div>`;
+  return html;
+}
+
+/* Evening: the routine one step at a time, the Sunday reset, what got done
+   today, and tomorrow's first commitment. After midnight it's wind-down
+   only: no routine card or wins, just what's later today. */
+function buildHomeEvening(dk) {
+  const now = nowMinutes();
+  const afterMidnight = now < HOME_MORNING_START;
+  let html = afterMidnight ? '' : buildHomeRoutineStep('evening', dk);
+  if (dateFromKey(dk).getDay() === WEEKLY_RESET_DOW) {
+    const reset = getTodayTodoGroups(dk).find(g => g.key === 'reset');
+    if (reset) html += homeRowsCard(TODO_GROUPS.reset.label, reset.rows);
+  }
+  if (!afterMidnight) {
+    const wins = getTodayTodoGroups(dk).flatMap(g => g.rows).concat(homeTodoRows(dk)).filter(r => r.done);
+    if (wins.length) html += homeRowsCard("Today's wins", wins);
+    html += buildHomeCommitmentLine('Tomorrow', localDateKey(addDays(dateFromKey(dk), 1)));
+  } else {
+    html += buildHomeCommitmentLine('Later today', dk, now);
+  }
+  return html;
+}
+
+/* During a meal (and two hours after), its ate / snack / skipped buttons. */
+function buildHomeMealLog(dk) {
+  const now = nowMinutes();
+  return homeTimedBlocks(dk)
+    .filter(b => b.source === 'mealtime' && now >= timeToMinutes(b.time) && now < homeBlockSpan(b).end + HOME_MEAL_LOG_AFTER)
+    .map(b => `<div class="card theme-card"><div class="card-title-row"><div class="card-title">${esc(b.title)}</div></div>${mealLogButtons(dk, b.mealKey)}</div>`)
+    .join('');
+}
+
+/* The To do card's add box on its own. */
+function buildHomeAddTodo(dk) {
+  return `<div class="card theme-card"><div class="card-title-row"><div class="card-title">Add a to-do</div></div>
+    <form class="day-todo-add" onsubmit="event.preventDefault();const i=this.querySelector('input');addTodoForDate('${attr(dk)}',i.value);i.value='';renderActivePage()">
+      <input type="text" placeholder="Add a to-do…" maxlength="140" autocomplete="off" aria-label="Add a to-do" />
+      <button type="submit" aria-label="Add to-do">+</button>
+    </form>
+  </div>`;
+}
+
+/* Missed items from earlier days (display only, stored dates untouched):
+   my to-dos and study blocks since CARRYOVER_START, and this week's
+   chores. Study blocks whose assignment is done are dropped. */
+function homeCarryoverRows(dk) {
+  const rows = [];
+  const events = getEvents();
+  const assignments = getAcademicAssignments();
+  for (let d = dateFromKey(CARRYOVER_START); localDateKey(d) < dk; d = addDays(d, 1)) {
+    const day = localDateKey(d);
+    const tag = homeFromTag(day);
+    homeTodoRows(day, tag).filter(r => !r.done).forEach(r => rows.push(r));
+    const autoDone = getAutoDone(day);
+    getEventsForDateFromList(day, events).filter(e => e.type === 'academic' && !autoDone[e.id]).forEach(e => {
+      const a = e.academicAssignmentId && assignments.find(x => x.id === e.academicAssignmentId);
+      if (a && a.done) return;
+      rows.push({ title: academicTodoTitle(e), done: false, meta: tag, toggle: `toggleAutoDone('${day}','${attr(e.id)}')`, icon: themeIcon('academic', 'todo-icon') });
+    });
+  }
+  for (let d = startOfMondayWeek(dateFromKey(dk)); localDateKey(d) < dk; d = addDays(d, 1)) {
+    const day = localDateKey(d);
+    if (day < CARRYOVER_START) continue;
+    getCleaningBlocksForDate(day).filter(c => !c.cleaningDone).forEach(c => rows.push({
+      title: c.title, done: false, meta: homeFromTag(day), toggle: `toggleCleaningTask('${attr(c.cleaningTaskId)}')`, icon: cleaningIcon({ id: c.cleaningTaskId, title: c.title }, 'small'),
+    }));
+  }
+  return rows;
+}
+
+/* Everything else, folded into one row: carried-over items, the To do
+   card, the timeline and today's note. */
+function buildHomeRest(mode, dk) {
+  const carry = homeCarryoverRows(dk);
+  let title = mode === 'morning' ? 'Saved for later' : 'Also today';
+  if (mode === 'evening') {
+    const open = getTodayTodoGroups(dk).filter(g => g.key !== 'morning' && g.key !== 'evening').flatMap(g => g.rows)
+      .concat(homeTodoRows(dk)).filter(r => !r.done).length;
+    title = `Still open · ${open + carry.length}`;
+  }
+  const from = carry.length ? `<div class="today-todo-card"><div class="todo-group"><div class="todo-group-label">From earlier</div>${carry.map(todoRowHtml).join('')}</div></div>` : '';
+  return homeSection('later', title, carry.length ? `${carry.length} from earlier` : '',
+    from + buildTodayTodoBody(dk).html + buildTodayTimeList(dk) + buildTodayNotesCard(dk), 'todayTab');
 }
 
 /* Water reminder on Home: a slim bar on phones; on wide screens the same
@@ -4870,6 +5187,7 @@ function buildWeekBillsBody() {
 
 function renderCalendar() {
   let html = themePageHeader('Calendar', 'One day at a time.', ['calendarTab']);
+  html += homeSection('week', 'This week', '', buildScheduleSection(), 'calendarTab');
   html += buildCalendarActions();
   html += buildMonthCalendar();
   document.getElementById('page-calendar').innerHTML = html;
@@ -5576,8 +5894,7 @@ function buildScheduleSection() {
     const off = !blocks.some(b => b.type === 'work') && USUAL_DAYS_OFF.includes(d.getDay());
     const items = blocks.map(b => weekItemHtml(b, dk)).join('') || `<div class="wg-empty">Clear day</div>`;
 
-    html += `<div class="wg-day${dk === todayK ? ' today' : ''}${dk < todayK ? ' past' : ''}"
-      ondragover="onDayDragOver(event)" ondragleave="onDayDragLeave(event)" ondrop="onDayDrop(event,'${dk}')">
+    html += `<div class="wg-day${dk === todayK ? ' today' : ''}${dk < todayK ? ' past' : ''}">
       <button class="wg-daycol" type="button" onclick="openDayModal('${dk}')" aria-label="Open ${esc(d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }))}">
         <span class="wg-dayname">${DAY_NAMES[d.getDay()]}</span>
         <span class="wg-daynum">${d.getDate()}</span>
@@ -5787,7 +6104,7 @@ function getWeeklyResetBlockForDate(dateKey) {
   return { id: `reset-${dateKey}`, source: 'reset', time: '21:00', end: '21:30', title: 'Weekly Reset', type: 'health', detail: 'Reload meds for the week · journal', editable: false };
 }
 
-/* Weekly testosterone shot — a fixed reminder block on injection day (Thu). */
+/* Weekly testosterone shot — a fixed reminder block on injection day (Fri). */
 function getShotBlockForDate(dateKey) {
   if (dateFromKey(dateKey).getDay() !== SHOT_DOW) return null;
   const shot = MEDS.weekly[0];
@@ -5895,14 +6212,13 @@ function buildTimelineHtml(dateKey, allowEdit = true, opts = {}) {
     const height = Math.max(MIN_BLOCK_PX, b.duration * pxPerMinute);
     const compact = height < 44 ? ' compact' : height < 64 ? ' mid' : '';
     const colStyle = b.cols > 1 ? `left:calc(8px + (100% - 8px) * ${b.col} / ${b.cols});width:calc((100% - 8px) / ${b.cols} - 3px);right:auto;` : '';
-    const highlightClass = highlightedAcademicEventId && b.id === highlightedAcademicEventId ? ' highlighted' : '';
     const cleaningClass = b.source === 'cleaning' ? ' cleaning' : '';
     const doneClass = b.cleaningDone ? ' done' : '';
     const cleaningBtn = b.source === 'cleaning'
       ? `<button class="timeline-block-action" type="button" title="Unassign from this day" aria-label="Unassign cleaning task" onclick="event.stopPropagation();unassignCleaningTaskFromUI('${attr(b.cleaningTaskId)}','${attr(b.date)}')">✕</button>`
       : '';
     const cleaningImg = b.source === 'cleaning' ? cleaningIcon({ id: b.cleaningTaskId, title: b.title }, 'small') : '';
-    html += `<div class="timeline-block${highlightClass}${cleaningClass}${doneClass}${compact}" style="top:${top}px;height:${height}px;${colStyle}--block-color:${evColor(b.type)};">
+    html += `<div class="timeline-block${cleaningClass}${doneClass}${compact}" style="top:${top}px;height:${height}px;${colStyle}--block-color:${evColor(b.type)};">
       <div class="timeline-block-title">${cleaningImg}${esc(b.title)}</div>
       <div class="timeline-block-time">${formatTime(b.time)}${b.end && b.end !== b.time ? ` - ${formatTime(b.end)}` : ''}</div>
       ${b.detail ? `<div class="timeline-block-detail">${esc(b.detail)}</div>` : ''}
@@ -5945,14 +6261,6 @@ function getDayMoneyItems(dateKey) {
       kind: 'neg'
     });
   });
-  getTransactions().filter(t => t.date === dateKey).forEach(t => {
-    items.push({
-      title: t.note || (t.amount > 0 ? 'Income / Deposit' : 'Spending'),
-      meta: 'Entered transaction',
-      amount: Number(t.amount || 0),
-      kind: t.amount < 0 ? 'neg' : 'pos'
-    });
-  });
   return items;
 }
 
@@ -5970,14 +6278,7 @@ function buildDayMoneyHtml(dateKey) {
   return html + `</div></div>`;
 }
 
-function scrollHighlightedAcademicBlock() {
-  if (!highlightedAcademicEventId) return;
-  const block = document.querySelector('.timeline-block.highlighted');
-  if (block) block.scrollIntoView({ block: 'center', behavior: 'smooth' });
-}
-
-function openDayModal(dateKey, highlightEventId = '') {
-  highlightedAcademicEventId = highlightEventId || null;
+function openDayModal(dateKey) {
   const date = dateFromKey(dateKey);
   scheduleWeekOffset = weekOffsetForDate(date);
   scheduleDay = date.getDay();
@@ -5986,12 +6287,10 @@ function openDayModal(dateKey, highlightEventId = '') {
   const modal = document.getElementById('day-modal');
   modal.classList.add('open');
   modal.dataset.dateKey = dateKey;
-  setTimeout(scrollHighlightedAcademicBlock, 60);
 }
 
 function closeDayModal() {
   document.getElementById('day-modal').classList.remove('open');
-  highlightedAcademicEventId = null;
 }
 
 function navigateDayModal(delta) {
@@ -5999,7 +6298,6 @@ function navigateDayModal(delta) {
   if (!modal || !modal.dataset.dateKey) return;
   const nextDate = addDays(dateFromKey(modal.dataset.dateKey), delta);
   const nextKey = localDateKey(nextDate);
-  highlightedAcademicEventId = null;
   modal.dataset.dateKey = nextKey;
   renderDayModal(nextKey);
   const sheet = document.getElementById('day-modal-sheet');
@@ -7178,8 +7476,7 @@ function buildCleaningBlock(tasks, week) {
     } else {
       badge = `<button class="cleaning-assign-btn" type="button" title="Assign to a day" aria-label="Assign to a day" onclick="event.stopPropagation();openCleaningAssignPicker('${attr(task.id)}')">+ day</button>`;
     }
-    html += `<div class="check-item cleaning-task-row ${done?'checked':''}" draggable="true" data-cleaning-task="${attr(task.id)}" ondragstart="onCleaningDragStart(event,'${attr(task.id)}')" ondragend="onCleaningDragEnd(event)" onclick="toggleCleaningTask('${attr(task.id)}')">
-      <span class="cleaning-drag-grip" aria-hidden="true">⋮⋮</span>
+    html += `<div class="check-item cleaning-task-row ${done?'checked':''}" onclick="toggleCleaningTask('${attr(task.id)}')">
       <div class="check-box">${checkSvg()}</div>
       ${cleaningIcon(task, 'small')}
       <div class="check-label">${esc(task.title)}</div>
@@ -7194,46 +7491,6 @@ function buildCleaningBlock(tasks, week) {
   return html;
 }
 
-let _cleaningDragTaskId = null;
-function onCleaningDragStart(ev, taskId) {
-  _cleaningDragTaskId = taskId;
-  try {
-    ev.dataTransfer.effectAllowed = 'move';
-    ev.dataTransfer.setData('text/plain', `cleaning:${taskId}`);
-  } catch {}
-  document.body.classList.add('cleaning-dragging');
-}
-function onCleaningDragEnd() {
-  _cleaningDragTaskId = null;
-  document.body.classList.remove('cleaning-dragging');
-  document.querySelectorAll('.week-day-row.drop-target, .week-day-btn.drop-target, .wg-day.drop-target').forEach(el => el.classList.remove('drop-target'));
-}
-function onDayDragOver(ev) {
-  if (!_cleaningDragTaskId) return;
-  ev.preventDefault();
-  try { ev.dataTransfer.dropEffect = 'move'; } catch {}
-  ev.currentTarget?.classList?.add('drop-target');
-}
-function onDayDragLeave(ev) {
-  ev.currentTarget?.classList?.remove('drop-target');
-}
-function onDayDrop(ev, dateKey) {
-  ev.preventDefault();
-  ev.currentTarget?.classList?.remove('drop-target');
-  let taskId = _cleaningDragTaskId;
-  if (!taskId) {
-    try {
-      const raw = ev.dataTransfer.getData('text/plain') || '';
-      if (raw.startsWith('cleaning:')) taskId = raw.slice('cleaning:'.length);
-    } catch {}
-  }
-  if (!taskId || !dateKey) return;
-  assignCleaningTaskToDate(taskId, dateKey);
-  _cleaningDragTaskId = null;
-  document.body.classList.remove('cleaning-dragging');
-  renderActivePage();
-  refreshDayModalIfOpen();
-}
 function unassignCleaningTaskFromUI(taskId, dateKey = null) {
   unassignCleaningTask(taskId, dateKey);
   renderActivePage();
@@ -7382,18 +7639,6 @@ function toggleRoutine(type, key) {
 
 let editingBillKey = null;
 
-function moneyNameKey(name = '') {
-  return String(name).trim().toLowerCase();
-}
-
-function getDiscoverAccount(accounts = getAccounts()) {
-  return accounts.find(a => moneyNameKey(a.name) === 'discover') || null;
-}
-
-function getDiscoverAccountId(accounts = getAccounts()) {
-  return getDiscoverAccount(accounts)?.id || null;
-}
-
 function clampMonthDate(monthDate, day) {
   const y = monthDate.getFullYear();
   const m = monthDate.getMonth();
@@ -7422,8 +7667,8 @@ function monthlyIncomeEstimateForSource(src) {
   return src.schedule === 'biweekly' ? amt * 2 : amt;
 }
 
-function incomeOccurrencesForMonth(accountId = null, monthDate = getBillMonthDate()) {
-  const sources = getIncomeSources().filter(src => (!accountId || src.accountId === accountId) && Number(src.amount || 0) > 0);
+function incomeOccurrencesForMonth(monthDate = getBillMonthDate()) {
+  const sources = getIncomeSources().filter(src => Number(src.amount || 0) > 0);
   const y = monthDate.getFullYear();
   const m = monthDate.getMonth();
   const start = new Date(y, m, 1);
@@ -7454,12 +7699,12 @@ function incomeOccurrencesForDate(date) {
   const d = typeof date === 'string' ? dateFromKey(date) : date;
   const key = localDateKey(d);
   const monthDate = new Date(d.getFullYear(), d.getMonth(), 1);
-  return incomeOccurrencesForMonth(null, monthDate).filter(occ => occ.dateKey === key);
+  return incomeOccurrencesForMonth(monthDate).filter(occ => occ.dateKey === key);
 }
 
 function getIncomeSources() {
-  const accts = getAccounts();
-  const defaultAcct = accts[0]?.id || '';
+  const accts = getAccounts() || [];
+  const defaultAcct = (accts.find(a => /checking/i.test(a.name || '')) || accts[0])?.id || '';
   let sources = ls('gnd-income-sources', null);
   if (!sources) {
     sources = [
@@ -7469,7 +7714,8 @@ function getIncomeSources() {
   }
   let migrated = false;
   sources.forEach(src => {
-    if (!src.accountId) { src.accountId = defaultAcct; migrated = true; }
+    // No account, or one that's been taken off the list (e.g. Cash App): checking.
+    if (defaultAcct && !accts.some(a => a.id === src.accountId)) { src.accountId = defaultAcct; migrated = true; }
     if (!src.schedule) { src.schedule = 'monthly'; migrated = true; }
     if (src.schedule === 'monthly' && !src.day) { src.day = 1; migrated = true; }
     if (src.schedule === 'biweekly' && !src.lastDate) { src.lastDate = todayKey(); migrated = true; }
@@ -7543,11 +7789,12 @@ function submitCreditCardField(card, field, rawValue) {
   renderMoney();
 }
 
-/* Regular card spending that isn't a bill, e.g. gas every other Friday. */
+/* Regular card spending that isn't a bill, e.g. gas every other Friday.
+   Each one repeats weekly, every 2 weeks or monthly from its start date. */
 function getCreditEstimates() {
   let list = ls('gnd-credit-estimates', null);
   if (list === null) {
-    list = [{ id: 'est-gas', name: 'Gas fill-up', amount: 120, card: 'Capital One', start: '2026-10-16', everyDays: 14 }];
+    list = [{ id: 'est-gas', name: 'Gas fill-up', amount: 120, card: 'Capital One', start: '2026-10-16', freq: 'biweekly', everyDays: 14 }];
     lsSeed('gnd-credit-estimates', list);
   }
   return Array.isArray(list) ? list : [];
@@ -7559,12 +7806,78 @@ function updateCreditEstimate(id, patch) {
 }
 function addCreditEstimate() {
   const list = getCreditEstimates();
-  list.push({ id: 'est-' + Date.now(), name: '', amount: 0, card: QUICK_PAY_CARDS[0], start: todayKey(), everyDays: 14 });
+  list.push({ id: 'est-' + Date.now(), name: '', amount: 0, card: QUICK_PAY_CARDS[0], start: todayKey(), freq: 'biweekly', everyDays: 14 });
   saveCreditEstimates(list);
   renderMoney();
 }
 function removeCreditEstimate(id) {
   saveCreditEstimates(getCreditEstimates().filter(e => e.id !== id));
+  renderMoney();
+}
+
+/* How often an estimate repeats. `everyDays` is kept alongside `freq` so
+   an older copy of the app still reads about the right spacing. */
+const CREDIT_EST_FREQS = [
+  { id: 'weekly', label: 'Weekly', kind: 'weekly', days: 7 },
+  { id: 'biweekly', label: 'Every 2 weeks', kind: 'every 2 weeks', days: 14 },
+  { id: 'monthly', label: 'Monthly', kind: 'monthly', days: 30 },
+];
+function creditEstimateFreq(e) {
+  const saved = CREDIT_EST_FREQS.find(f => f.id === e.freq);
+  if (saved) return saved;
+  // Estimates made before there was a choice only have a number of days.
+  const days = Number(e.everyDays) || 14;
+  return CREDIT_EST_FREQS[days <= 7 ? 0 : days >= 28 ? 2 : 1];
+}
+function setCreditEstimateFreq(id, freqId) {
+  const f = CREDIT_EST_FREQS.find(x => x.id === freqId);
+  if (f) updateCreditEstimate(id, { freq: f.id, everyDays: f.days });
+}
+/* The days an estimate lands on between two dates. Monthly ones land on
+   the start date's day of the month (the last day in shorter months). */
+function creditEstimateDates(e, from, to) {
+  const start = dateFromKey(e.start);
+  const freq = creditEstimateFreq(e);
+  const out = [];
+  if (freq.id === 'monthly') {
+    for (let m = new Date(start.getFullYear(), start.getMonth(), 1); m <= to; m = nextMonthDate(m)) {
+      const d = clampMonthDate(m, start.getDate());
+      if (d >= start && d >= from && d <= to) out.push(d);
+    }
+    return out;
+  }
+  let d = start;
+  while (d < from) d = addDays(d, freq.days);
+  for (; d <= to; d = addDays(d, freq.days)) out.push(new Date(d));
+  return out;
+}
+
+/* Skipping a row on the Credit tab when real life strays from the plan.
+   Charges (bills on the card, estimates) are skipped per day in
+   gnd-credit-skips = { "bill:<key>@YYYY-MM-DD": true, "est:<id>@YYYY-MM-DD": true }.
+   A card payment uses its paycheck's own Skip, so it's skipped on the
+   Paychecks and Bills tabs too (and the other way round). */
+const CREDIT_SKIPS_KEY = 'gnd-credit-skips';
+function getCreditSkips() {
+  const v = ls(CREDIT_SKIPS_KEY, {});
+  return v && typeof v === 'object' && !Array.isArray(v) ? v : {};
+}
+function toggleCreditSkip(kind, id, rowKey = '', monthKey = '') {
+  if (kind === 'charge') {
+    const skips = getCreditSkips();
+    if (skips[id]) delete skips[id]; else skips[id] = true;
+    lsSave(CREDIT_SKIPS_KEY, skips);
+  } else {
+    const [y, m] = String(monthKey).split('-').map(Number);
+    const monthDate = new Date(y, m - 1, 1);
+    const inst = getPaycheckInstance(id, monthDate);
+    if (kind === 'bill') {
+      overrideBillOnPaycheck(id, rowKey, { skip: !inst.billOverrides[rowKey]?.skip }, monthDate);
+    } else {
+      const extra = inst.extras.find(e => e.id === rowKey);
+      if (extra) updatePaycheckExtra(id, rowKey, { skip: !extra.skip }, monthDate);
+    }
+  }
   renderMoney();
 }
 
@@ -7580,34 +7893,37 @@ function billPaysCard(bill, card) {
 
 /* Charges (negative) and scheduled payments (positive) on a card between
    two dates. Card payments count on the payday they're scheduled on; ones
-   not on a paycheck yet come back separately and don't count. */
+   not on a paycheck yet come back separately and don't count. Skipped
+   rows come back too (marked `skipped`) so they can be un-skipped; `skip`
+   is the click handler that flips them. */
 function creditCardEvents(card, from, to) {
   const events = [];
   const unscheduled = [];
+  const skips = getCreditSkips();
   const inRange = d => d >= from && d <= to;
   const payday = p => p.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   const months = [];
   for (let m = new Date(from.getFullYear(), from.getMonth(), 1); m <= to; m = nextMonthDate(m)) months.push(m);
+  const charge = (skipKey, ev) => events.push({ ...ev, skipped: !!skips[skipKey], skip: `toggleCreditSkip('charge',${jsArg(skipKey)})` });
 
   BILLS.filter(b => billChargesCard(b, card)).forEach(b => {
     months.forEach(m => billOccurrenceDatesInMonth(b, m).forEach(d => {
-      if (inRange(d)) events.push({ date: d, name: b.name, amount: -Number(b.amount || 0), kind: b.category === 'Variable' ? 'Spending budget' : b.category });
+      if (inRange(d)) charge(`bill:${b.key}@${localDateKey(d)}`, { date: d, name: b.name, amount: -Number(b.amount || 0), kind: b.category === 'Variable' ? 'Spending budget' : b.category });
     }));
   });
 
   getCreditEstimates().forEach(e => {
     if (e.card !== card || !(Number(e.amount) > 0) || !/^\d{4}-\d{2}-\d{2}$/.test(e.start || '')) return;
-    const step = Math.max(1, Number(e.everyDays) || 14);
-    let d = dateFromKey(e.start);
-    while (d < from) d = addDays(d, step);
-    for (; d <= to; d = addDays(d, step)) {
-      events.push({ date: new Date(d), name: e.name || 'Card spending', amount: -Number(e.amount), kind: `Estimate · every ${step === 14 ? '2 weeks' : step + ' days'}` });
-    }
+    const kind = `Estimate · ${creditEstimateFreq(e).kind}`;
+    creditEstimateDates(e, from, to).forEach(d => {
+      charge(`est:${e.id}@${localDateKey(d)}`, { date: d, name: e.name || 'Card spending', amount: -Number(e.amount), kind });
+    });
   });
 
   const payBills = BILLS.filter(b => billPaysCard(b, card));
   months.forEach(m => {
-    const paychecks = incomeOccurrencesForMonth(null, m);
+    const monthKey = paycheckPlanKey(m);
+    const paychecks = incomeOccurrencesForMonth(m);
     const byId = {};
     paychecks.forEach(p => { byId[p.id] = p; });
     const plan = getPaycheckPlan(m);
@@ -7616,10 +7932,11 @@ function creditCardEvents(card, from, to) {
       .forEach(o => {
         const p = byId[plan.assignments[o.occId]];
         if (p) {
+          if (!inRange(p.date)) return;
           const ov = getPaycheckInstance(p.id, m).billOverrides[o.billKey] || {};
-          if (ov.skip || !inRange(p.date)) return;
           const amount = ov.amount !== undefined ? Number(ov.amount) : Number(o.bill.amount || 0);
-          events.push({ date: p.date, name: o.bill.name, amount, kind: `Paid from ${payday(p)} paycheck` });
+          events.push({ date: p.date, name: o.bill.name, amount, kind: `Paid from ${payday(p)} paycheck`,
+            skipped: !!ov.skip, skip: `toggleCreditSkip('bill',${jsArg(p.id)},${jsArg(o.billKey)},'${monthKey}')` });
         } else if (!o.fromNextMonth && !findOccurrenceAssignment(o.occId) && inRange(o.date)) {
           unscheduled.push({ date: o.date, name: o.bill.name, amount: Number(o.bill.amount || 0) });
         }
@@ -7627,8 +7944,9 @@ function creditCardEvents(card, from, to) {
     paychecks.forEach(p => {
       if (!inRange(p.date)) return;
       getPaycheckInstance(p.id, m).extras.forEach(e => {
-        if (e.card === card && !e.skip && Number(e.amount) > 0) {
-          events.push({ date: p.date, name: e.name || `${card} payment`, amount: Number(e.amount), kind: `Extra · paid from ${payday(p)} paycheck` });
+        if (e.card === card && Number(e.amount) > 0) {
+          events.push({ date: p.date, name: e.name || `${card} payment`, amount: Number(e.amount), kind: `Extra · paid from ${payday(p)} paycheck`,
+            skipped: !!e.skip, skip: `toggleCreditSkip('extra',${jsArg(p.id)},${jsArg(e.id)},'${monthKey}')` });
         }
       });
     });
@@ -7668,16 +7986,23 @@ function renderMoneyCredit() {
     events.forEach(ev => {
       const counts = ev.date >= from;
       if (ev.date >= billMonth && monthOpen === null) monthOpen = s.limit - owed;
-      if (counts) owed = Math.max(0, owed - ev.amount);
+      if (counts && !ev.skipped) owed = Math.max(0, owed - ev.amount);
       if (ev.date >= billMonth) rows.push({ ...ev, counts, available: s.limit - owed });
     });
     if (monthOpen === null) monthOpen = s.limit - owed;
-    const counted = rows.filter(r => r.counts);
-    const low = counted.reduce((lo, r) => (r.available < lo.available ? r : lo), { available: monthOpen, date: null });
+    const counted = rows.filter(r => r.counts && !r.skipped);
+    const skippedCount = rows.filter(r => r.counts && r.skipped).length;
+    // Nothing dips below where the month opens: the low point is the opening.
+    const opening = { available: monthOpen, date: from > billMonth ? from : billMonth, opening: true };
+    const low = counted.reduce((lo, r) => (r.available < lo.available ? r : lo), opening);
     const charges = counted.filter(r => r.amount < 0).reduce((sum, r) => sum - r.amount, 0);
     const payments = counted.filter(r => r.amount > 0).reduce((sum, r) => sum + r.amount, 0);
     const endAvail = s.limit - owed;
     const availClass = n => (n < 0 ? 'over' : '');
+    const warn = low.available >= 0 ? ''
+      : !low.opening ? `Short ${formatMoney(-low.available)} on ${esc(shortDate(low.date))}. Schedule a ${esc(card)} payment on a paycheck before then.`
+      : from > billMonth ? `Over the limit by ${formatMoney(-low.available)} right now. Schedule a ${esc(card)} payment on your next paycheck.`
+      : `${esc(monthShort)} starts ${formatMoney(-low.available)} over the limit. Schedule a ${esc(card)} payment on a paycheck before then.`;
 
     html += `<div class="card theme-card credit-card">
       <div class="card-title-row"><div class="card-title credit-card-title">${cardIconSvg(card, 'card-icon lg')}${esc(card)}</div></div>
@@ -7699,20 +8024,24 @@ function renderMoneyCredit() {
         <div><span>Lowest${low.date ? ' · ' + esc(shortDate(low.date)) : ''}</span><strong class="${availClass(low.available)}">${formatMoney(low.available)}</strong></div>
         <div><span>End of ${esc(monthShort)}</span><strong class="${availClass(endAvail)}">${formatMoney(endAvail)}</strong></div>
       </div>
-      <div class="credit-sub">${formatMoney(charges)} in charges · ${formatMoney(payments)} in scheduled payments</div>
-      ${low.available < 0 ? `<div class="credit-warn">Short ${formatMoney(-low.available)} on ${esc(shortDate(low.date))}. Schedule a ${esc(card)} payment on a paycheck before then.</div>` : ''}
+      <div class="credit-sub">${formatMoney(charges)} in charges · ${formatMoney(payments)} in scheduled payments${skippedCount ? ` · ${skippedCount} skipped` : ''}</div>
+      ${warn ? `<div class="credit-warn">${warn}</div>` : ''}
       <div class="credit-list">`;
     if (!rows.length) html += `<div class="credit-empty">Nothing on ${esc(card)} in ${esc(monthShort)}.</div>`;
     rows.forEach(r => {
-      html += `<div class="credit-row ${r.counts ? '' : 'already'} ${r.amount > 0 ? 'is-payment' : ''}">
+      const live = r.counts && !r.skipped;
+      const kind = !r.counts ? 'Already in what you owe' : r.skipped ? 'Skipped · not counted' : esc(r.kind);
+      html += `<div class="credit-row ${r.counts ? '' : 'already'} ${r.skipped && r.counts ? 'skipped' : ''} ${r.amount > 0 ? 'is-payment' : ''}">
         <div class="credit-row-date">${esc(shortDate(r.date))}</div>
         <div class="credit-row-info">
           <div class="credit-row-name">${esc(r.name)}</div>
-          <div class="credit-row-kind">${r.counts ? esc(r.kind) : 'Already in what you owe'}</div>
+          <div class="credit-row-kind">${kind}</div>
+          ${r.counts ? `<button type="button" class="paycheck-tool-btn credit-skip-btn ${r.skipped ? 'on' : ''}" aria-pressed="${!!r.skipped}"
+            title="${r.skipped ? 'Count this again' : 'Not happening as planned: leave it out of the math'}" onclick="${r.skip}">Skip</button>` : ''}
         </div>
         <div class="credit-row-right">
           <div class="credit-row-amt">${r.amount > 0 ? '+' : '−'}${formatMoney(Math.abs(r.amount))}</div>
-          ${r.counts ? `<div class="credit-row-avail ${availClass(r.available)}">${formatMoney(r.available)} open</div>` : ''}
+          ${live ? `<div class="credit-row-avail ${availClass(r.available)}">${formatMoney(r.available)} open</div>` : ''}
         </div>
       </div>`;
     });
@@ -7728,15 +8057,19 @@ function renderMoneyCredit() {
   const estimates = getCreditEstimates();
   html += `<div class="card theme-card credit-card">
     <div class="card-title-row"><div class="card-title">Regular card spending</div></div>
-    <div class="credit-hint" style="margin-top:0;">Estimates for spending that isn't a bill. Each one repeats every 2 weeks from its date.</div>`;
+    <div class="credit-hint" style="margin-top:0;">Estimates for spending that isn't a bill. Each one repeats weekly, every 2 weeks or monthly from its start date.</div>`;
   estimates.forEach(e => {
+    const freq = creditEstimateFreq(e);
     html += `<div class="credit-est-row">
       <input type="text" class="text-input compact credit-est-name" placeholder="e.g. Gas" value="${attr(e.name || '')}" onchange="updateCreditEstimate('${attr(e.id)}',{name:this.value.trim()})">
       <span class="paycheck-row-amt-edit"><span class="paycheck-row-amt-currency">$</span>
         <input type="number" step="0.01" min="0" inputmode="decimal" class="paycheck-row-amt-input" value="${Number(e.amount || 0).toFixed(2)}"
           onfocus="this.select()" onchange="updateCreditEstimate('${attr(e.id)}',{amount:Number(this.value)||0})"></span>
-      <select class="text-input compact credit-est-card" onchange="updateCreditEstimate('${attr(e.id)}',{card:this.value})">
+      <select class="text-input compact credit-est-card" aria-label="Card" onchange="updateCreditEstimate('${attr(e.id)}',{card:this.value})">
         ${QUICK_PAY_CARDS.map(c => `<option value="${attr(c)}" ${c === e.card ? 'selected' : ''}>${esc(c)}</option>`).join('')}
+      </select>
+      <select class="text-input compact credit-est-freq" aria-label="How often" onchange="setCreditEstimateFreq('${attr(e.id)}',this.value)">
+        ${CREDIT_EST_FREQS.map(f => `<option value="${f.id}" ${f.id === freq.id ? 'selected' : ''}>${f.label}</option>`).join('')}
       </select>
       <label class="credit-est-start"><span>From</span>
         <input type="date" class="text-input compact" value="${attr(e.start || '')}" onchange="updateCreditEstimate('${attr(e.id)}',{start:this.value})"></label>
@@ -7797,7 +8130,7 @@ function renderMoneyBills() {
   const paidTotal = allEntries.filter(entryPaid).reduce((s, e) => s + e.b.amount, 0);
   // Which paycheck each unpaid bill is scheduled on, for the "Scheduled" tag.
   const paychecksById = {};
-  incomeOccurrencesForMonth(null, billMonth).forEach(p => { paychecksById[p.id] = p; });
+  incomeOccurrencesForMonth(billMonth).forEach(p => { paychecksById[p.id] = p; });
   const scheduledOn = (b, index = 0) => {
     const a = findOccurrenceAssignment(billOccId(b.key, billMonth, index));
     const p = a && paychecksById[a.paycheckId];
@@ -7847,32 +8180,14 @@ function renderMoneyBills() {
         : '';
       const dragClass = draggableToCard ? ' bill-row-draggable' : '';
       if (cat === 'Variable') {
-        const spent = getSpentAgainstVariableBill(b.key, billMonth);
-        const limit = Number(b.amount || 0);
-        const remaining = Math.max(0, limit - spent);
-        const pct = limit > 0 ? Math.min(100, (spent / limit) * 100) : 0;
-        const overBudget = spent > limit;
-        const lastTx = getLastVariablePurchase(b.key);
-        const daysSince = daysSinceLastPurchase(b.key);
-        let lastLine;
-        if (lastTx) {
-          const daysLabel = daysSince === 0 ? 'today' : daysSince === 1 ? 'yesterday' : `${daysSince} days ago`;
-          lastLine = `Last: ${formatShortDate(transactionDate(lastTx))} · ${daysLabel} · ${formatMoney(Math.abs(lastTx.amount))}`;
-        } else {
-          lastLine = 'No purchases logged yet';
-        }
-        html += `<div class="bill-row${dragClass}" data-bill-key="${attr(b.key)}" style="padding:10px 0;flex-wrap:wrap;"${dragAttrs}>
+        html += `<div class="bill-row${dragClass}" data-bill-key="${attr(b.key)}" style="padding:10px 0;"${dragAttrs}>
           <div class="bill-edit-info" style="flex:1;min-width:0;">
             <div class="bill-edit-name">${esc(b.name)}</div>
-            <div class="bill-edit-detail">${formatMoney(spent)} spent of ${formatMoney(limit)} budget${b.source ? ' · ' + esc(b.source) : ''}</div>
-            <div class="bill-edit-detail" style="margin-top:2px;">${esc(lastLine)}</div>
+            <div class="bill-edit-detail">Monthly budget${b.note ? ' · ' + esc(b.note) : ''}${b.source ? ' · ' + esc(b.source) : ''}</div>
           </div>
           <div class="bill-edit-right">
-            <div class="bill-edit-amt ${overBudget ? 'negative' : ''}" style="color:${overBudget ? 'var(--danger)' : 'var(--espresso)'};">${overBudget ? '-' + formatMoney(spent - limit) : formatMoney(remaining)} ${overBudget ? 'over' : 'left'}</div>
+            <div class="bill-edit-amt">${formatMoney(b.amount)}</div>
             <button class="bill-edit-btn" onclick="openBillEditModal('${b.key}')" title="Edit bill">&#9998;</button>
-          </div>
-          <div style="flex:0 0 100%;margin-top:8px;height:6px;border-radius:3px;background:var(--border-soft);overflow:hidden;">
-            <div style="height:100%;width:${pct}%;background:${overBudget ? 'var(--danger)' : 'var(--success)'};border-radius:3px;transition:width 0.3s ease;"></div>
           </div>
         </div>`;
       } else billEntries(b).forEach(({ date, index }) => {
@@ -7965,7 +8280,7 @@ function togglePaycheckBillPaid(billKey, dateKey, isPaid) {
 function checkingPlan(billMonth) {
   const eligible = BILLS.filter(billBelongsOnPaychecksTab);
   const plan = getPaycheckPlan(billMonth);
-  const paychecks = incomeOccurrencesForMonth(null, billMonth).slice().sort((a, b) => a.date - b.date);
+  const paychecks = incomeOccurrencesForMonth(billMonth).slice().sort((a, b) => a.date - b.date);
   const instances = {};
   paychecks.forEach(p => { instances[p.id] = getPaycheckInstance(p.id, billMonth); });
 
@@ -8143,36 +8458,8 @@ function setBillCard(billKey, source) {
   renderMoney();
 }
 
-let _billDragOccId = null;
-function onPaycheckDragOver(ev) {
-  if (!_billDragOccId) return;
-  ev.preventDefault();
-  try { ev.dataTransfer.dropEffect = 'move'; } catch {}
-  ev.currentTarget?.classList?.add('drop-target');
-}
-function onPaycheckDragLeave(ev) {
-  ev.currentTarget?.classList?.remove('drop-target');
-}
-function onPaycheckDrop(ev, paycheckId) {
-  ev.preventDefault();
-  ev.currentTarget?.classList?.remove('drop-target');
-  let occId = _billDragOccId;
-  if (!occId) {
-    try {
-      const raw = ev.dataTransfer.getData('text/plain') || '';
-      if (raw.startsWith('billocc:')) occId = raw.slice('billocc:'.length);
-      else if (raw.startsWith('bill:')) occId = raw.slice('bill:'.length); // legacy
-    } catch {}
-  }
-  if (!occId || !paycheckId) return;
-  assignBillOccToPaycheck(occId, paycheckId, getBillMonthDate());
-  _billDragOccId = null;
-  document.body.classList.remove('bill-dragging');
-  renderMoney();
-}
-
 function pickPaycheckForBill(occId) {
-  const paychecks = incomeOccurrencesForMonth(null, getBillMonthDate()).slice().sort((a, b) => a.date - b.date);
+  const paychecks = incomeOccurrencesForMonth(getBillMonthDate()).slice().sort((a, b) => a.date - b.date);
   if (!paychecks.length) { alert('Add an income source first so we have paychecks to assign to.'); return; }
   const sheet = document.getElementById('cleaning-picker');
   if (!sheet) return;
@@ -8240,7 +8527,7 @@ function renderMoneyPaychecks() {
   const monthName = monthDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   const next = nextMonthDate(monthDate);
   const nextMonthShort = next.toLocaleDateString('en-US', { month: 'short' });
-  const paychecks = incomeOccurrencesForMonth(null, monthDate).slice().sort((a, b) => a.date - b.date);
+  const paychecks = incomeOccurrencesForMonth(monthDate).slice().sort((a, b) => a.date - b.date);
   const plan = getPaycheckPlan(monthDate);
   const bills = BILLS.slice().filter(billBelongsOnPaychecksTab);
   const todayK = todayKey();
@@ -8300,8 +8587,7 @@ function renderMoneyPaychecks() {
     const isDone = doneIds.has(p.id);
     const dateLabel = p.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 
-    html += `<div class="paycheck-card state-${stateClass} ${isDone ? 'is-done' : ''} ${remaining < 0 ? 'overdraft' : ''} ${isOpen?'open':'collapsed'}" data-paycheck-id="${attr(p.id)}"
-      ondragover="onPaycheckDragOver(event)" ondragleave="onPaycheckDragLeave(event)" ondrop="onPaycheckDrop(event,'${attr(p.id)}')">
+    html += `<div class="paycheck-card state-${stateClass} ${isDone ? 'is-done' : ''} ${remaining < 0 ? 'overdraft' : ''} ${isOpen?'open':'collapsed'}" data-paycheck-id="${attr(p.id)}">
       <button class="paycheck-card-toggle" type="button" onclick="togglePaycheckCardOpen('${attr(p.id)}')" aria-expanded="${isOpen?'true':'false'}">
         <div class="paycheck-card-head">
           <div>
@@ -8753,7 +9039,7 @@ function renderMoneyIncome() {
       <div style="font-family:var(--font-display);font-size:26px;color:var(--espresso);font-weight:800;">${formatMoney(totalMonthly)}</div></div>`;
   }
 
-  const paydays = incomeOccurrencesForMonth(null, billMonth);
+  const paydays = incomeOccurrencesForMonth(billMonth);
   if (paydays.length) {
     html += `<div class="card theme-card" style="margin-top:14px;">${themeIcon('money', 'theme-corner bottom-right')}
       <div class="card-title">Paydays in ${billMonthName}</div>
@@ -8897,37 +9183,12 @@ function saveBillEdit() {
 function deleteBillEdit() {
   if (!editingBillKey) return;
   if (!confirm('Delete this bill?')) return;
+  rememberTombstone(REMOVED_BILLS_KEY, editingBillKey); // so another device's copy can't bring it back
   const bills = getBillsList().filter(b => b.key !== editingBillKey);
   saveBillsList(bills);
   BILLS = bills;
   document.getElementById('bill-edit-modal').classList.remove('open');
   renderMoney();
-}
-
-function getSpentAgainstVariableBill(billKey, monthDate = getBillMonthDate()) {
-  const y = monthDate.getFullYear();
-  const m = monthDate.getMonth();
-  return getTransactions()
-    .filter(t => t.variableBillKey === billKey)
-    .filter(t => {
-      const d = transactionDate(t);
-      return d.getFullYear() === y && d.getMonth() === m;
-    })
-    .reduce((sum, t) => sum + Math.abs(Number(t.amount || 0)), 0);
-}
-
-function getLastVariablePurchase(billKey) {
-  const matches = getTransactions().filter(t => t.variableBillKey === billKey);
-  if (!matches.length) return null;
-  matches.sort((a, b) => transactionDate(b) - transactionDate(a));
-  return matches[0];
-}
-
-function daysSinceLastPurchase(billKey) {
-  const last = getLastVariablePurchase(billKey);
-  if (!last) return null;
-  const diff = Math.floor((dateFromKey(todayKey()) - transactionDate(last)) / 86400000);
-  return Math.max(0, diff);
 }
 
 /* ═══════════════════════ HEALTH ═══════════════════════ */
@@ -8952,7 +9213,7 @@ function renderHealth() {
 function buildWaterBottle(h) {
   const water = h.water || 0;
   const frac = Math.min(1, water / 8);
-  return `<div class="card water-card theme-card">${themeIcon('evening', 'theme-corner')}
+  return `<div class="card water-card theme-card">
     <div class="card-title-row"><div class="card-title">Water</div></div>
     <div class="water-wrap">
       <button class="water-bottle-btn" onclick="tapWaterBottle()" title="Add one glass" aria-label="Add one glass of water">
@@ -9315,14 +9576,32 @@ function closeSettings() {
   document.getElementById('settings-panel').classList.remove('open');
 }
 
+/* Light or dark, picked with the moon button at the top. It's kept per
+   device (not synced), so a phone can be dark while a laptop stays light. */
+const THEME_KEY = 'device-theme';
+function savedTheme() {
+  try {
+    const t = localStorage.getItem(THEME_KEY);
+    if (t === 'dark' || t === 'light') return t;
+  } catch (e) {}
+  return getSettings().theme === 'dark' ? 'dark' : 'light';
+}
+function toggleTheme() {
+  const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+  applyTheme(next);
+}
 function applyTheme(mode) {
-  document.documentElement.setAttribute('data-theme', mode);
-  const sun = document.getElementById('ico-sun');
-  const moon = document.getElementById('ico-moon');
-  if (sun) sun.style.display = mode === 'dark' ? 'none' : '';
-  if (moon) moon.style.display = mode === 'dark' ? '' : 'none';
+  const dark = mode === 'dark';
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  const btn = document.getElementById('btn-theme');
+  if (btn) {
+    btn.classList.toggle('on', dark);
+    btn.setAttribute('aria-pressed', dark);
+    btn.title = dark ? 'Dark mode is on (tap for light)' : 'Dark mode';
+  }
   const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.content = mode === 'dark' ? '#1E1915' : '#F7F2EB';
+  if (meta) meta.content = dark ? '#1E1915' : '#F7F2EB';
 }
 
 /* ═══════════════════════ MODAL CLOSE ═══════════════════════ */
@@ -10300,13 +10579,72 @@ function thoughtHistoryHtml() {
    Entries are kept per day in gnd-YYYY-MM-DD-dailyjournal (a list; several
    a day is fine). One prompt a day, the same for everyone on that date. */
 const JOURNAL_PROMPTS = {
-  Wins: ['What went okay today, even a little?', "What's one thing you handled better than you expected?", 'What did you get done that past-you would be glad about?', 'Where did you show up today?', "What's a small win you almost didn't notice?"],
-  Energy: ['What drained you today?', 'What gave you energy today?', 'When did you feel most like yourself?', 'What could you do less of tomorrow?', 'What helped, even for a minute?'],
-  Gratitude: ["What's one thing you're glad about today?", 'Who made your day a little easier?', "What's something comfortable or good you have right now?", "What's a small thing you enjoyed today?", "What are you thankful you didn't have to deal with?"],
-  Tomorrow: ["What's one thing that would make tomorrow easier?", "What's the first small step for tomorrow?", 'What can wait until later this week?', 'What do you want to remember tomorrow?', "What's one kind thing you can do for yourself tomorrow?"],
+  Patterns: [
+    'Think of the last thing you put off. Were you avoiding the task itself, or a feeling the task would bring up? Name the feeling.',
+    "What's a problem you keep solving the same way, even though it keeps coming back? What would a different first move look like?",
+    'Describe the first five minutes of one of your bad spirals: the thought, the place, the time of day. Where is the earliest point you could catch it?',
+    "When things start going well, what do you tend to do next? Is that something you'd choose on purpose?",
+    'Which habit of yours is doing a job for you, even if it does it badly? What job is it doing?',
+    'What did you do today on autopilot? If you had been paying full attention, would you have done it the same way?',
+  ],
+  Underneath: [
+    "What feeling showed up today that you didn't let all the way in? Where did it go instead: your body, your phone, your mood with someone?",
+    "Pick something you wanted badly this week. If you got it, what feeling were you hoping it would give you? Is there another way to get that feeling?",
+    'When you get irritated, what is usually underneath: tired, scared, hurt, unseen? Which was it the last time?',
+    'What do you need right now that you usually act like you don\'t need?',
+    "What's something you say you don't care about that you actually care about a lot?",
+    'What would you do with tonight if no one, including you, would judge it? What does that answer tell you?',
+  ],
+  Beliefs: [
+    "Finish this sentence without editing it: \"People like me don't get to…\" Where did you learn that? Is it true?",
+    'What is a rule you live by that you never actually chose? Who handed it to you?',
+    "What do you believe about yourself that you'd never say about someone you love, even if they did the exact same things?",
+    'What were you sure about five years ago that you have completely changed your mind on? What changed it?',
+    'What are you waiting to feel (ready, motivated, calm) before you start something? What if that feeling only shows up after you start?',
+    'If your harshest critic and your most loyal friend both watched your day, where exactly would they disagree? Who has the better evidence?',
+  ],
+  Values: [
+    'If a stranger saw only how you spent your hours this week, what would they guess you care about? Where would they be wrong?',
+    "What's something you're supposed to want that you don't actually want? What do you want instead?",
+    'What would you keep doing even if no one ever saw it or thanked you for it?',
+    "What's a small thing you refuse to compromise on? Why that thing, and not something bigger?",
+    'Who do you want to be on the hard days, not the easy ones? When were you last that person, even for a moment?',
+    'If you could only keep three things you did this week, which three? What do they have in common?',
+  ],
+  People: [
+    'Who do you become a slightly different person around? Which version of you do you like more, and why?',
+    "What have you been rehearsing saying to someone instead of saying it? What's the worst realistic thing that happens if you say it?",
+    "Whose approval are you still working for, even though they may never give it? What would you do differently if you stopped?",
+    'Who actually knows how you are doing right now? If no one does, what is standing in the way?',
+    "What's a kindness someone showed you that they probably don't remember? Why did it stick with you?",
+    'Think of someone you admire. Name one specific thing they do, not a trait, that you could borrow for a single day.',
+  ],
+  Time: [
+    'What would you from three years ago be surprised by today, in a good way and in a hard way?',
+    'What are you doing now that future-you will thank you for? What are you doing that future-you will have to clean up?',
+    'If today repeated every day for a year, where would you end up? What one change to today would change that year the most?',
+    "What is something you're grieving that you haven't called grief?",
+    'What did you love doing as a kid that you stopped doing? What made you stop, and is that reason still true?',
+    'Write a short note from you, one year from now. What do they want you to know, and what do they wish you would stop worrying about?',
+  ],
+  Body: [
+    'Where did stress show up in your body today before your mind noticed it? What was it reacting to?',
+    'What does safe feel like in your body, specifically? When did you last feel it, and what was around you?',
+    "What is your body asking for right now that your schedule isn't giving it?",
+    'When were you most settled today? What were you doing with your hands, your breath, your attention?',
+  ],
+  Sideways: [
+    'If your anxiety had a job title and a list of duties, what would they be? Is it good at its job? What would you rather it did?',
+    "If you had to teach a short class on something you've survived, what would the first lesson be?",
+    "What's a question you've been avoiding asking yourself? Ask it here, then answer it as honestly as you can.",
+    'If you could get the honest answer to one question about your own life, what would you ask? Why that one?',
+    'Narrate today like a nature documentary about yourself. What does the narrator notice that you missed?',
+    'What story do you keep telling about your life that you would like to stop telling? What would you tell instead?',
+  ],
 };
 /* Topics take turns day to day. */
-const JOURNAL_PROMPT_LIST = [0, 1, 2, 3, 4].flatMap(i => Object.keys(JOURNAL_PROMPTS).map(topic => ({ topic, text: JOURNAL_PROMPTS[topic][i] })));
+const JOURNAL_PROMPT_LIST = Array.from({ length: Math.max(...Object.values(JOURNAL_PROMPTS).map(list => list.length)) }, (_, i) => i)
+  .flatMap(i => Object.keys(JOURNAL_PROMPTS).filter(topic => JOURNAL_PROMPTS[topic][i]).map(topic => ({ topic, text: JOURNAL_PROMPTS[topic][i] })));
 let journalPromptShift = { dateKey: '', by: 0 };
 let journalDraft = { mood: 0, energy: 0, text: '' };
 let journalJustSaved = false;
@@ -10433,10 +10771,9 @@ function buildWeeklyResetCareExtras() {
 /* ═══════════════════════ INIT ═══════════════════════ */
 
 (function init() {
-  applyTheme(getSettings().theme || 'light');
+  applyTheme(savedTheme());
   ensureCreditCardAccount('Discover', 800);
   ensureCreditCardAccount('Capital One', 1000);
-  recalcGambling();
   updateBrainDumpCount();
   switchTab('home');
   demoteDefaultSeedDirtyFlags();
