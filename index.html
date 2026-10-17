@@ -828,6 +828,7 @@ body { background: var(--bg); }
 .paycheck-row-name .card-icon { margin-right: 5px; }
 .ff-item-name { min-width: 0; }
 .ff-item-name .card-icon { margin-right: 4px; }
+.bill-edit-detail .card-icon { margin-right: 4px; }
 .ff-item .paycheck-row-amt-edit { min-width: 0; padding: 1px 5px; }
 .ff-item .paycheck-row-amt-input { width: 64px; font-size: 13px; }
 .ff-item.has-edit { align-items: center; }
@@ -1215,6 +1216,7 @@ body.paycheck-dragging .paycheck-pool-row {
 .bill-source { font-size: 11px; color: var(--text-muted); }
 .bill-amount { font-size: 14px; font-weight: 600; color: var(--espresso); }
 .bill-row.paid .bill-amount { color: var(--text-muted); }
+#rand-exp-paid { width: 20px; height: 20px; accent-color: var(--espresso); cursor: pointer; flex-shrink: 0; }
 
 /* ── Money Sub-Tabs ── */
 .money-tabs { display: flex; gap: 6px; margin-bottom: 16px; }
@@ -2478,6 +2480,39 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
   </div>
 </div>
 
+<!-- Random Expense Modal -->
+<div class="modal-overlay" id="random-expense-modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="rand-exp-title">Add Random Expense</div>
+    <div class="modal-field">
+      <div class="field-label">What was it?</div>
+      <input type="text" class="modal-input" id="rand-exp-name" placeholder="e.g. Tire patch, vet visit" maxlength="80">
+    </div>
+    <div class="modal-field">
+      <div class="field-label">Amount</div>
+      <input type="number" class="modal-input" id="rand-exp-amount" placeholder="0.00" step="0.01" min="0" inputmode="decimal">
+    </div>
+    <div class="modal-field">
+      <div class="field-label">Date</div>
+      <input type="date" class="modal-input" id="rand-exp-date" onchange="onRandomExpenseDateChange()">
+    </div>
+    <div class="modal-field">
+      <div class="field-label">Paid With</div>
+      <div class="field-hint">Checking counts toward what checking needs this month. A card shows as a charge on the Credit tab.</div>
+      <select class="modal-input" id="rand-exp-source"></select>
+    </div>
+    <div class="modal-field">
+      <label class="toggle-row" style="justify-content:flex-start;gap:10px;">
+        <input type="checkbox" id="rand-exp-paid" onchange="randomExpensePaidTouched=true">
+        <span class="toggle-label">Already paid</span>
+      </label>
+    </div>
+    <button class="modal-danger" id="rand-exp-delete" style="display:none;margin-bottom:10px;" onclick="deleteRandomExpense()">Delete Expense</button>
+    <button class="modal-submit" id="rand-exp-save" onclick="saveRandomExpense()">Add</button>
+  </div>
+</div>
+
 <!-- Event Modal -->
 <div class="modal-overlay" id="event-modal">
   <div class="modal-sheet">
@@ -3009,6 +3044,9 @@ function rememberTombstone(key, id) {
 /* Deleted bills, by bill key. */
 const REMOVED_BILLS_KEY = 'gnd-bills-removed';
 function getRemovedBills() { return getTombstones(REMOVED_BILLS_KEY); }
+/* Random expenses (see the Money section), and the ids of deleted ones. */
+const RANDOM_EXPENSES_KEY = 'gnd-random-expenses';
+const REMOVED_RANDOM_EXPENSES_KEY = 'gnd-random-expenses-removed';
 
 function getBillsList() {
   const stored = ls('gnd-bills-list', null);
@@ -3302,6 +3340,8 @@ const PRIORITY_SYNC_KEYS = new Set([
   'gnd-paycheck-instances',
   'gnd-paycheck-removed-extras',
   'gnd-paycheck-plan',
+  'gnd-random-expenses',
+  'gnd-random-expenses-removed',
 ]);
 
 function getSupabaseConfig() { return JSON.parse(localStorage.getItem('gnd-supabase') || 'null'); }
@@ -3430,6 +3470,7 @@ function mergedRemoteValueWithLocalWork(key, localRaw, remoteValue) {
   const localValue = readStorageJson(localRaw, null);
   if (key === 'gnd-bills-list') return mergeLocalOnlyRecords(remoteValue, localValue, 'key', getRemovedBills());
   if (key === 'gnd-transactions') return mergeLocalOnlyRecords(remoteValue, localValue, 'id');
+  if (key === RANDOM_EXPENSES_KEY) return mergeLocalOnlyRecords(remoteValue, localValue, 'id', getTombstones(REMOVED_RANDOM_EXPENSES_KEY));
   return null;
 }
 
@@ -4680,7 +4721,7 @@ function removePaycheckExtra(paycheckId, extraId, monthDate = getBillMonthDate()
    ones added on either device are kept. */
 const REMOVED_EXTRAS_KEY = 'gnd-paycheck-removed-extras';
 /* Every "removed" list, merged first on each pull (see getTombstones). */
-const TOMBSTONE_KEYS = [REMOVED_EXTRAS_KEY, REMOVED_BILLS_KEY];
+const TOMBSTONE_KEYS = [REMOVED_EXTRAS_KEY, REMOVED_BILLS_KEY, REMOVED_RANDOM_EXPENSES_KEY];
 function getRemovedExtras() { return getTombstones(REMOVED_EXTRAS_KEY); }
 function rememberRemovedExtra(extraId) { rememberTombstone(REMOVED_EXTRAS_KEY, extraId); }
 function mergeTombstones(a, b) {
@@ -4837,6 +4878,7 @@ function renderHome() {
     html += mode === 'morning' ? buildHomeMorning(dk) : mode === 'day' ? buildHomeDay(dk) : buildHomeEvening(dk);
     html += buildHomeMealLog(dk);
     html += buildHomeAddTodo(dk);
+    html += buildHomeAddExpense();
     html += buildHomeRest(mode, dk);
   }
   document.getElementById('page-home').innerHTML = html;
@@ -5101,6 +5143,13 @@ function buildHomeAddTodo(dk) {
       <input type="text" placeholder="Add a to-do…" maxlength="140" autocomplete="off" aria-label="Add a to-do" />
       <button type="submit" aria-label="Add to-do">+</button>
     </form>
+  </div>`;
+}
+
+/* A quick way to log a random expense without opening Money. */
+function buildHomeAddExpense() {
+  return `<div class="card theme-card"><div class="card-title-row"><div class="card-title">Add an expense</div></div>
+    <button type="button" class="add-btn" style="margin:0;" onclick="openRandomExpenseModal()">+ Random expense</button>
   </div>`;
 }
 
@@ -7759,6 +7808,94 @@ function togglePaycheckCardOpen(id) {
   renderMoney();
 }
 
+/* ─── Random expenses ────────────────────────────────────────────────────
+   One-off costs that come up outside the bills and aren't tied to a
+   paycheck. Each has a date, what paid for it and a paid tick. Unpaid
+   ones from checking count toward what checking still needs that month
+   (Bills tab); ones on a card are charges on the Credit tab.
+   gnd-random-expenses = [{ id, name, amount, date: "YYYY-MM-DD", source, paid }] */
+const RANDOM_EXPENSE_SOURCES = [
+  { value: CHECKING_ACCOUNT_NAME, label: 'Checking' },
+  ...QUICK_PAY_CARDS.map(card => ({ value: card, label: card })),
+];
+function getRandomExpenses() {
+  const list = ls(RANDOM_EXPENSES_KEY, []);
+  const removed = getTombstones(REMOVED_RANDOM_EXPENSES_KEY);
+  return (Array.isArray(list) ? list : [])
+    .filter(e => e && e.id && !removed[e.id] && /^\d{4}-\d{2}-\d{2}$/.test(e.date || ''));
+}
+function saveRandomExpenses(list) { lsSave(RANDOM_EXPENSES_KEY, list); }
+function randomExpensesInMonth(monthDate) {
+  const month = localDateKey(monthDate).slice(0, 7);
+  return getRandomExpenses().filter(e => e.date.startsWith(month))
+    .sort((a, b) => a.date.localeCompare(b.date) || String(a.id).localeCompare(String(b.id)));
+}
+function randomExpenseFromChecking(e) {
+  return !QUICK_PAY_CARDS.includes(e.source);
+}
+function randomExpenseSourceLabel(e) {
+  return (RANDOM_EXPENSE_SOURCES.find(s => s.value === e.source) || RANDOM_EXPENSE_SOURCES[0]).label;
+}
+function toggleRandomExpensePaid(id) {
+  saveRandomExpenses(getRandomExpenses().map(e => e.id === id ? { ...e, paid: !e.paid } : e));
+  renderActivePage();
+}
+
+/* The add / edit popup, opened from the Bills tab or Home. "Already paid"
+   follows the date (ticked for today or earlier) until it's tapped. */
+let editingRandomExpenseId = null;
+let randomExpensePaidTouched = false;
+function openRandomExpenseModal(id = null, defaultDate = todayKey()) {
+  const e = id ? getRandomExpenses().find(x => x.id === id) : null;
+  editingRandomExpenseId = e ? e.id : null;
+  randomExpensePaidTouched = !!e;
+  document.getElementById('rand-exp-title').textContent = e ? 'Edit Random Expense' : 'Add Random Expense';
+  document.getElementById('rand-exp-save').textContent = e ? 'Save' : 'Add';
+  document.getElementById('rand-exp-delete').style.display = e ? '' : 'none';
+  document.getElementById('rand-exp-name').value = e?.name || '';
+  document.getElementById('rand-exp-amount').value = e ? Number(e.amount || 0) : '';
+  document.getElementById('rand-exp-date').value = e?.date || defaultDate;
+  document.getElementById('rand-exp-source').innerHTML = RANDOM_EXPENSE_SOURCES
+    .map(s => `<option value="${attr(s.value)}" ${(e?.source || CHECKING_ACCOUNT_NAME) === s.value ? 'selected' : ''}>${esc(s.label)}</option>`).join('');
+  document.getElementById('rand-exp-paid').checked = e ? !!e.paid : defaultDate <= todayKey();
+  document.getElementById('random-expense-modal').classList.add('open');
+}
+function onRandomExpenseDateChange() {
+  if (randomExpensePaidTouched) return;
+  const date = document.getElementById('rand-exp-date').value;
+  if (date) document.getElementById('rand-exp-paid').checked = date <= todayKey();
+}
+function saveRandomExpense() {
+  const nameEl = document.getElementById('rand-exp-name');
+  const name = nameEl.value.trim();
+  const amount = Math.max(0, parseFloat(document.getElementById('rand-exp-amount').value) || 0);
+  const dateRaw = document.getElementById('rand-exp-date').value;
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(dateRaw) ? dateRaw : todayKey();
+  const source = document.getElementById('rand-exp-source').value || CHECKING_ACCOUNT_NAME;
+  const paid = document.getElementById('rand-exp-paid').checked;
+  if (!name && !amount) { nameEl.focus(); return; }
+  const record = { name: name || 'Random expense', amount, date, source, paid };
+  const list = getRandomExpenses();
+  if (editingRandomExpenseId) {
+    const idx = list.findIndex(e => e.id === editingRandomExpenseId);
+    if (idx > -1) list[idx] = { ...list[idx], ...record };
+  } else {
+    list.push({ id: 'rand-' + Date.now(), ...record });
+  }
+  saveRandomExpenses(list);
+  billCatOpen['@random'] = true;
+  document.getElementById('random-expense-modal').classList.remove('open');
+  renderActivePage();
+}
+function deleteRandomExpense() {
+  if (!editingRandomExpenseId) return;
+  if (!confirm('Delete this expense?')) return;
+  rememberTombstone(REMOVED_RANDOM_EXPENSES_KEY, editingRandomExpenseId); // so another device's copy can't bring it back
+  saveRandomExpenses(getRandomExpenses().filter(e => e.id !== editingRandomExpenseId));
+  document.getElementById('random-expense-modal').classList.remove('open');
+  renderActivePage();
+}
+
 /* ─── Credit tab ─────────────────────────────────────────────────────────
    Tracks only the credit cards: what each card will be charged (bills paid
    from the card, plus estimated spending like gas) against the payments
@@ -7853,8 +7990,8 @@ function creditEstimateDates(e, from, to) {
 }
 
 /* Skipping a row on the Credit tab when real life strays from the plan.
-   Charges (bills on the card, estimates) are skipped per day in
-   gnd-credit-skips = { "bill:<key>@YYYY-MM-DD": true, "est:<id>@YYYY-MM-DD": true }.
+   Charges (bills on the card, estimates, random expenses) are skipped per day in
+   gnd-credit-skips = { "bill:<key>@YYYY-MM-DD": true, "est:<id>@YYYY-MM-DD": true, "rand:<id>@YYYY-MM-DD": true }.
    A card payment uses its paycheck's own Skip, so it's skipped on the
    Paychecks and Bills tabs too (and the other way round). */
 const CREDIT_SKIPS_KEY = 'gnd-credit-skips';
@@ -7918,6 +8055,12 @@ function creditCardEvents(card, from, to) {
     creditEstimateDates(e, from, to).forEach(d => {
       charge(`est:${e.id}@${localDateKey(d)}`, { date: d, name: e.name || 'Card spending', amount: -Number(e.amount), kind });
     });
+  });
+
+  getRandomExpenses().forEach(e => {
+    if (e.source !== card || !(Number(e.amount) > 0)) return;
+    const d = dateFromKey(e.date);
+    if (inRange(d)) charge(`rand:${e.id}@${e.date}`, { date: d, name: e.name, amount: -Number(e.amount), kind: 'Random expense' });
   });
 
   const payBills = BILLS.filter(b => billPaysCard(b, card));
@@ -8219,6 +8362,8 @@ function renderMoneyBills() {
     </div>`;
   });
 
+  html += buildRandomExpensesSection(billMonth);
+
   // ── Card sections: mirror any bill whose source matches Discover / Capital One.
   //    Bills stay in their own category above; these sections give you a "by card"
   //    view and are the drop targets for reassignment.
@@ -8260,6 +8405,47 @@ function renderMoneyBills() {
   });
 
   return html;
+}
+
+/* This month's random expenses, with their paid ticks and the add button.
+   New ones default to today, or the 1st when a later month is showing. */
+function buildRandomExpensesSection(billMonth) {
+  const chevron = `<svg class="collapse-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>`;
+  const openKey = '@random';
+  const isOpen = billCatOpen[openKey] !== false;
+  const list = randomExpensesInMonth(billMonth);
+  const total = list.reduce((sum, e) => sum + Number(e.amount || 0), 0);
+  const paidCount = list.filter(e => e.paid).length;
+  const monthStart = localDateKey(billMonth);
+  const defaultDate = todayKey().slice(0, 7) === monthStart.slice(0, 7) ? todayKey() : monthStart;
+  let body = list.length ? '' : `<div style="font-size:14px;color:var(--text-muted);padding:12px 0;">No random expenses this month.</div>`;
+  list.forEach(e => {
+    const id = attr(e.id);
+    const onCard = !randomExpenseFromChecking(e);
+    body += `<div class="bill-row ${e.paid ? 'paid' : ''}" style="padding:10px 0;">
+      <button class="bill-check" onclick="toggleRandomExpensePaid('${id}')" aria-label="${e.paid ? 'Mark not paid' : 'Mark paid'}: ${attr(e.name)}"><svg viewBox="0 0 12 12"><polyline points="2.5 6 5 8.5 9.5 3.5"/></svg></button>
+      <div class="bill-edit-info" style="flex:1;min-width:0;${e.paid ? 'opacity:0.5;' : ''}">
+        <div class="bill-edit-name"><span style="${e.paid ? 'text-decoration:line-through;' : ''}">${esc(e.name)}</span>${e.paid ? ' <span class="bill-paid-tag">Paid</span>' : ''}</div>
+        <div class="bill-edit-detail">${esc(formatShortDate(dateFromKey(e.date)))} · ${onCard ? cardIconSvg(e.source) : ''}${esc(randomExpenseSourceLabel(e))}</div>
+      </div>
+      <div class="bill-edit-right">
+        <div class="bill-edit-amt" style="${e.paid ? 'opacity:0.5;' : ''}">${formatMoney(Number(e.amount || 0))}</div>
+        <button class="bill-edit-btn" onclick="openRandomExpenseModal('${id}')" title="Edit expense">&#9998;</button>
+      </div>
+    </div>`;
+  });
+  return `<div class="bill-cat-section ${isOpen ? 'open' : ''}">
+    <div class="bill-cat-header theme-row-card" onclick="billCatOpen['${openKey}']=billCatOpen['${openKey}']===false;renderMoney()">
+      <div class="bill-cat-left">
+        <div class="bill-cat-name">Random expenses</div>
+        <div class="bill-cat-sub">${formatMoney(total)} · ${paidCount}/${list.length} paid</div>
+      </div>
+      ${chevron}
+    </div>
+    <div class="bill-cat-body">${body}
+      <button class="add-btn" style="margin-top:8px;" onclick="openRandomExpenseModal(null,'${defaultDate}')">+ Add random expense</button>
+    </div>
+  </div>`;
 }
 
 /* Older paycheck-only "paid" ticks move over to the shared map once. */
@@ -8404,7 +8590,20 @@ function buildCheckingSection(billMonth) {
       <div class="ff-item-list">${unassignedItems.map(itemRow).join('')}</div>
     </div>`;
   }
-  const stillNeeded = perPaycheck.reduce((sum, r) => sum + r.needed, 0) + unassignedItems.filter(it => !it.paid).reduce((sum, it) => sum + it.amount, 0);
+  // Random expenses paid from checking aren't on a paycheck; unpaid ones still need covering.
+  const randomItems = randomExpensesInMonth(billMonth).filter(randomExpenseFromChecking)
+    .map(e => ({ name: e.name, amount: Number(e.amount || 0), date: dateFromKey(e.date), paid: !!e.paid }));
+  const randomLeft = randomItems.filter(it => !it.paid).reduce((sum, it) => sum + it.amount, 0);
+  if (randomItems.length) {
+    body += `<div class="ff-paycheck-card ff-unassigned">
+      <div class="ff-paycheck-head">
+        <div><div class="ff-paycheck-name">Random expenses</div><div class="ff-paycheck-date">Not on a paycheck</div></div>
+        <div class="ff-paycheck-total"><div class="ff-paycheck-total-label">${randomLeft ? 'Need in checking' : 'All paid'}</div><div class="ff-paycheck-total-amt">${formatMoney(randomLeft)}</div></div>
+      </div>
+      <div class="ff-item-list">${randomItems.map(itemRow).join('')}</div>
+    </div>`;
+  }
+  const stillNeeded = perPaycheck.reduce((sum, r) => sum + r.needed, 0) + unassignedItems.filter(it => !it.paid).reduce((sum, it) => sum + it.amount, 0) + randomLeft;
   return `<div class="bill-cat-section bill-card-section ff-section ${isOpen ? 'open' : ''}" data-card="checking">
     <div class="bill-cat-header theme-row-card" onclick="billCatOpen['${openKey}']=!billCatOpen['${openKey}'];renderMoney()">
       <div class="bill-cat-left">
