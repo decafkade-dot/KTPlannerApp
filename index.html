@@ -2114,6 +2114,36 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
   background: var(--success-light); border: 1px solid var(--success);
 }
 
+/* ── Reschedule sheet ── */
+.rs-lead { font-size: 14.5px; line-height: 1.4; color: var(--text-secondary); margin: -6px 0 10px; }
+.rs-group { font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-secondary); margin: 14px 0 6px; }
+.rs-item {
+  padding: 10px 12px; margin-bottom: 8px; border-radius: var(--radius-sm);
+  background: var(--bg-input); border-left: 4px solid var(--block-color, var(--nude));
+}
+.rs-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; }
+.rs-title { font-size: 15px; font-weight: 700; color: var(--text); min-width: 0; overflow-wrap: anywhere; }
+.rs-when { font-size: 12.5px; font-weight: 600; color: var(--text-secondary); }
+.rs-why { font-size: 13px; line-height: 1.35; color: var(--text-secondary); margin-top: 3px; overflow-wrap: anywhere; }
+.rs-options { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.rs-opt {
+  max-width: 100%; padding: 7px 12px; border-radius: 999px; cursor: pointer; text-align: left;
+  border: 1.5px solid var(--border); background: var(--bg-card); color: var(--text);
+  font-size: 13px; line-height: 1.25; overflow-wrap: anywhere;
+}
+.rs-opt.active { background: var(--espresso); border-color: var(--espresso); color: #fff; }
+.rs-best { margin-left: 6px; font-size: 11px; font-weight: 700; color: var(--text-secondary); white-space: nowrap; }
+.rs-opt.active .rs-best { color: rgba(255,255,255,0.85); }
+[data-theme="dark"] .rs-opt.active, [data-theme="dark"] .rs-opt.active .rs-best { color: var(--bg); }
+.rs-open-day { margin-top: 8px; background: var(--bg-card); }
+.rs-kept { margin: 14px 0 4px; }
+.rs-kept summary { cursor: pointer; font-size: 13.5px; font-weight: 700; color: var(--text-secondary); padding: 6px 0; }
+.rs-kept[open] summary { margin-bottom: 6px; }
+.rs-cancel {
+  display: block; width: 100%; margin-top: 6px; padding: 10px; border: none; background: transparent;
+  color: var(--text-secondary); font-size: 15px; cursor: pointer;
+}
+
 /* ── Health: chicken / beef icons on the meal plan ── */
 .meal-choice-btn { display: inline-flex; align-items: center; gap: 5px; }
 .meal-choice-icon { --sticker-size: 16px; }
@@ -2728,6 +2758,13 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
     <div class="modal-title">Put chores on days</div>
     <div id="chores-modal-body"></div>
     <button class="modal-submit" onclick="document.getElementById('chores-modal').classList.remove('open')">Done</button>
+  </div>
+</div>
+<!-- Reschedule sheet (Calendar page, day popup) — filled in by renderReschedule() -->
+<div class="modal-overlay" id="reschedule-modal">
+  <div class="modal-sheet" role="dialog" aria-modal="true" aria-labelledby="reschedule-title">
+    <div class="modal-handle"></div>
+    <div id="reschedule-body"></div>
   </div>
 </div>
 <!-- Hard Day sheet (Home) — filled in by renderHardDay() -->
@@ -4068,31 +4105,39 @@ function isLaundryTask(taskId) {
   return !!task && /laundry/i.test(task.title);
 }
 
-/* Pick a conflict-free 1-hour slot for a cleaning task; laundry is all-day. */
-function computeCleaningSlot(dateKey, taskId) {
-  if (isLaundryTask(taskId)) return { time: '', end: '', allDay: true };
-
-  // Everything already on the day (routine, work + the hour after it, shot,
-  // other cleaning), ignoring this task's own block if it's already placed here.
-  const busy = getScheduleBlocksForDate(dateKey)
+/* Every free 1-hour start for a chore on a day (half-hour steps), around
+   everything already there — routines, meals, work + the hour after it,
+   school, plans, other chores — ignoring this chore's own block. */
+function choreFreeStarts(dateKey, taskId, events = getEvents()) {
+  const busy = getScheduleBlocksForDate(dateKey, events)
     .filter(b => !b.allDay && b.time && !(b.source === 'cleaning' && b.cleaningTaskId === taskId))
     .map(choreBusyRange);
 
   // Today, only times that haven't passed yet.
   const first = dateKey === todayKey() ? Math.max(CLEANING_DAY_START, Math.ceil(nowMinutes() / 30) * 30) : CLEANING_DAY_START;
+  const starts = [];
   for (let start = first; start + CLEANING_BLOCK_MINUTES <= CLEANING_DAY_END; start += 30) {
     const end = start + CLEANING_BLOCK_MINUTES;
-    if (!busy.some(iv => start < iv.e && end > iv.s)) {
-      return { time: minutesToClock(start), end: minutesToClock(end), allDay: false };
-    }
+    if (!busy.some(iv => start < iv.e && end > iv.s)) starts.push(start);
   }
-  return { time: '', end: '', allDay: true }; // day is packed: any time that day, never on top of work
+  return starts;
 }
 
-function assignCleaningTaskToDate(taskId, dateKey, time = null, end = null, allDay = null) {
-  if (!taskId || !dateKey) return;
-  const map = getCleaningAssignments();
-  // One day per chore per Monday–Sunday week: take it off any other day that week.
+function choreSlotAt(start) {
+  return { time: minutesToClock(start), end: minutesToClock(start + CLEANING_BLOCK_MINUTES), allDay: false };
+}
+
+/* Pick a conflict-free 1-hour slot for a cleaning task; laundry is all-day. */
+function computeCleaningSlot(dateKey, taskId, events = getEvents()) {
+  if (isLaundryTask(taskId)) return { time: '', end: '', allDay: true };
+  const start = choreFreeStarts(dateKey, taskId, events)[0];
+  if (start === undefined) return { time: '', end: '', allDay: true }; // day is packed: any time that day, never on top of work
+  return choreSlotAt(start);
+}
+
+/* Put a chore on a day in an assignments map. One day per chore per
+   Monday–Sunday week, so it comes off any other day that week. */
+function placeChoreInMap(map, taskId, dateKey, slot) {
   const week = currentMondayKey(dateFromKey(dateKey));
   Object.keys(map).forEach(k => {
     if (Array.isArray(map[k]) && currentMondayKey(dateFromKey(k)) === week) {
@@ -4100,10 +4145,15 @@ function assignCleaningTaskToDate(taskId, dateKey, time = null, end = null, allD
       if (!map[k].length) delete map[k];
     }
   });
-  let slot = { time, end, allDay };
-  if (time === null) slot = computeCleaningSlot(dateKey, taskId);
   if (!Array.isArray(map[dateKey])) map[dateKey] = [];
   map[dateKey].push({ taskId, time: slot.time, end: slot.end, allDay: !!slot.allDay });
+}
+
+function assignCleaningTaskToDate(taskId, dateKey, time = null, end = null, allDay = null) {
+  if (!taskId || !dateKey) return;
+  const slot = time === null ? computeCleaningSlot(dateKey, taskId) : { time, end, allDay };
+  const map = getCleaningAssignments();
+  placeChoreInMap(map, taskId, dateKey, slot);
   saveCleaningAssignments(map);
 }
 /* Take a chore off a day (or, with no day given, off every day). */
@@ -4130,8 +4180,11 @@ function getCleaningAssignmentForTask(taskId, weekStartKey = currentMondayKey())
   }
   return null;
 }
+/* While Reschedule tries out moves it reads chores from its own working
+   copy (see planReschedule), so nothing is saved until Apply. */
+let cleaningPlanOverride = null;
 function getCleaningBlocksForDate(dateKey) {
-  const list = getCleaningAssignments()[dateKey] || [];
+  const list = (cleaningPlanOverride || getCleaningAssignments())[dateKey] || [];
   if (!list.length) return [];
   const tasks = getCleaningTasks();
   const week = getCleaningWeek(dateFromKey(dateKey));
@@ -4401,7 +4454,6 @@ function getAcademicAssignments() {
   return assignments;
 }
 function saveAcademicAssignments(a) { lsSave('gnd-academic-assignments', a); }
-function saveAcademicBalanceStatus(s) { lsSave('gnd-academic-balance-status', s); }
 function getScheduleCustom() { return ls('gnd-schedule-custom', {}); }
 function saveScheduleCustom(s) { lsSave('gnd-schedule-custom', s); }
 function getTodos() { return dayData('todos') || defTodos(); }
@@ -5517,7 +5569,7 @@ function buildCalendarActions() {
     { icon: 'academic', label: 'School', onclick: 'openSyllabusImportModal()' },
     { icon: 'calendarTab', label: 'Appointment', onclick: `openEventModal('${todayKey()}')` },
     { icon: 'mop', label: 'Chores', onclick: 'openChoresModal()' },
-    { icon: 'clock', label: 'Reschedule', onclick: 'autoRescheduleAll()' },
+    { icon: 'clock', label: 'Reschedule', onclick: 'openReschedule()' },
   ];
   return `<div class="card cal-actions">
     <div class="cal-action-row">${actions.map(a => `<button class="cal-action-btn" type="button" onclick="${a.onclick}">${themeIcon(a.icon)}<span class="cal-action-label">${esc(a.label)}</span></button>`).join('')}</div>
@@ -5956,8 +6008,9 @@ function nowMinutes() {
 }
 
 /* Morning routine starts at its set time (4:00 AM on early-shift days — see
-   adaptMorningRoutineBlockForDate). Evening routine starts at its set time
-   every day. Each block lasts as long as its steps. */
+   adaptMorningRoutineBlockForDate). Evening routine starts at its set time,
+   or once a plan running over it ends (adaptEveningRoutineBlockForDate).
+   Each block lasts as long as its steps. */
 
 function getBaseScheduleBlocks(dayOfWeek, dateKey = null) {
   return [
@@ -6033,6 +6086,47 @@ function adaptMorningRoutineBlockForDate(dateKey, block, events = getEvents()) {
     routineAdjust: 'collapsed',
     workStart: work.start
   }, 'Early shift: tiny version. Do what helps; no full block expected.');
+}
+
+/* Work, appointments and plans on a day, as minute spans (the way the
+   Reschedule sheet reads them). `blocks` are the day's schedule blocks. */
+function commitmentSpansForDay(blocks) {
+  return blocks
+    .filter(b => b.source === 'event' && COMMITMENT_TYPES.includes(b.type) && !b.allDay && b.time)
+    .map(b => ({ b, ...blockMinutes(b.time, b.end, 15) }));
+}
+function commitmentNames(spans) { return listText([...new Set(spans.map(p => p.b.title))]); }
+
+/* Auto-arrange the evening routine around a late plan: when work, an
+   appointment or a plan runs over it, it starts once the last of them
+   ends, as long as it still finishes by sleep. Otherwise it keeps its set
+   time (block unchanged). */
+function adaptEveningRoutineBlockForDate(block, blocks) {
+  if (!block || block.blockKey !== 'evening') return block;
+  const plans = commitmentSpansForDay(blocks);
+  const start = timeToMinutes(block.time);
+  const length = Math.max(0, timeToMinutes(block.end || block.time) - start);
+  const sleep = blocks.find(b => b.blockKey === 'sleep');
+  let sleepAt = sleep ? timeToMinutes(sleep.time) : 23 * 60;
+  if (sleepAt <= start) sleepAt = 24 * 60;
+
+  let t = start;
+  const around = [];
+  for (;;) {
+    const hits = plans.filter(p => p.s < t + Math.max(length, 1) && p.e > t);
+    if (!hits.length) break;
+    around.push(...hits);
+    t = Math.max(...hits.map(p => p.e));
+  }
+  if (t === start || t + length > sleepAt) return block;
+  const names = commitmentNames(around);
+  return addAutoRoutineDetail({
+    ...block,
+    time: minutesToClock(t),
+    end: minutesToClock(t + length),
+    routineAdjust: 'later',
+    afterPlan: names,
+  }, `Starts after ${names}.`);
 }
 
 function applyScheduleCustom(dayOfWeek, block) {
@@ -6181,8 +6275,9 @@ function deleteDueSoonItem() {
 const WEEK_GLANCE_HIDDEN_BLOCKS = ['sleep', 'evening', 'morning'];
 
 /* This week (on Home): each day's time blocks with their icons and details,
-   plus that day's meal-plan breakfast, lunch and dinner. The routines that
-   are the same every day stay out, except an early (4 AM) morning. */
+   plus that day's meal-plan breakfast, lunch and dinner. The routines and
+   meal times that are the same every day stay out, unless they moved (an
+   early 4 AM morning, a later evening, a meal moved around a plan). */
 function buildScheduleSection() {
   if (scheduleDay === null) scheduleDay = new Date().getDay();
 
@@ -6204,8 +6299,8 @@ function buildScheduleSection() {
     const d = addDays(weekStart, i);
     const dk = localDateKey(d);
     const blocks = getScheduleBlocksForDate(dk, events)
-      .filter(b => b.source !== 'mealtime')
-      .filter(b => !(b.blockKey && WEEK_GLANCE_HIDDEN_BLOCKS.includes(b.blockKey)) || (b.blockKey === 'morning' && b.routineAdjust));
+      .filter(b => b.source !== 'mealtime' || b.mealMoved)
+      .filter(b => !(b.blockKey && WEEK_GLANCE_HIDDEN_BLOCKS.includes(b.blockKey)) || b.routineAdjust);
     if (bareMinimumHidesOn(dk)) trimBlocksForBareMinimum(blocks);
     const off = !blocks.some(b => b.type === 'work') && USUAL_DAYS_OFF.includes(d.getDay());
     const items = blocks.map(b => weekItemHtml(b, dk)).join('') || `<div class="wg-empty">Clear day</div>`;
@@ -6287,7 +6382,10 @@ function getScheduleBlocksForDate(dateKey, events = getEvents()) {
     blocks.push(block);
   });
 
-  getMealTimeBlocksForDate(dateKey, blocks.find(b => b.blockKey === 'morning')).forEach(b => blocks.push(b));
+  const evening = blocks.findIndex(b => b.blockKey === 'evening');
+  if (evening > -1) blocks[evening] = adaptEveningRoutineBlockForDate(blocks[evening], blocks);
+
+  getMealTimeBlocksForDate(dateKey, blocks.find(b => b.blockKey === 'morning'), blocks).forEach(b => blocks.push(b));
 
   getCleaningBlocksForDate(dateKey).forEach(b => blocks.push(b));
 
@@ -6328,19 +6426,56 @@ function findFreeStart(blocks, duration, dayStart, dayEnd) {
    Half an hour for each meal, every day, so eating has a set spot:
    breakfast starts with the morning routine (it's the first step there),
    lunch at noon, dinner at 6. On meal-plan weekdays the detail says
-   what's planned. */
+   what's planned. When work, an appointment or a plan covers lunch or
+   dinner, it moves to the nearest free half hour in its window (lunch
+   11–2, dinner 5–8), or keeps its time if none is free. A meal inside a
+   work shift stays put: that's eaten on break. So does one covered by a
+   plan named for it ("Lunch with Sam", "Dinner out"). */
 const MEAL_TIME_MINUTES = 30;
 const LUNCH_TIME = 12 * 60;
 const DINNER_TIME = 18 * 60;
-function getMealTimeBlocksForDate(dateKey, morningBlock) {
+const MEAL_WINDOWS = { lunch: [11 * 60, 14 * 60], dinner: [17 * 60, 20 * 60] };
+const MEAL_PLAN_WORDS = { lunch: /\b(lunch|brunch)\b/i, dinner: /\b(dinner|supper)\b/i };
+const MEAL_SLIDE_STEP = 15;
+
+/* Where a meal at `start` goes around the day's plans: null when it can
+   stay, else { start, around } with the plans it made room for. */
+function slideMealAroundPlans(mealKey, start, plans) {
+  const range = MEAL_WINDOWS[mealKey];
+  if (!range) return null;
+  const clear = t => plans.filter(p => p.s < t + MEAL_TIME_MINUTES && p.e > t);
+  const around = clear(start);
+  if (!around.length) return null;
+  if (around.some(p => p.b.type === 'work' && p.s <= start && p.e >= start + MEAL_TIME_MINUTES)) return null;
+  if (around.some(p => MEAL_PLAN_WORDS[mealKey].test(p.b.title || ''))) return null;
+  let best = null;
+  for (let t = range[0]; t + MEAL_TIME_MINUTES <= range[1]; t += MEAL_SLIDE_STEP) {
+    if (!clear(t).length && (best === null || Math.abs(t - start) < Math.abs(best - start))) best = t;
+  }
+  return best === null ? null : { start: best, around };
+}
+
+function getMealTimeBlocksForDate(dateKey, morningBlock, dayBlocks = []) {
   const planDay = MEAL_DAY_BY_DOW[dateFromKey(dateKey).getDay()];
   const planned = planDay ? getMealOptionsForDay(planDay) : null;
-  const meal = (key, title, start) => ({
-    id: `meal-${key}-${dateKey}`, source: 'mealtime', mealKey: key, title, type: 'meal', editable: false,
-    time: minutesToClock(start), end: minutesToClock(start + MEAL_TIME_MINUTES),
-    detail: planned ? planned[key].label : '',
-    mealIcon: 'eat',
-  });
+  const plans = commitmentSpansForDay(dayBlocks);
+  const meal = (key, title, start) => {
+    const block = {
+      id: `meal-${key}-${dateKey}`, source: 'mealtime', mealKey: key, title, type: 'meal', editable: false,
+      time: minutesToClock(start), end: minutesToClock(start + MEAL_TIME_MINUTES),
+      detail: planned ? planned[key].label : '',
+      mealIcon: 'eat',
+    };
+    const moved = slideMealAroundPlans(key, start, plans);
+    if (!moved) return block;
+    const note = `${moved.start > start ? 'After' : 'Before'} ${commitmentNames(moved.around)}`;
+    return {
+      ...block,
+      time: minutesToClock(moved.start), end: minutesToClock(moved.start + MEAL_TIME_MINUTES),
+      detail: [note, block.detail].filter(Boolean).join(' · '),
+      mealMoved: true,
+    };
+  };
   const breakfastAt = morningBlock ? timeToMinutes(morningBlock.time) : MORNING_ROUTINE_START;
   return [meal('breakfast', 'Breakfast', breakfastAt), meal('lunch', 'Lunch', LUNCH_TIME), meal('dinner', 'Dinner', DINNER_TIME)];
 }
@@ -6649,7 +6784,7 @@ function renderDayModal(dateKey) {
   </div>
   ${buildDayMoneyHtml(dateKey)}
   <div class="day-modal-actions">
-    <button class="add-btn" onclick="rebalanceAcademicBlocksNow(true)" style="border-style:solid;margin:0;">Rebalance Academic Blocks</button>
+    <button class="add-btn" onclick="openReschedule()" style="border-style:solid;margin:0;">Reschedule</button>
     <button class="modal-submit" onclick="closeDayModal();openEventModal('${dateKey}')">Add Event</button>
   </div>`;
 }
@@ -6797,9 +6932,12 @@ function saveBulkShifts() {
   }
   const shiftDates = new Set(shifts.map(s => s.date));
   const kept = getEvents().filter(e => !(e.type === 'work' && e.date && shiftDates.has(e.date) && !e.recurring));
+  const ids = new Set();
   shifts.forEach((s, i) => {
+    const id = 'ev' + Date.now() + '-' + i;
+    ids.add(id);
     kept.push({
-      id: 'ev' + Date.now() + '-' + i,
+      id,
       title: 'Work Shift',
       date: s.date,
       start: s.start,
@@ -6807,10 +6945,9 @@ function saveBulkShifts() {
       type: 'work'
     });
   });
-  const balance = applyAcademicWorkPrecedence(kept, 'Work shifts updated');
-  saveEvents(balance.events);
-  reslotConflictingChores();
+  saveEvents(kept);
   document.getElementById('shift-modal').classList.remove('open');
+  rescheduleAround({ ids, title: shifts.length === 1 ? 'The shift' : 'A shift' });
   renderActivePage();
   refreshDayModalIfOpen();
 }
@@ -6992,8 +7129,16 @@ function academicSlotStarts(window, duration) {
    tries the due date itself, then a shorter block (down to an hour), then
    the next two weeks — so it never stays on top of work. */
 const ACADEMIC_SHORTER_MINUTES = [120, 90, 60];
+const ACADEMIC_DAY_MAX_MINUTES = 240; // more school than this in a day is a heavy day
 const ACADEMIC_CATCH_UP_DAYS = 14;
 function findAcademicSlot(item, events, mustMove = false) {
+  return academicSlotCandidates(item, events, mustMove)[0] || null;
+}
+
+/* Every free time findAcademicSlot weighed, best first (from the first set
+   of days that had any). `lightDaysOnly` keeps to days before it's due
+   with room under the 4-hour school limit. */
+function academicSlotCandidates(item, events, mustMove = false, lightDaysOnly = false) {
   const today = dateFromKey(todayKey());
   const due = dateFromKey(item.assignment.dueDate);
   const days = (from, to) => {
@@ -7004,7 +7149,8 @@ function findAcademicSlot(item, events, mustMove = false) {
   const beforeDue = due < today ? [] : days(today, addDays(due, -1) < today ? due : addDays(due, -1));
 
   const tries = [[beforeDue, item.duration, false], [beforeDue, item.duration, true]];
-  if (mustMove) {
+  if (lightDaysOnly) tries.length = 1;
+  else if (mustMove) {
     const throughDue = due < today ? [] : days(today, due);
     const nextTwoWeeks = days(today, addDays(today, ACADEMIC_CATCH_UP_DAYS - 1));
     const shorter = ACADEMIC_SHORTER_MINUTES.filter(m => m < item.duration);
@@ -7016,7 +7162,8 @@ function findAcademicSlot(item, events, mustMove = false) {
     const candidates = [];
     dayKeys.forEach(dateKey => {
       const academicLoad = academicMinutesForDate(dateKey, events);
-      if (!allowHeavyDay && academicLoad + duration > 240) return;
+      if (!allowHeavyDay && academicLoad + duration > ACADEMIC_DAY_MAX_MINUTES) return;
+      const dayLoad = totalScheduledMinutesForDate(dateKey, events);
       freeAcademicWindows(dateKey, duration, events).forEach(window => {
         academicSlotStarts(window, duration).forEach(start => {
           const daysBeforeDue = Math.round((due - dateFromKey(dateKey)) / 86400000);
@@ -7026,14 +7173,14 @@ function findAcademicSlot(item, events, mustMove = false) {
             dateKey,
             start,
             end: start + duration,
-            score: (academicLoad * 2) + (totalScheduledMinutesForDate(dateKey, events) * 0.1) + (Math.abs(daysBeforeDue - item.targetLead) * 24) + timeScore + todayPenalty
+            score: (academicLoad * 2) + (dayLoad * 0.1) + (Math.abs(daysBeforeDue - item.targetLead) * 24) + timeScore + todayPenalty
           });
         });
       });
     });
-    if (candidates.length) return candidates.sort((a, b) => a.score - b.score || a.start - b.start)[0];
+    if (candidates.length) return candidates.sort((a, b) => a.score - b.score || a.start - b.start);
   }
-  return null;
+  return [];
 }
 
 function buildAcademicDetail(item) {
@@ -7041,25 +7188,6 @@ function buildAcademicDetail(item) {
   const action = String(item.action || 'work on');
   const label = action.charAt(0).toUpperCase() + action.slice(1);
   return `${item.assignment.className}: ${label} ${item.assignment.title}. Due ${dueText}.`;
-}
-
-function timeRangesOverlap(aStart, aEnd, bStart, bEnd) {
-  return Math.max(aStart, bStart) < Math.min(aEnd, bEnd);
-}
-
-function scheduleBlockRange(block) {
-  const { s, e } = blockMinutes(block.start || block.time, block.end);
-  return { start: s, end: e };
-}
-
-function academicConflictsWithWork(academic, events) {
-  if (!academic || academic.type !== 'academic' || !academic.date || !academic.start) return false;
-  const a = scheduleBlockRange(academic);
-  return getScheduleBlocksForDate(academic.date, events).some(block => {
-    if (block.type !== 'work') return false;
-    const w = scheduleBlockRange(block);
-    return timeRangesOverlap(a.start, a.end, w.start, w.end);
-  });
 }
 
 function parseAcademicDueDateFromText(text) {
@@ -7094,76 +7222,19 @@ function academicWorkItemFromEvent(event, assignments) {
   };
 }
 
-function rebalanceAcademicAroundWork(events) {
-  const nextEvents = events.map(e => ({ ...e }));
-  const assignments = getAcademicAssignments();
-  const todayK = todayKey();
-  // Past days stay as they were, unless the work they were for isn't due yet.
-  const stillAhead = e => e.date >= todayK || academicWorkItemFromEvent(e, assignments).assignment.dueDate >= todayK;
-  const conflicted = nextEvents
-    .filter(e => academicConflictsWithWork(e, nextEvents) && stillAhead(e))
-    .sort((a, b) => {
-      const aItem = academicWorkItemFromEvent(a, assignments);
-      const bItem = academicWorkItemFromEvent(b, assignments);
-      return aItem.assignment.dueDate.localeCompare(bItem.assignment.dueDate) || a.start.localeCompare(b.start);
-    });
-
-  const moved = [];
-  const skipped = [];
-  conflicted.forEach(academic => {
-    const idx = nextEvents.findIndex(e => e.id === academic.id);
-    if (idx < 0) return;
-    const moving = nextEvents.splice(idx, 1)[0];
-    const before = { date: moving.date, start: moving.start, end: moving.end };
-    const item = academicWorkItemFromEvent(moving, assignments);
-    const slot = findAcademicSlot(item, nextEvents, true);
-    if (!slot) {
-      nextEvents.push(moving);
-      skipped.push(moving);
-      return;
-    }
-    moving.date = slot.dateKey;
-    moving.start = minutesToClock(slot.start);
-    moving.end = minutesToClock(slot.end);
-    moving.academicDueDate = item.assignment.dueDate;
-    moving.academicClass = moving.academicClass || item.assignment.className;
-    moving.academicAssignmentTitle = moving.academicAssignmentTitle || item.assignment.title;
-    moving.detail = moving.detail || buildAcademicDetail(item);
-    nextEvents.push(moving);
-    moved.push({ event: moving, before, after: { date: moving.date, start: moving.start, end: moving.end }, shorter: slot.end - slot.start < item.duration });
-  });
-
-  nextEvents.sort((a, b) => (a.date || '').localeCompare(b.date || '') || (a.start || '').localeCompare(b.start || '') || (a.title || '').localeCompare(b.title || ''));
-  return { events: nextEvents, moved, skipped, checked: conflicted.length };
+/* Move a school block to a new time, keeping what it's for in its notes. */
+function moveAcademicEvent(event, item, slot) {
+  event.date = slot.dateKey;
+  event.start = minutesToClock(slot.start);
+  event.end = minutesToClock(slot.end);
+  event.academicDueDate = item.assignment.dueDate;
+  event.academicClass = event.academicClass || item.assignment.className;
+  event.academicAssignmentTitle = event.academicAssignmentTitle || item.assignment.title;
+  event.detail = event.detail || buildAcademicDetail(item);
 }
 
-function applyAcademicWorkPrecedence(events, reason = 'Work shifts updated') {
-  const result = rebalanceAcademicAroundWork(events);
-  saveAcademicBalanceStatus({
-    reason,
-    moved: result.moved.length,
-    skipped: result.skipped.length,
-    checked: result.checked,
-    at: new Date().toISOString()
-  });
-  return result;
-}
-
-function rebalanceAcademicBlocksNow(showAlert = false) {
-  const result = applyAcademicWorkPrecedence(getEvents(), 'Manual rebalance');
-  saveEvents(result.events);
-  renderActivePage();
-  refreshDayModalIfOpen();
-  if (showAlert) {
-    alert(rebalanceAcademicSummary(result));
-  }
-}
-
-function rebalanceAcademicSummary(result) {
-  if (!result.checked) return 'No Academic blocks are conflicting with work shifts.';
-  const moved = `${result.moved.length} moved`;
-  const skipped = result.skipped.length ? `, ${result.skipped.length} still need a spot` : '';
-  return `Academic rebalance complete: ${moved}${skipped}.`;
+function sortEventsByTime(events) {
+  return events.sort((a, b) => (a.date || '').localeCompare(b.date || '') || (a.start || '').localeCompare(b.start || '') || (a.title || '').localeCompare(b.title || ''));
 }
 
 function scheduleAcademicAssignments(assignments, events) {
@@ -7322,6 +7393,12 @@ function morningRoutineSub(done, total, block) {
   return `${done}/${total} done · ${label}`;
 }
 
+function eveningRoutineSub(done, total, block) {
+  let label = routineTimeRangeLabel(block);
+  if (block?.routineAdjust === 'later') label += ` · after ${block.afterPlan}`;
+  return `${done}/${total} done · ${label}`;
+}
+
 function getMorningItemsForDate(dateKey = todayKey()) {
   if (isShotDay(dateFromKey(dateKey))) {
     const shot = MEDS.weekly[0];
@@ -7361,8 +7438,9 @@ function renderRoutines() {
     'morning'
   );
 
-  html += buildCollapseSection('evening', 'Evening Routine', `${eDone}/${EVENING_ITEMS.length} done · ${routineTimeRangeLabel(eveningBlock)}`, routineOpenState.evening,
+  html += buildCollapseSection('evening', 'Evening Routine', eveningRoutineSub(eDone, EVENING_ITEMS.length, eveningBlock), routineOpenState.evening,
     (routineEditing.evening ? buildRoutineEditor('evening') :
+    `<div class="edit-hint routine-auto-hint">Starts at ${formatTime(minutesToClock(EVENING_ROUTINE_START))}, or once a plan running over it ends, if there's still time before sleep.</div>` +
     ring(eDone, EVENING_ITEMS.length) + buildRoutineChecklist('evening', EVENING_ITEMS, eve, eveningBlock) + routineEditButton('evening')),
     'moon'
   );
@@ -7908,45 +7986,486 @@ function afterChoreChange() {
   refreshDayModalIfOpen();
 }
 
-/* Move a chore to a free time if work (or the hour after it) or plans
-   now overlap it. */
-function reslotConflictingChores() {
-  const map = getCleaningAssignments();
+/* ── Reschedule ──
+   Looks over everything with a time on the calendar from today through the
+   next four weeks (work, school, appointments, plans, routines, meals, the
+   shot and Sunday reset, chores) and lists what overlaps:
+   - A school block moves off anything but a chore (the chore makes room
+     instead). When two school blocks overlap, the one due later moves. A
+     day with more than 4 hours of school offers its extra blocks a lighter
+     day before they're due.
+   - A chore moves off anything (work also holds the hour after it). A chore
+     left at "any time" because its day was full gets an hour once one opens.
+   - An appointment or plan that overlaps work or another one stays put
+     unless a new time is picked for it — it's set with other people.
+   Each gets a few times to pick from, the best fit already picked; nothing
+   changes until Apply. "Leave it" is remembered (gnd-reschedule-kept) until
+   something about that overlap changes. Meal prep and grocery shopping
+   already land in free time by themselves, the morning routine moves for
+   early shifts, and lunch, dinner and the evening routine move around
+   plans that cover them. */
+const RESCHEDULE_DAYS = 28;
+const COMMITMENT_TYPES = ['work', 'appointment', 'personal'];
+const RESCHEDULE_KEPT_KEY = 'gnd-reschedule-kept';
+const COMMITMENT_SLOT_DAY_START = 7 * 60;
+const COMMITMENT_SLOT_DAY_END = 21 * 60;
+const COMMITMENT_SLOT_LOOKAHEAD_DAYS = 7;
+const RESCHEDULE_GROUPS = { commitment: 'Appointments & work', school: 'School', chore: 'Chores' };
+
+let rescheduleChoices = {}; // item key -> picked option id, while the sheet is open
+let rescheduleKeptOpen = false;
+
+function rescheduleSpan(b) { return blockMinutes(b.time, b.end, 15); }
+function spansOverlap(a, b) { return a.s < b.e && a.e > b.s; }
+function isCommitmentBlock(b) {
+  return COMMITMENT_TYPES.includes(b.type) && (b.source === 'event' || b.source === 'default') && !!b.time;
+}
+function blockRef(b) { return b.id || b.customKey || b.title; }
+
+/* "9:00–11:00 AM", "11:00 AM–1:00 PM" */
+function shortTimeRange(s, e) {
+  const a = formatTime(minutesToClock(s));
+  if (e <= s) return a;
+  const b = formatTime(minutesToClock(e));
+  return a.slice(-2) === b.slice(-2) ? `${a.slice(0, -3)}–${b}` : `${a}–${b}`;
+}
+function rescheduleDayText(dk) {
   const todayK = todayKey();
-  let moved = 0;
-  Object.keys(map).filter(dk => dk >= todayK).forEach(dk => {
-    (map[dk] || []).forEach(a => {
-      if (a.allDay || !a.time) return;
-      const { s: start, e: end } = blockMinutes(a.time, a.end, CLEANING_BLOCK_MINUTES);
-      const clash = getScheduleBlocksForDate(dk).some(b => {
-        if (b.allDay || !b.time || (b.source === 'cleaning' && b.cleaningTaskId === a.taskId)) return false;
-        if (b.blockKey === 'sleep') return false;
-        const { s, e } = choreBusyRange(b);
-        return start < e && end > s;
-      });
-      if (clash) {
-        assignCleaningTaskToDate(a.taskId, dk);
-        moved++;
-      }
-    });
-  });
-  return moved;
+  if (dk === todayK) return 'Today';
+  if (dk === localDateKey(addDays(dateFromKey(todayK), 1))) return 'Tomorrow';
+  return dateFromKey(dk).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+}
+function rescheduleWhen(dk, s, e) { return `${rescheduleDayText(dk)} · ${shortTimeRange(s, e)}`; }
+function listText(names) {
+  if (names.length <= 1) return names[0] || '';
+  if (names.length === 2) return `${names[0]} and ${names[1]}`;
+  if (names.length === 3) return `${names[0]}, ${names[1]} and ${names[2]}`;
+  return `${names[0]}, ${names[1]} and ${names.length - 2} more`;
+}
+/* "Overlaps Work Shift (5:30 AM–3:00 PM) and Lunch (12:00–12:30 PM)".
+   For a chore, work that only reaches it with the hour after counts too. */
+function overlapText(blocks, span, choreRange = false) {
+  return `Overlaps ${listText(blocks.map(b => {
+    const r = rescheduleSpan(b);
+    const name = b.type === 'academic' && b.title === 'Academic' ? academicTodoTitle(b).replace(/\.$/, '') : b.title;
+    const near = choreRange && b.type === 'work' && !spansOverlap(span, r);
+    const overnight = b.end && timeToMinutes(b.end) < timeToMinutes(b.time);
+    return near ? `the hour after ${name}` : `${name} (${overnight ? `${formatTime(b.time)}–${formatTime(b.end)}` : shortTimeRange(r.s, r.e)})`;
+  }))}`;
 }
 
-/* Calendar "Reschedule": school blocks step out of the way of work, and
-   chores move off anything they now overlap. */
-function autoRescheduleAll() {
-  const result = applyAcademicWorkPrecedence(getEvents(), 'Manual rebalance');
-  saveEvents(result.events);
-  const choresMoved = reslotConflictingChores();
+/* Today through the next four weeks, plus any later day with a one-off
+   event or a chore on it. */
+function rescheduleDateKeys(events, chores) {
+  const todayK = todayKey();
+  const today = dateFromKey(todayK);
+  const keys = new Set(Array.from({ length: RESCHEDULE_DAYS }, (_, i) => localDateKey(addDays(today, i))));
+  events.forEach(e => { if (e.date && e.date >= todayK && !e.recurring) keys.add(e.date); });
+  Object.keys(chores).forEach(dk => { if (dk >= todayK) keys.add(dk); });
+  return [...keys].sort();
+}
+
+function academicEventDone(e, assignments) {
+  return !!getAutoDone(e.date)[e.id] || !!assignments.find(a => a && a.id === e.academicAssignmentId)?.done;
+}
+function academicEventLabel(e, item) {
+  return [item.assignment.className, item.assignment.title].filter(Boolean).join(': ') || e.title || 'School block';
+}
+
+/* Works out every overlap and what to do about it on working copies of the
+   events and chores; nothing is saved here. `choices` holds the options
+   picked in the sheet (anything else gets its best fit). With `quiet`
+   ({ ids, customKey } of what was just saved) it only clears school blocks
+   and chores out of that one's way. */
+function planReschedule(choices = {}, quiet = null) {
+  const events = getEvents().map(e => ({ ...e }));
+  const chores = JSON.parse(JSON.stringify(getCleaningAssignments()));
+  const plan = { items: [], events, chores };
+  const ctx = { plan, events, chores, choices, quiet, kept: ls(RESCHEDULE_KEPT_KEY, null) || {}, assignments: getAcademicAssignments() };
+  cleaningPlanOverride = chores;
+  try {
+    ctx.dates = rescheduleDateKeys(events, chores);
+    if (!quiet) planCommitmentOverlaps(ctx);
+    planSchoolOverlaps(ctx);
+    if (!quiet) planHeavySchoolDays(ctx);
+    planChores(ctx);
+  } finally {
+    cleaningPlanOverride = null;
+  }
+  return plan;
+}
+
+/* Settle one item: the picked option, else "Leave it" if that was kept
+   last time, else the best fit. Applies it to the working copies. */
+function rescheduleDecide(ctx, item, options, bestId) {
+  const keptHere = ctx.kept[item.key] === item.sig;
+  if (ctx.quiet && keptHere) return;
+  options.push({ id: 'leave', label: item.leaveLabel || 'Leave it', apply: () => {} });
+  const find = id => options.find(o => o.id === id);
+  const picked = find(ctx.choices[item.key]) || (keptHere && find('leave')) || find(bestId) || find('leave');
+  picked.apply();
+  item.options = options.map(o => ({ id: o.id, label: o.label }));
+  item.best = find(bestId) ? bestId : 'leave';
+  item.chosen = picked.id;
+  item.kept = keptHere;
+  ctx.plan.items.push(item);
+}
+
+/* Appointments and plans on top of work or each other. The one that isn't
+   work gives way; between two appointments or plans, the later one. Two
+   work shifts on top of each other just get a heads-up. */
+function planCommitmentOverlaps(ctx) {
+  const todayK = todayKey();
+  const nowM = nowMinutes();
+  const workDays = [];
+  ctx.dates.forEach(dk => {
+    const list = getScheduleBlocksForDate(dk, ctx.events)
+      .filter(b => b.source === 'event' && isCommitmentBlock(b))
+      .map(b => ({ b, span: rescheduleSpan(b) }))
+      .filter(c => dk > todayK || c.span.e > nowM);
+    const movers = new Map();
+    list.forEach((x, i) => list.slice(i + 1).forEach(y => {
+      if (!spansOverlap(x.span, y.span)) return;
+      if (x.b.type === 'work' && y.b.type === 'work') { if (!workDays.includes(dk)) workDays.push(dk); return; }
+      let move = y;
+      if (y.b.type === 'work') move = x;
+      else if (x.b.type !== 'work') {
+        const later = x.span.s !== y.span.s ? x.span.s > y.span.s : (x.span.e - x.span.s) < (y.span.e - y.span.s);
+        if (later) move = x;
+      }
+      const stay = move === x ? y : x;
+      if (!movers.has(move)) movers.set(move, []);
+      movers.get(move).push(stay.b);
+    }));
+    movers.forEach((others, mover) => planCommitmentMove(ctx, dk, mover, others));
+  });
+  if (workDays.length) {
+    rescheduleDecide(ctx, {
+      key: 'work-overlaps', sig: workDays.join(','), kind: 'commitment', type: 'work', dayLink: workDays[0],
+      title: 'Work shifts overlap', when: listText(workDays.map(rescheduleDayText)),
+      why: 'Two shifts are on top of each other (often a weekly shift plus one added for that date). Open the day to fix or remove one.',
+    }, [], 'leave');
+  }
+}
+
+function planCommitmentMove(ctx, dk, mover, others) {
+  const ev = ctx.events.find(e => e.id === mover.b.id);
+  if (!ev || !ev.start) return;
+  const evS = timeToMinutes(ev.start);
+  const evE = ev.end && ev.end !== ev.start ? timeToMinutes(ev.end) : null;
+  const length = evE !== null && evE > evS ? evE - evS : 0;
+  const lead = Number(ev.commute) > 0 ? Number(ev.commute) + APPOINTMENT_EARLY_MINUTES : 0;
+  const rest = ctx.events.filter(e => e !== ev);
+  const todayK = todayKey();
+  const freeStarts = dateKey => {
+    const busy = getScheduleBlocksForDate(dateKey, rest)
+      .filter(b => !b.allDay && b.time && b.source !== 'mealprep').map(rescheduleSpan);
+    const earliest = dateKey === todayK ? Math.max(COMMITMENT_SLOT_DAY_START, Math.ceil(nowMinutes() / 30) * 30) : COMMITMENT_SLOT_DAY_START;
+    const starts = [];
+    for (let t = Math.ceil((earliest + lead) / 30) * 30; t + Math.max(length, 15) <= COMMITMENT_SLOT_DAY_END; t += 30) {
+      const span = { s: t - lead, e: t + Math.max(length, 15) };
+      if (!busy.some(iv => spansOverlap(span, iv))) starts.push(t);
+    }
+    return starts.sort((a, b) => Math.abs(a - evS) - Math.abs(b - evS) || a - b);
+  };
+  const picks = [];
+  freeStarts(dk).forEach(t => {
+    if (picks.length < 2 && !picks.some(p => Math.abs(p.t - t) < Math.max(length, 60))) picks.push({ dk, t });
+  });
+  for (let i = 1; i <= COMMITMENT_SLOT_LOOKAHEAD_DAYS && picks.length < 3; i++) {
+    const next = localDateKey(addDays(dateFromKey(dk), i));
+    const t = freeStarts(next)[0];
+    if (t !== undefined) picks.push({ dk: next, t });
+  }
+  const options = picks.map(p => ({
+    id: `slot:${p.dk}@${p.t}`,
+    label: rescheduleWhen(p.dk, p.t, p.t + length),
+    apply: () => {
+      ev.date = p.dk;
+      ev.start = minutesToClock(p.t);
+      if (evE !== null) ev.end = minutesToClock(p.t + length);
+    },
+  }));
+  const span = mover.span;
+  rescheduleDecide(ctx, {
+    key: `commit:${ev.id}`, sig: `${dk}|${ev.start}-${ev.end || ''}|${others.map(blockRef).sort().join(',')}`,
+    kind: 'commitment', type: ev.type, title: ev.title || 'Appointment',
+    when: rescheduleWhen(dk, evS, evE !== null ? evE : evS),
+    why: `${overlapText(others, span)}. It stays unless you pick a new time.`,
+  }, options, 'leave');
+}
+
+/* School blocks on top of something, earliest due first so the one due
+   later is the one that moves when two overlap. */
+function planSchoolOverlaps(ctx) {
+  const { events, assignments, quiet } = ctx;
+  const todayK = todayKey();
+  const school = events
+    .filter(e => e.type === 'academic' && e.date && e.start && !e.recurring && !academicEventDone(e, assignments))
+    .map(e => ({ e, item: academicWorkItemFromEvent(e, assignments) }))
+    // Past days stay as they were, unless the work they were for isn't due yet.
+    .filter(x => x.e.date >= todayK || x.item.assignment.dueDate >= todayK)
+    .sort((a, b) => a.item.assignment.dueDate.localeCompare(b.item.assignment.dueDate)
+      || a.e.date.localeCompare(b.e.date) || a.e.start.localeCompare(b.e.start) || String(a.e.id).localeCompare(String(b.e.id)));
+  const rank = new Map(school.map((x, i) => [x.e.id, i]));
+  school.forEach(({ e: ev, item }, i) => {
+    const span = blockMinutes(ev.start, ev.end, 15);
+    const clashes = getScheduleBlocksForDate(ev.date, events).filter(b => {
+      if (b.allDay || !b.time || b.id === ev.id || b.source === 'cleaning' || b.source === 'mealprep') return false;
+      if (quiet && !(isCommitmentBlock(b) && (quiet.ids.has(ev.id) || quiet.ids.has(b.id) || (!!quiet.customKey && b.customKey === quiet.customKey)))) return false;
+      if (b.source === 'event' && b.type === 'academic' && (rank.get(b.id) ?? -1) > i) return false; // that one moves for this one
+      return spansOverlap(span, rescheduleSpan(b));
+    });
+    if (!clashes.length) return;
+    const when = rescheduleWhen(ev.date, span.s, span.e);
+    events.splice(events.indexOf(ev), 1); // so its own time doesn't count as taken
+    const slots = pickRescheduleSlots(academicSlotCandidates(item, events, true));
+    events.push(ev);
+    const options = slots.map(slot => ({
+      id: `slot:${slot.dateKey}@${slot.start}-${slot.end}`,
+      label: rescheduleWhen(slot.dateKey, slot.start, slot.end) + (slot.end - slot.start < item.duration ? ' (shorter)' : ''),
+      apply: () => moveAcademicEvent(ev, item, slot),
+    }));
+    rescheduleDecide(ctx, {
+      key: `school:${ev.id}`, sig: `${ev.date}|${ev.start}-${ev.end}|${clashes.map(blockRef).sort().join(',')}`,
+      kind: 'school', type: 'academic', title: academicEventLabel(ev, item), when,
+      why: options.length ? overlapText(clashes, span) : `${overlapText(clashes, span)}. No free time before it's due or in the next two weeks.`,
+    }, options, options[0]?.id);
+  });
+}
+
+/* Up to three times, on different days when there's a choice. */
+function pickRescheduleSlots(cands, n = 3) {
+  const out = [];
+  cands.forEach(c => { if (out.length < n && !out.some(o => o.dateKey === c.dateKey)) out.push(c); });
+  cands.forEach(c => { if (out.length < n && !out.some(o => o.dateKey === c.dateKey && c.start < o.end && c.end > o.start)) out.push(c); });
+  return out;
+}
+
+/* More than 4 hours of school on a day: the blocks due latest are offered
+   a lighter day before they're due, until the day is back under 4 hours. */
+function planHeavySchoolDays(ctx) {
+  const { events, assignments } = ctx;
+  const todayK = todayKey();
+  const nowM = nowMinutes();
+  const dates = new Set(ctx.dates);
+  events.forEach(e => { if (e.type === 'academic' && e.date >= todayK) dates.add(e.date); });
+  [...dates].sort().forEach(dk => {
+    if (academicMinutesForDate(dk, events) <= ACADEMIC_DAY_MAX_MINUTES) return;
+    const blocks = events
+      .filter(e => e.type === 'academic' && e.date === dk && e.start && !e.recurring && !academicEventDone(e, assignments))
+      .filter(e => dk > todayK || timeToMinutes(e.start) >= nowM)
+      .map(e => ({ e, item: academicWorkItemFromEvent(e, assignments) }))
+      .sort((a, b) => b.item.assignment.dueDate.localeCompare(a.item.assignment.dueDate) || b.e.start.localeCompare(a.e.start));
+    for (const { e: ev, item } of blocks) {
+      const load = academicMinutesForDate(dk, events);
+      if (load <= ACADEMIC_DAY_MAX_MINUTES) break;
+      const span = blockMinutes(ev.start, ev.end, 15);
+      const when = rescheduleWhen(dk, span.s, span.e);
+      events.splice(events.indexOf(ev), 1);
+      const slots = pickRescheduleSlots(academicSlotCandidates(item, events, false, true).filter(c => c.dateKey !== dk));
+      events.push(ev);
+      if (!slots.length) continue;
+      const hours = Math.round(load / 30) / 2;
+      rescheduleDecide(ctx, {
+        key: `heavy:${ev.id}`, sig: `${dk}|${ev.start}-${ev.end}|heavy`,
+        kind: 'school', type: 'academic', title: academicEventLabel(ev, item), when,
+        why: `${rescheduleDayText(dk)} has ${hours} hours of school. This one can go on a lighter day.`,
+      }, slots.map(slot => ({
+        id: `slot:${slot.dateKey}@${slot.start}-${slot.end}`,
+        label: rescheduleWhen(slot.dateKey, slot.start, slot.end),
+        apply: () => moveAcademicEvent(ev, item, slot),
+      })), `slot:${slots[0].dateKey}@${slots[0].start}-${slots[0].end}`);
+    }
+  });
+}
+
+/* A chore's options: free hours that day, then the lightest other days
+   that week (today on), up to three. */
+function choreMoveOptions(ctx, dk, taskId, sameDayOnly = false) {
+  const todayK = todayKey();
+  const picks = [];
+  const same = choreFreeStarts(dk, taskId, ctx.events);
+  if (same.length) {
+    picks.push({ dk, start: same[0] });
+    const later = same.find(s => s >= same[0] + 120);
+    if (later !== undefined) picks.push({ dk, start: later });
+  }
+  if (!sameDayOnly) {
+    const monday = startOfMondayWeek(dateFromKey(dk));
+    const others = [];
+    for (let i = 0; i < 7; i++) {
+      const other = localDateKey(addDays(monday, i));
+      if (other === dk || other < todayK) continue;
+      const start = choreFreeStarts(other, taskId, ctx.events)[0];
+      if (start !== undefined) others.push({ dk: other, start, load: totalScheduledMinutesForDate(other, ctx.events) });
+    }
+    others.sort((a, b) => a.load - b.load || a.dk.localeCompare(b.dk));
+    others.slice(0, 3 - picks.length).forEach(o => picks.push(o));
+  }
+  return picks.map(p => ({
+    id: `slot:${p.dk}@${p.start}`,
+    label: rescheduleWhen(p.dk, p.start, p.start + CLEANING_BLOCK_MINUTES),
+    apply: () => placeChoreInMap(ctx.chores, taskId, p.dk, choreSlotAt(p.start)),
+  }));
+}
+
+/* Chores on top of something, and chores with no set time that could have
+   one now. After a save (quiet), a chore keeps its day: a free hour there,
+   else any time that day. */
+function planChores(ctx) {
+  const { events, chores, quiet } = ctx;
+  const todayK = todayKey();
+  const tasks = getCleaningTasks();
+  Object.keys(chores).filter(dk => dk >= todayK).sort().forEach(dk => {
+    const done = getCleaningWeek(dateFromKey(dk)).done;
+    (chores[dk] || []).slice().forEach(a => {
+      const task = tasks.find(t => t.id === a.taskId);
+      if (!task || done[a.taskId]) return;
+      if (a.allDay || !a.time) {
+        if (quiet || isLaundryTask(a.taskId)) return;
+        const options = choreMoveOptions(ctx, dk, a.taskId);
+        if (!options.length) return;
+        rescheduleDecide(ctx, {
+          key: `anytime:${a.taskId}:${dk}`, sig: `${dk}|any`, kind: 'chore', type: 'cleaning',
+          title: task.title, when: `${rescheduleDayText(dk)} · any time`, leaveLabel: 'Keep any time',
+          why: 'It has no set time because the day was full when it was put there.',
+        }, options, options[0].id);
+        return;
+      }
+      const span = blockMinutes(a.time, a.end, CLEANING_BLOCK_MINUTES);
+      const clashes = getScheduleBlocksForDate(dk, events).filter(b => {
+        if (b.allDay || !b.time || b.blockKey === 'sleep' || b.source === 'mealprep') return false;
+        if (b.source === 'cleaning' && b.cleaningTaskId === a.taskId) return false;
+        if (quiet && !(isCommitmentBlock(b) && (quiet.ids.has(b.id) || (!!quiet.customKey && b.customKey === quiet.customKey)))) return false;
+        return spansOverlap(span, choreBusyRange(b));
+      });
+      if (!clashes.length) return;
+      const options = choreMoveOptions(ctx, dk, a.taskId, !!quiet);
+      options.push({
+        id: `anytime:${dk}`, label: `${rescheduleDayText(dk)} · any time`,
+        apply: () => placeChoreInMap(chores, a.taskId, dk, { time: '', end: '', allDay: true }),
+      });
+      rescheduleDecide(ctx, {
+        key: `chore:${a.taskId}:${dk}`, sig: `${dk}|${a.time}-${a.end}|${clashes.map(blockRef).sort().join(',')}`,
+        kind: 'chore', type: 'cleaning', title: task.title, when: rescheduleWhen(dk, span.s, span.e),
+        why: overlapText(clashes, span, true),
+      }, options, options[0].id);
+    });
+  });
+}
+
+function saveReschedulePlan(plan) {
+  const changed = plan.items.filter(i => i.chosen !== 'leave');
+  if (changed.some(i => i.kind !== 'chore')) saveEvents(sortEventsByTime(plan.events));
+  if (changed.some(i => i.kind === 'chore')) saveCleaningAssignments(plan.chores);
+  return changed;
+}
+
+/* ── The Reschedule sheet (Calendar page and the day popup) ── */
+function openReschedule() {
+  rescheduleChoices = {};
+  rescheduleKeptOpen = false;
+  renderReschedule();
+  document.getElementById('reschedule-modal').classList.add('open');
+}
+function closeReschedule() {
+  document.getElementById('reschedule-modal').classList.remove('open');
+}
+function pickRescheduleOption(key, id) {
+  rescheduleChoices[key] = id;
+  renderReschedule();
+}
+
+function rescheduleItemHtml(item) {
+  const chips = item.options.map(o => {
+    const on = o.id === item.chosen;
+    const tag = o.id === item.best && o.id !== 'leave' ? '<span class="rs-best">best fit</span>' : '';
+    return `<button class="rs-opt${on ? ' active' : ''}" type="button" role="radio" aria-checked="${on}"
+      onclick="pickRescheduleOption('${attr(item.key)}','${attr(o.id)}')">${esc(o.label)}${tag}</button>`;
+  }).join('');
+  const open = item.dayLink ? `<button class="routine-link-btn rs-open-day" type="button" onclick="closeReschedule();openDayModal('${attr(item.dayLink)}')">Open the day</button>` : '';
+  return `<div class="rs-item" style="--block-color:${evColor(item.type)}">
+    <div class="rs-head"><span class="rs-title">${esc(item.title)}</span><span class="rs-when">${esc(item.when)}</span></div>
+    <div class="rs-why">${esc(item.why)}</div>
+    ${item.options.length > 1 ? `<div class="rs-options" role="radiogroup" aria-label="${attr(item.title)}">${chips}</div>` : ''}${open}
+  </div>`;
+}
+
+/* New overlaps first, grouped; ones left as is last time sit folded away
+   at the bottom. */
+function renderReschedule() {
+  const body = document.getElementById('reschedule-body');
+  if (!body) return;
+  const plan = planReschedule(rescheduleChoices);
+  const lastDay = formatShortDate(addDays(dateFromKey(todayKey()), RESCHEDULE_DAYS - 1));
+  const title = '<div class="modal-title" id="reschedule-title">Reschedule</div>';
+  if (!plan.items.length) {
+    body.innerHTML = `${title}
+      <p class="rs-lead">Everything fits. Nothing overlaps from today through ${esc(lastDay)}.</p>
+      <div class="edit-hint">Checked work, school, appointments, plans, routines, meals and chores.</div>
+      <button class="modal-submit" type="button" onclick="closeReschedule()">Done</button>`;
+    return;
+  }
+  const fresh = plan.items.filter(i => !i.kept);
+  const kept = plan.items.filter(i => i.kept);
+  let group = '';
+  const rows = fresh.map(item => {
+    const heading = item.kind !== group ? `<div class="rs-group">${esc(RESCHEDULE_GROUPS[item.kind])}</div>` : '';
+    group = item.kind;
+    return heading + rescheduleItemHtml(item);
+  }).join('');
+  const keptHtml = kept.length ? `<details class="rs-kept"${rescheduleKeptOpen ? ' open' : ''} ontoggle="rescheduleKeptOpen=this.open">
+      <summary>Left as is last time (${kept.length})</summary>${kept.map(rescheduleItemHtml).join('')}
+    </details>` : '';
+  const changes = plan.items.filter(i => i.chosen !== 'leave').length;
+  const lead = fresh.length
+    ? `${fresh.length} thing${fresh.length === 1 ? '' : 's'} to look at through ${esc(lastDay)}. The best fit is picked for each; tap another time to change it.`
+    : `Nothing new overlaps through ${esc(lastDay)}.`;
+  body.innerHTML = `${title}
+    <p class="rs-lead">${lead}</p>
+    ${rows}${keptHtml}
+    <button class="modal-submit" type="button" onclick="applyReschedule()">${changes ? `Move ${changes} thing${changes === 1 ? '' : 's'}` : (fresh.length ? 'Keep everything as is' : 'Done')}</button>
+    ${changes || fresh.length ? '<button class="rs-cancel" type="button" onclick="closeReschedule()">Cancel</button>' : ''}`;
+}
+
+function applyReschedule() {
+  const plan = planReschedule(rescheduleChoices);
+  const kept = {};
+  plan.items.forEach(i => { if (i.chosen === 'leave') kept[i.key] = i.sig; });
+  if (stableJson(kept) !== stableJson(ls(RESCHEDULE_KEPT_KEY, null) || {})) lsSave(RESCHEDULE_KEPT_KEY, kept);
+  const moved = saveReschedulePlan(plan);
+  closeReschedule();
   renderActivePage();
   refreshDayModalIfOpen();
-  const shorter = result.moved.filter(m => m.shorter).length;
-  const school = result.checked
-    ? `School: ${result.moved.length} block${result.moved.length === 1 ? '' : 's'} moved${shorter ? ` (${shorter} made shorter to fit)` : ''}${result.skipped.length ? `, ${result.skipped.length} still need a spot` : ''}.`
-    : 'School: nothing overlaps work.';
-  const chores = choresMoved ? `Chores: ${choresMoved} moved to a free time.` : 'Chores: nothing overlaps.';
-  alert(`${school}\n${chores}`);
+  if (moved.length) showCareToast(`Moved ${listText(moved.map(i => i.title))}.`, 6000);
+}
+
+/* After a work shift, appointment, plan or school block is saved: school
+   blocks and chores step out of its way by themselves (the best fit, as
+   the sheet would pick), and a note says what moved, or what still
+   overlaps. `saved` is { ids, customKey, title }. */
+function rescheduleAround(saved) {
+  const plan = planReschedule({}, { ids: saved.ids, customKey: saved.customKey || null });
+  const moved = saveReschedulePlan(plan);
+  const stuck = plan.items.filter(i => i.chosen === 'leave');
+  const events = getEvents();
+  const clashes = new Set();
+  rescheduleDateKeys(events, {}).forEach(dk => {
+    const blocks = getScheduleBlocksForDate(dk, events);
+    blocks.filter(b => b.source === 'event' && saved.ids.has(b.id) && isCommitmentBlock(b)).forEach(own => {
+      const span = rescheduleSpan(own);
+      blocks.forEach(b => {
+        if (b !== own && b.source === 'event' && !saved.ids.has(b.id) && isCommitmentBlock(b) && spansOverlap(span, rescheduleSpan(b))) clashes.add(b.title);
+      });
+    });
+  });
+  const parts = [];
+  if (moved.length) parts.push(`Moved ${listText(moved.map(i => i.title))} out of the way.`);
+  if (stuck.length) parts.push(`${listText(stuck.map(i => i.title))} still overlap${stuck.length === 1 ? 's' : ''}; no free time was found.`);
+  if (clashes.size) parts.push(`${saved.title || 'This'} overlaps ${listText([...clashes])}.`);
+  if (stuck.length || clashes.size) parts.push('Reschedule on the Calendar page has options.');
+  if (parts.length) showCareToast(parts.join(' '), 8000);
 }
 
 function toggleRoutine(type, key) {
@@ -10309,10 +10828,7 @@ function saveEvent() {
     const custom = getScheduleCustom();
     custom[evEditingCustomKey] = { title, detail, time: start, end: end || start, type: evType };
     saveScheduleCustom(custom);
-    if (evType === 'work') {
-      const balance = applyAcademicWorkPrecedence(getEvents(), 'Work shifts updated');
-      saveEvents(balance.events);
-    }
+    if (COMMITMENT_TYPES.includes(evType)) rescheduleAround({ ids: new Set(), customKey: evEditingCustomKey, title });
     closeEventModalAndRender();
     return;
   }
@@ -10340,10 +10856,9 @@ function saveEvent() {
   } else {
     events.push(ev);
   }
-  const balance = (evType === 'work' || evType === 'academic')
-    ? applyAcademicWorkPrecedence(events, evType === 'work' ? 'Work shifts updated' : 'Academic block added')
-    : null;
-  saveEvents(balance ? balance.events : events);
+  saveEvents(events);
+  // School blocks and chores step out of the way of what was just saved.
+  rescheduleAround({ ids: new Set([ev.id]), title });
   closeEventModalAndRender();
 }
 
@@ -10660,18 +11175,11 @@ function moveTodaysSchoolForBareMinimum(dateKey) {
       moved.push({ id: moving.id, title: label, to: null });
       return;
     }
-    moving.date = slot.dateKey;
-    moving.start = minutesToClock(slot.start);
-    moving.end = minutesToClock(slot.end);
-    moving.academicDueDate = item.assignment.dueDate;
-    moving.academicClass = moving.academicClass || item.assignment.className;
-    moving.academicAssignmentTitle = moving.academicAssignmentTitle || item.assignment.title;
-    moving.detail = moving.detail || buildAcademicDetail(item);
+    moveAcademicEvent(moving, item, slot);
     next.push(moving);
     moved.push({ id: moving.id, title: label, to: moving.date, start: moving.start });
   });
-  next.sort((a, b) => (a.date || '').localeCompare(b.date || '') || (a.start || '').localeCompare(b.start || '') || (a.title || '').localeCompare(b.title || ''));
-  saveEvents(next);
+  saveEvents(sortEventsByTime(next));
   return moved;
 }
 
