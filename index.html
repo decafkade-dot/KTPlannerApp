@@ -4809,17 +4809,32 @@ function savePaycheckPlan(plan, monthDate = getBillMonthDate()) {
   plans[paycheckPlanKey(monthDate)] = plan;
   savePaycheckPlans(plans);
 }
+/* Whether a paycheck still turns up in its plan month. It goes away when its
+   income source is deleted (or its payday or amount changes), and any bill
+   still assigned to it then counts as unassigned again. */
+let livePaycheckIdsMemo = { sig: null, byMonth: {} };
+function paycheckStillExists(paycheckId, planMonthKey) {
+  const sig = localStorage.getItem('gnd-income-sources') || '';
+  if (livePaycheckIdsMemo.sig !== sig) livePaycheckIdsMemo = { sig, byMonth: {} };
+  let ids = livePaycheckIdsMemo.byMonth[planMonthKey];
+  if (!ids) {
+    const [y, m] = String(planMonthKey).split('-').map(Number);
+    ids = new Set(y && m ? incomeOccurrencesForMonth(new Date(y, m - 1, 1)).map(p => p.id) : []);
+    livePaycheckIdsMemo.byMonth[planMonthKey] = ids;
+  }
+  return ids.has(paycheckId);
+}
 function findOccurrenceAssignment(occId) {
-  // Returns { planMonthKey, paycheckId } if this occurrence is assigned in
-  // any stored plan month.
+  // Returns { planMonthKey, paycheckId } if this occurrence is assigned to a
+  // paycheck that still exists, in any stored plan month.
   const plans = getAllPaycheckPlans();
   const { billKey, monthKey } = parseBillOccId(occId);
   for (const planKey of Object.keys(plans)) {
     const plan = plans[planKey];
     const norm = normalizePlanAssignments(plan?.assignments, planKey);
-    if (norm[occId]) return { planMonthKey: planKey, paycheckId: norm[occId] };
+    if (norm[occId] && paycheckStillExists(norm[occId], planKey)) return { planMonthKey: planKey, paycheckId: norm[occId] };
     // Also recognize legacy plain billKey within its own plan month.
-    if (plan?.assignments?.[billKey] && planKey === monthKey) {
+    if (plan?.assignments?.[billKey] && planKey === monthKey && paycheckStillExists(plan.assignments[billKey], planKey)) {
       return { planMonthKey: planKey, paycheckId: plan.assignments[billKey] };
     }
   }
