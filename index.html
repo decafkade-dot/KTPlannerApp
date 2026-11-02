@@ -1492,6 +1492,8 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
   cursor: pointer; transition: all 0.2s; margin-bottom: 14px;
 }
 .add-btn:active { background: var(--espresso-light); }
+.home-money-btns { display: flex; gap: 10px; }
+.home-money-btns .add-btn { flex: 1; min-width: 0; margin: 0; }
 
 /* ── Health ── */
 .water-card { overflow: hidden; }
@@ -2596,6 +2598,35 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
   </div>
 </div>
 
+<!-- One-off Deposit Modal -->
+<div class="modal-overlay" id="deposit-modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="deposit-title">Add Deposit</div>
+    <div class="modal-field">
+      <div class="field-label">What was it?</div>
+      <input type="text" class="modal-input" id="deposit-name" placeholder="e.g. Casino win, birthday cash" maxlength="80">
+    </div>
+    <div class="modal-field">
+      <div class="field-label">Amount</div>
+      <input type="number" class="modal-input" id="deposit-amount" placeholder="0.00" step="0.01" min="0" inputmode="decimal">
+    </div>
+    <div class="modal-field">
+      <div class="field-label">Date</div>
+      <div class="field-hint">Goes into checking, so it counts in the checking balance on the Bills tab.</div>
+      <input type="date" class="modal-input" id="deposit-date" onchange="onDepositDateChange()">
+    </div>
+    <div class="modal-field">
+      <label class="toggle-row" style="justify-content:flex-start;gap:10px;">
+        <input type="checkbox" id="deposit-received" onchange="depositReceivedTouched=true">
+        <span class="toggle-label">Already in checking</span>
+      </label>
+    </div>
+    <button class="modal-danger" id="deposit-delete" style="display:none;margin-bottom:10px;" onclick="deleteDeposit()">Delete Deposit</button>
+    <button class="modal-submit" id="deposit-save" onclick="saveDeposit()">Add</button>
+  </div>
+</div>
+
 <!-- Event Modal -->
 <div class="modal-overlay" id="event-modal">
   <div class="modal-sheet">
@@ -3137,6 +3168,9 @@ function getRemovedBills() { return getTombstones(REMOVED_BILLS_KEY); }
 /* Random expenses (see the Money section), and the ids of deleted ones. */
 const RANDOM_EXPENSES_KEY = 'gnd-random-expenses';
 const REMOVED_RANDOM_EXPENSES_KEY = 'gnd-random-expenses-removed';
+/* One-off deposits (see the Money section), and the ids of deleted ones. */
+const DEPOSITS_KEY = 'gnd-deposits';
+const REMOVED_DEPOSITS_KEY = 'gnd-deposits-removed';
 
 function getBillsList() {
   const stored = ls('gnd-bills-list', null);
@@ -3428,6 +3462,8 @@ const PRIORITY_SYNC_KEYS = new Set([
   'gnd-paycheck-plan',
   'gnd-random-expenses',
   'gnd-random-expenses-removed',
+  'gnd-deposits',
+  'gnd-deposits-removed',
   'gnd-card-payments',
   'gnd-checking-balance',
   'gnd-credit-cards',
@@ -3564,6 +3600,7 @@ function mergedRemoteValueWithLocalWork(key, localRaw, remoteValue) {
   if (key === 'gnd-bills-list') return mergeLocalOnlyRecords(remoteValue, localValue, 'key', getRemovedBills());
   if (key === 'gnd-transactions') return mergeLocalOnlyRecords(remoteValue, localValue, 'id');
   if (key === RANDOM_EXPENSES_KEY) return mergeLocalOnlyRecords(remoteValue, localValue, 'id', getTombstones(REMOVED_RANDOM_EXPENSES_KEY));
+  if (key === DEPOSITS_KEY) return mergeLocalOnlyRecords(remoteValue, localValue, 'id', getTombstones(REMOVED_DEPOSITS_KEY));
   if (key === paycheckInstancesKey() && localValue && typeof localValue === 'object') {
     const merged = mergePaycheckInstanceMaps(remoteValue, localValue, getRemovedExtras());
     return sameJson(merged, remoteValue) ? null : merged;
@@ -5071,7 +5108,7 @@ function removePaycheckExtra(paycheckId, extraId, monthDate = getBillMonthDate()
    whenever the paycheck map is merged or pulled (see cleanSyncedValue). */
 const REMOVED_EXTRAS_KEY = 'gnd-paycheck-removed-extras';
 /* Every "removed" list, merged first on each pull (see getTombstones). */
-const TOMBSTONE_KEYS = [REMOVED_EXTRAS_KEY, REMOVED_BILLS_KEY, REMOVED_RANDOM_EXPENSES_KEY];
+const TOMBSTONE_KEYS = [REMOVED_EXTRAS_KEY, REMOVED_BILLS_KEY, REMOVED_RANDOM_EXPENSES_KEY, REMOVED_DEPOSITS_KEY];
 function getRemovedExtras() { return getTombstones(REMOVED_EXTRAS_KEY); }
 function rememberRemovedExtra(extraId) { rememberTombstone(REMOVED_EXTRAS_KEY, extraId); }
 function mergeTombstones(a, b) {
@@ -5480,10 +5517,13 @@ function buildHomeAddTodo(dk) {
   </div>`;
 }
 
-/* A quick way to log a random expense without opening Money. */
+/* A quick way to log a random expense or a one-off deposit without opening Money. */
 function buildHomeAddExpense() {
-  return `<div class="card theme-card"><div class="card-title-row"><div class="card-title">Add an expense</div></div>
-    <button type="button" class="add-btn" style="margin:0;" onclick="openRandomExpenseModal()">+ Random expense</button>
+  return `<div class="card theme-card"><div class="card-title-row"><div class="card-title">Add an expense or deposit</div></div>
+    <div class="home-money-btns">
+      <button type="button" class="add-btn" onclick="openRandomExpenseModal()">+ Random expense</button>
+      <button type="button" class="add-btn" onclick="openDepositModal()">+ Deposit</button>
+    </div>
   </div>`;
 }
 
@@ -8713,6 +8753,103 @@ function deleteRandomExpense() {
   renderActivePage();
 }
 
+/* ─── One-off deposits ───────────────────────────────────────────────────
+   Money in that isn't a paycheck (a casino win, a cash gift). Each goes
+   into checking on its date and has a received tick, like a payday: the
+   checking balance on the Bills tab adds it once it's in, and counts it
+   as still coming until then. Listed on the Income tab.
+   gnd-deposits = [{ id, name, amount, date: "YYYY-MM-DD", received }] */
+function getDeposits() {
+  const list = ls(DEPOSITS_KEY, []);
+  const removed = getTombstones(REMOVED_DEPOSITS_KEY);
+  return (Array.isArray(list) ? list : [])
+    .filter(d => d && d.id && !removed[d.id] && /^\d{4}-\d{2}-\d{2}$/.test(d.date || ''));
+}
+function saveDeposits(list) { lsSave(DEPOSITS_KEY, list); }
+function depositsInMonth(monthDate) {
+  const month = localDateKey(monthDate).slice(0, 7);
+  return getDeposits().filter(d => d.date.startsWith(month))
+    .sort((a, b) => a.date.localeCompare(b.date) || String(a.id).localeCompare(String(b.id)));
+}
+function toggleDepositReceived(id, received) {
+  saveDeposits(getDeposits().map(d => d.id === id ? { ...d, received: typeof received === 'boolean' ? received : !d.received } : d));
+  renderActivePage();
+}
+
+/* The add / edit popup, opened from the Income tab or Home. "Already in
+   checking" follows the date (ticked for today or earlier) until it's tapped. */
+let editingDepositId = null;
+let depositReceivedTouched = false;
+let depositOpenedWith = null;
+function openDepositModal(id = null, defaultDate = todayKey()) {
+  const d = id ? getDeposits().find(x => x.id === id) : null;
+  editingDepositId = d ? d.id : null;
+  depositReceivedTouched = !!d;
+  document.getElementById('deposit-title').textContent = d ? 'Edit Deposit' : 'Add Deposit';
+  document.getElementById('deposit-save').textContent = d ? 'Save' : 'Add';
+  document.getElementById('deposit-delete').style.display = d ? '' : 'none';
+  document.getElementById('deposit-name').value = d?.name || '';
+  document.getElementById('deposit-amount').value = d ? Number(d.amount || 0) : '';
+  document.getElementById('deposit-date').value = d?.date || defaultDate;
+  document.getElementById('deposit-received').checked = d ? !!d.received : defaultDate <= todayKey();
+  depositOpenedWith = readDepositForm();
+  document.getElementById('deposit-modal').classList.add('open');
+}
+function onDepositDateChange() {
+  if (depositReceivedTouched) return;
+  const date = document.getElementById('deposit-date').value;
+  if (date) document.getElementById('deposit-received').checked = date <= todayKey();
+}
+function readDepositForm() {
+  const name = document.getElementById('deposit-name').value.trim();
+  const amount = Math.max(0, parseFloat(document.getElementById('deposit-amount').value) || 0);
+  const dateRaw = document.getElementById('deposit-date').value;
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(dateRaw) ? dateRaw : todayKey();
+  const received = document.getElementById('deposit-received').checked;
+  return { name: name || 'Deposit', amount, date, received, typedName: name };
+}
+function saveDeposit() {
+  const form = readDepositForm();
+  if (!form.typedName && !form.amount) { document.getElementById('deposit-name').focus(); return; }
+  const { typedName, ...record } = form;
+  const list = getDeposits();
+  if (editingDepositId) {
+    // Only what was changed in the popup, on top of the latest saved copy.
+    const idx = list.findIndex(d => d.id === editingDepositId);
+    const opened = depositOpenedWith || {};
+    const changed = {};
+    Object.keys(record).forEach(f => { if (!sameJson(record[f], opened[f])) changed[f] = record[f]; });
+    if (idx > -1) list[idx] = { ...list[idx], ...changed };
+  } else {
+    list.push({ id: 'dep-' + Date.now(), ...record });
+  }
+  saveDeposits(list);
+  document.getElementById('deposit-modal').classList.remove('open');
+  renderActivePage();
+}
+function deleteDeposit() {
+  if (!editingDepositId) return;
+  if (!confirm('Delete this deposit?')) return;
+  rememberTombstone(REMOVED_DEPOSITS_KEY, editingDepositId); // so another device's copy can't bring it back
+  saveDeposits(getDeposits().filter(d => d.id !== editingDepositId));
+  document.getElementById('deposit-modal').classList.remove('open');
+  renderActivePage();
+}
+function depositRowHtml(d) {
+  const id = attr(d.id);
+  return `<div class="bill-row ${d.received ? 'paid' : ''}">
+    <button class="bill-check" onclick="toggleDepositReceived('${id}',${!d.received})" aria-label="${d.received ? 'Mark not received' : 'Mark received'}: ${attr(d.name)}"><svg viewBox="0 0 12 12"><polyline points="2.5 6 5 8.5 9.5 3.5"/></svg></button>
+    <div class="bill-edit-info" style="flex:1;min-width:0;">
+      <div class="bill-edit-name">${esc(d.name)}</div>
+      <div class="bill-edit-detail">${esc(formatShortDate(dateFromKey(d.date)))} · ${d.received ? 'Received' : 'Not received yet'}</div>
+    </div>
+    <div class="bill-edit-right">
+      <div class="bill-edit-amt">${formatMoney(Number(d.amount || 0))}</div>
+      <button class="bill-edit-btn" onclick="openDepositModal('${id}')" title="Edit deposit">&#9998;</button>
+    </div>
+  </div>`;
+}
+
 /* ─── Credit tab ─────────────────────────────────────────────────────────
    Tracks only the credit cards: what each card will be charged (bills paid
    from the card, plus estimated spending like gas) against the payments
@@ -9575,9 +9712,9 @@ function donePaycheckIds(billMonth) {
    What's in checking, typed in from the bank. From there: what should be
    in checking now, and what should be left at the end of the month. Each
    tick after the balance was typed (a bill, card payment or random expense
-   paid, a paycheck received) moves "now" by its amount, so the number keeps
-   up between bank checks; typing a new balance starts over from it.
-   gnd-checking-balance = { amount, asOf, asOfDate, paid: [item ids], received: [paycheck ids] } */
+   paid, a paycheck or deposit received) moves "now" by its amount, so the
+   number keeps up between bank checks; typing a new balance starts over from it.
+   gnd-checking-balance = { amount, asOf, asOfDate, paid: [item ids], received: [paycheck and deposit ids] } */
 const CHECKING_BALANCE_KEY = 'gnd-checking-balance';
 function getCheckingBalance() {
   const v = ls(CHECKING_BALANCE_KEY, null);
@@ -9600,6 +9737,9 @@ function checkingFlows(fromMonth, toMonth) {
       ins.set(`inc:${r.paycheck.id}`, { id: `inc:${r.paycheck.id}`, monthKey: paycheckPlanKey(m), amount: r.paycheckAmt, received: !!r.paycheck.received, dateKey: r.paycheck.dateKey });
     });
     unassignedItems.concat(randomItems).forEach(it => { if (!outs.has(it.id)) outs.set(it.id, it); });
+    depositsInMonth(m).forEach(d => {
+      ins.set(`dep:${d.id}`, { id: `dep:${d.id}`, monthKey: paycheckPlanKey(m), amount: Number(d.amount || 0), received: !!d.received, dateKey: d.date, deposit: true });
+    });
   });
   return { outs: [...outs.values()], ins: [...ins.values()] };
 }
@@ -9621,8 +9761,9 @@ function submitCheckingBalance(rawValue, typed) {
   });
   renderMoney();
 }
-/* Paychecks dated before the balance was typed are taken as already in
-   it (or not coming); bills count until they're ticked, whatever their date. */
+/* Paychecks and deposits dated before the balance was typed are taken as
+   already in it (or not coming); bills count until they're ticked, whatever
+   their date. */
 function checkingProjection(viewMonth) {
   const bal = getCheckingBalance();
   if (!bal) return null;
@@ -9647,9 +9788,11 @@ function checkingProjection(viewMonth) {
   const toKey = paycheckPlanKey(viewMonth);
   const counts = mk => mk >= fromKey && mk <= toKey;
   const toPay = outs.filter(o => !o.paid && counts(o.monthKey)).reduce((s, o) => s + o.amount, 0);
-  const coming = ins.filter(i => !i.received && i.dateKey >= bal.asOfDate && counts(i.monthKey)).reduce((s, i) => s + i.amount, 0);
+  const comingIns = ins.filter(i => !i.received && i.dateKey >= bal.asOfDate && counts(i.monthKey));
+  const coming = comingIns.reduce((s, i) => s + i.amount, 0);
+  const depositsComing = comingIns.filter(i => i.deposit).reduce((s, i) => s + i.amount, 0);
   const now = Number(bal.amount) - paidSince + receivedSince;
-  return { bal, now, paidSince, receivedSince, toPay, coming, left: now + coming - toPay, multiMonth: fromKey < toKey || paycheckPlanKey(thisMonth) < toKey };
+  return { bal, now, paidSince, receivedSince, toPay, coming, depositsComing, left: now + coming - toPay, multiMonth: fromKey < toKey || paycheckPlanKey(thisMonth) < toKey };
 }
 function buildCheckingBalance(billMonth, proj) {
   const monthName = billMonth.toLocaleDateString('en-US', { month: 'long' });
@@ -9674,7 +9817,8 @@ function buildCheckingBalance(billMonth, proj) {
     ${proj ? `<div class="checking-ledger">
       <div><span>Should be in checking now</span><strong class="${proj.now < 0 ? 'over' : ''}">${formatMoney(proj.now)}</strong></div>
       ${since.length ? `<div class="checking-note">${since.join(' · ')}</div>` : ''}
-      <div><span>Paychecks still coming</span><strong>+${formatMoney(proj.coming)}</strong></div>
+      <div><span>Paychecks still coming</span><strong>+${formatMoney(proj.coming - proj.depositsComing)}</strong></div>
+      ${proj.depositsComing >= 0.005 ? `<div><span>Deposits still coming</span><strong>+${formatMoney(proj.depositsComing)}</strong></div>` : ''}
       <div><span>Still to pay${through}</span><strong>${formatMoney(-proj.toPay)}</strong></div>
       <div class="ledger-total ${proj.left < 0 ? 'over' : ''}"><span>Left at end of ${esc(monthName)}</span><strong>${formatMoney(proj.left)}</strong></div>
     </div>` : `<div class="credit-hint">Type what's in checking now to see what should be left at the end of ${esc(monthName)}.</div>`}
@@ -10383,6 +10527,16 @@ function renderMoneyIncome() {
     });
     html += `</div>`;
   }
+
+  // One-off money in, outside the income sources.
+  const deposits = depositsInMonth(billMonth);
+  const depositTotal = deposits.reduce((sum, d) => sum + Number(d.amount || 0), 0);
+  html += `<div class="card theme-card" style="margin-top:14px;">
+    <div class="card-title-row"><div class="card-title">One-off deposits</div>${deposits.length ? `<div class="paycheck-pool-total">${formatMoney(depositTotal)}</div>` : ''}</div>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:8px;">Money in that isn't a paycheck, like a casino win or a cash gift. Tick it once it's in checking.</div>
+    ${deposits.length ? deposits.map(depositRowHtml).join('') : `<div style="font-size:14px;color:var(--text-muted);padding:4px 0 8px;">No one-off deposits in ${esc(billMonthName)}.</div>`}
+    <button class="add-btn" style="margin:8px 0 0;" onclick="openDepositModal(null,'${randomExpenseDefaultDate(billMonth)}')">+ Add deposit</button>
+  </div>`;
 
   return html;
 }
