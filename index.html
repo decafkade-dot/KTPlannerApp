@@ -1841,6 +1841,7 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
 .month-cell .month-icons[data-count="4"] .month-day-sticker { --sticker-size: min(15px, (100cqh - 18px) / 2, 46cqw); }
 .month-cell .month-icons[data-count="5"] .month-day-sticker,
 .month-cell .month-icons[data-count="6"] .month-day-sticker { --sticker-size: min(14px, (100cqh - 18px) / 2, 30cqw); }
+.month-cell .month-icons[data-count="7"] .month-day-sticker { --sticker-size: min(12px, (100cqh - 18px) / 3, 30cqw); }
 /* Phones: day squares get a little taller so the icons stay readable. */
 @media (max-width: 520px) {
   .month-cell { aspect-ratio: 4 / 5; }
@@ -1868,6 +1869,13 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
   font-size: 13px; font-weight: 700; color: var(--espresso);
   line-height: 1.1; text-align: center;
 }
+.school-kind-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.school-kind-row .cal-action-btn {
+  flex-direction: column; gap: 5px; min-height: 66px; padding: 8px 4px;
+  box-shadow: none; background: var(--bg-input); border-width: 1.5px;
+}
+.school-kind-row .cal-action-btn .theme-sticker { --sticker-size: 28px; }
+.school-kind-row .cal-action-btn.active { border-color: var(--espresso); background: var(--bg-card); }
 
 /* ── This Week ── */
 .wg-day.past { opacity: 0.6; }
@@ -2610,8 +2618,9 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
     <div class="modal-handle"></div>
     <div class="modal-title" id="event-modal-title">Add Event</div>
     <div class="modal-field" id="ev-for-wrap">
-      <div class="field-label">What it's for</div>
-      <select class="modal-input" id="ev-for" onchange="onSchoolForChange(this)"></select>
+      <div class="field-label">Kind</div>
+      <div class="school-kind-row" id="ev-kind-row" role="radiogroup" aria-label="Kind of school time"></div>
+      <div class="field-hint" style="margin-top:8px;">Say what it's for in the title or notes. Name an assignment and this time comes off the calendar once you check it off.</div>
     </div>
     <div class="modal-field">
       <div class="field-label">Title</div>
@@ -3337,6 +3346,7 @@ const IMG_ICONS = {
   trash: 'Assets/images/trash.svg',
   mop: 'Assets/images/cleaning-mop.svg',
   schoolTime: 'Assets/images/hw.svg',
+  zoom: 'Assets/images/computer-tv-svgrepo-com.svg',
   syringe: 'Assets/images/syringe.svg',
   // Gentle tools (Bare Minimum Day, Hard Day, Dopamine Menu, Notes)
   bareMinimum: 'Assets/images/bare-minimum.png',
@@ -5577,9 +5587,9 @@ function buildDueListCard(weekStart) {
 function renderCalendar() {
   let html = themePageHeader('Calendar', 'One day at a time.', ['calendarTab']);
   html += homeSection('week', 'This week', '', buildScheduleSection(), 'calendarTab');
-  html += buildDueListCard(getScheduleWeekStart());
   html += buildCalendarActions();
   html += buildMonthCalendar();
+  html += buildDueListCard(getScheduleWeekStart());
   document.getElementById('page-calendar').innerHTML = html;
 }
 
@@ -5715,7 +5725,7 @@ function blockIconName(b) {
   if (b.blockKey === 'evening') return 'moon';
   if (b.blockKey === 'sleep') return 'sleep';
   if (b.type === 'work') return 'work';
-  if (b.type === 'academic') return b.academicKind === 'internship' ? 'work' : 'schoolTime';
+  if (b.type === 'academic') return b.academicKind === 'internship' ? 'work' : (SCHOOL_TIME_KINDS[b.academicKind]?.icon || 'schoolTime');
   return 'calendarTab'; // appointments and other plans
 }
 
@@ -5892,14 +5902,14 @@ function timeRowDetails(b, dateKey) {
   } else if (b.type === 'academic') {
     // What the time is for. Finishing the assignment frees the rest of it.
     const ev = getEvents().find(e => e.id === b.id) || {};
-    const assignment = getAcademicAssignments().find(a => ev.academicAssignmentId && a.id === ev.academicAssignmentId);
-    const task = ev.academicAssignmentTitle || assignment?.title || '';
+    const assignment = schoolTimeAssignment(ev);
+    const task = assignment?.title || '';
     const dueKey = assignment?.dueDate || '';
     const daysUntil = dueKey ? Math.round((dateFromKey(dueKey) - dateFromKey(todayKey())) / 86400000) : null;
     const dueText = assignment?.done ? 'Done ✓'
       : daysUntil === null ? ''
       : `Due ${formatShortDate(dateFromKey(dueKey))} · ${daysUntil < 0 ? `${Math.abs(daysUntil)} day${daysUntil === -1 ? '' : 's'} late` : academicCountdownText(daysUntil)}`;
-    const kind = SCHOOL_TIME_KINDS[ev.academicKind]?.label || '';
+    const kind = { session: 'School session', homework: 'Homework time', zoom: 'Zoom meeting', internship: 'Internship shift' }[ev.academicKind] || '';
     body = `${ev.academicClass ? `<div><strong>${esc(ev.academicClass)}</strong></div>` : ''}
       ${task && task !== b.title ? `<div>${esc(task)}</div>` : ''}
       ${kind ? `<div class="time-row-sub">${esc(kind)}${b.recurring ? ' · repeats weekly' : ''}</div>` : ''}
@@ -6008,17 +6018,18 @@ function buildMonthCalendar() {
   return html;
 }
 
-/* The month marks work (and internship shifts), assignments due (the
-   homework icon is only for due dates), school sessions and meetings,
-   cleaning days, other plans and paydays — everything else lives in the
-   week view and the day popup. */
+/* The month marks work (and older internship shifts), school time and
+   assignments due (each with its own icon; the notebook covers both due
+   dates and homework time), cleaning days, other plans and paydays —
+   everything else lives in the week view and the day popup. */
 function monthIconsForDate(dateKey, events = getEvents(), assignments = getAcademicAssignments()) {
   const dayEvents = getEventsForDateFromList(dateKey, events).filter(e => !schoolTimeFreed(e, dateKey, assignments));
   const out = [];
   const internship = e => e.type === 'academic' && e.academicKind === 'internship';
   if (dayEvents.some(e => e.type === 'work' || internship(e))) out.push('work');
-  if (assignments.some(a => a && a.dueDate === dateKey)) out.push('academic');
-  if (dayEvents.some(e => e.type === 'academic' && !internship(e))) out.push('schoolTime');
+  const schoolIcons = dayEvents.filter(e => e.type === 'academic' && !internship(e)).map(e => SCHOOL_TIME_KINDS[e.academicKind]?.icon || 'schoolTime');
+  if (assignments.some(a => a && a.dueDate === dateKey)) schoolIcons.push('academic');
+  ['academic', 'schoolTime', 'zoom'].filter(i => schoolIcons.includes(i)).forEach(i => out.push(i));
   if (getChoresForDate(dateKey).length) out.push('mop');
   if (dayEvents.some(e => e.type !== 'work' && e.type !== 'academic')) out.push('calendarTab');
   if (incomeOccurrencesForDate(dateFromKey(dateKey)).length) out.push('payday');
@@ -6317,11 +6328,22 @@ function weekMealsHtml(date, settings = getMealSettings()) {
    Blocks are positioned with percentages so nothing scrolls horizontally or
    vertically. Overlapping blocks split the lane into side-by-side columns. */
 
+/* The assignment a stretch of school time is for: the one it was linked
+   to, else the one named in its title or notes (the longest match). Zoom
+   meetings never count — they're set with other people. */
+function schoolTimeAssignment(ev, assignments = getAcademicAssignments()) {
+  if (!ev || ev.type !== 'academic' || ev.academicKind === 'zoom') return null;
+  if (ev.academicAssignmentId) return assignments.find(a => a && a.id === ev.academicAssignmentId) || null;
+  const text = academicTextKey(`${ev.title || ''} ${ev.detail || ''}`);
+  return assignments
+    .filter(a => a && academicTextKey(a.title).length >= 3 && text.includes(academicTextKey(a.title)))
+    .sort((a, b) => b.title.length - a.title.length)[0] || null;
+}
+
 /* School time set aside for an assignment that was finished before it
    ended comes off the calendar, so that time is free again. */
 function schoolTimeFreed(ev, dateKey, assignments = getAcademicAssignments()) {
-  if (ev.type !== 'academic' || !ev.academicAssignmentId) return false;
-  const a = assignments.find(x => x && x.id === ev.academicAssignmentId);
+  const a = schoolTimeAssignment(ev, assignments);
   if (!a || !a.done || !a.doneAt) return false;
   const end = dateFromKey(dateKey);
   const mins = timeToMinutes(ev.end || ev.start || '00:00');
@@ -10457,9 +10479,8 @@ function openEventModal(dateKey, eventId = '', customKey = '') {
   document.getElementById('ev-start').value = existingEvent?.start || existingCustom?.time || '';
   document.getElementById('ev-end').value = existingEvent?.end || existingCustom?.end || '';
   document.getElementById('ev-commute').value = existingEvent?.commute || '';
-  const forSelect = document.getElementById('ev-for');
-  forSelect.innerHTML = schoolForOptionsHtml(existingEvent);
-  forSelect.dataset.prev = forSelect.value;
+  evSchoolKind = SCHOOL_TIME_KINDS[existingEvent?.academicKind] ? existingEvent.academicKind : 'session';
+  renderSchoolKindButtons();
   document.querySelectorAll('#event-modal [data-evtype]').forEach(b => b.classList.toggle('active', b.dataset.evtype === evType));
 
   let daysHtml = '';
@@ -10493,14 +10514,16 @@ function showEventTypeFields() {
   document.getElementById('ev-title').placeholder = evType === 'academic' ? 'e.g. Group meeting' : 'e.g. Dr. Basile, Dentist';
 }
 
-/* School (Calendar page): set time aside for an assignment on the due
-   list, a group assignment meeting, an internship shift, or anything
-   else. Finishing the assignment early frees its time (schoolTimeFreed). */
+/* School (Calendar page): set time aside, picking one of three kinds by
+   its icon; what it's for goes in the title and notes. Naming an
+   assignment there means finishing it early frees the rest of its time
+   (schoolTimeAssignment). */
 const SCHOOL_TIME_KINDS = {
-  meeting: { label: 'Group assignment meeting', title: 'Group meeting' },
-  internship: { label: 'Internship work shift', title: 'Internship shift' },
-  other: { label: 'Something else', title: '' },
+  session: { label: 'Session', icon: 'schoolTime' },
+  homework: { label: 'Homework', icon: 'academic' },
+  zoom: { label: 'Zoom', icon: 'zoom' },
 };
+let evSchoolKind = 'session';
 function openSchoolTimeModal(dateKey = todayKey()) {
   openEventModal(dateKey);
   evType = 'academic';
@@ -10508,24 +10531,10 @@ function openSchoolTimeModal(dateKey = todayKey()) {
   document.getElementById('event-modal-title').textContent = 'Schedule School Time';
   showEventTypeFields();
 }
-function schoolForOptionsHtml(ev = null) {
-  const picked = ev?.academicAssignmentId ? `as:${ev.academicAssignmentId}` : (ev?.academicKind || '');
-  const open = getAcademicAssignments().filter(a => a && a.dueDate && (!a.done || a.id === ev?.academicAssignmentId)).sort(academicAssignmentSort);
-  const opt = (value, label) => `<option value="${attr(value)}" ${value === picked ? 'selected' : ''}>${esc(label)}</option>`;
-  return `<option value="" ${picked ? '' : 'selected'}>Pick one…</option>`
-    + (open.length ? `<optgroup label="Assignments">${open.map(a => opt(`as:${a.id}`, `${a.title}${a.className ? ` (${a.className})` : ''} · due ${formatShortDate(dateFromKey(a.dueDate))}`)).join('')}</optgroup>` : '')
-    + `<optgroup label="Other">${Object.entries(SCHOOL_TIME_KINDS).map(([k, v]) => opt(k, v.label)).join('')}</optgroup>`;
-}
-function schoolForTitle(value) {
-  if (value.startsWith('as:')) return getAcademicAssignments().find(a => a && `as:${a.id}` === value)?.title || '';
-  return SCHOOL_TIME_KINDS[value]?.title || '';
-}
-/* Picking what it's for fills in the title, unless one was typed. */
-function onSchoolForChange(select) {
-  const input = document.getElementById('ev-title');
-  const prev = select.dataset.prev || '';
-  if (!input.value.trim() || input.value === schoolForTitle(prev)) input.value = schoolForTitle(select.value);
-  select.dataset.prev = select.value;
+function renderSchoolKindButtons() {
+  document.getElementById('ev-kind-row').innerHTML = Object.entries(SCHOOL_TIME_KINDS).map(([k, v]) =>
+    `<button class="cal-action-btn${k === evSchoolKind ? ' active' : ''}" type="button" role="radio" aria-checked="${k === evSchoolKind}" onclick="evSchoolKind='${k}';renderSchoolKindButtons()">${themeIcon(v.icon)}<span class="cal-action-label">${esc(v.label)}</span></button>`
+  ).join('');
 }
 
 function toggleRecurDay(i, btn) {
@@ -10560,16 +10569,9 @@ function saveEvent() {
     ev.recurDays = evRecurDays;
   }
   if (evType === 'academic') {
-    const forValue = document.getElementById('ev-for').value;
-    const assignment = forValue.startsWith('as:') ? getAcademicAssignments().find(a => a && `as:${a.id}` === forValue) : null;
-    if (assignment) {
-      ev.academicAssignmentId = assignment.id;
-      ev.academicClass = assignment.className || '';
-      ev.academicAssignmentTitle = assignment.title;
-      ev.academicDueDate = assignment.dueDate;
-    } else if (forValue) {
-      ev.academicKind = forValue;
-    }
+    ev.academicKind = evSchoolKind;
+    // Time set aside earlier from the old picker keeps its assignment.
+    if (previousEvent?.academicAssignmentId) ev.academicAssignmentId = previousEvent.academicAssignmentId;
   }
 
   if (evEditingId) {
