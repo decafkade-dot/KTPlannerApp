@@ -1841,7 +1841,8 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
 .month-cell .month-icons[data-count="4"] .month-day-sticker { --sticker-size: min(15px, (100cqh - 18px) / 2, 46cqw); }
 .month-cell .month-icons[data-count="5"] .month-day-sticker,
 .month-cell .month-icons[data-count="6"] .month-day-sticker { --sticker-size: min(14px, (100cqh - 18px) / 2, 30cqw); }
-.month-cell .month-icons[data-count="7"] .month-day-sticker { --sticker-size: min(12px, (100cqh - 18px) / 3, 30cqw); }
+.month-cell .month-icons[data-count="7"] .month-day-sticker,
+.month-cell .month-icons[data-count="8"] .month-day-sticker { --sticker-size: min(12px, (100cqh - 18px) / 3, 30cqw); }
 /* Phones: day squares get a little taller so the icons stay readable. */
 @media (max-width: 520px) {
   .month-cell { aspect-ratio: 4 / 5; }
@@ -3347,6 +3348,7 @@ const IMG_ICONS = {
   mop: 'Assets/images/cleaning-mop.svg',
   schoolTime: 'Assets/images/hw.svg',
   zoom: 'Assets/images/computer-tv-svgrepo-com.svg',
+  personal: 'Assets/images/schedule-svgrepo-com.svg',
   syringe: 'Assets/images/syringe.svg',
   // Gentle tools (Bare Minimum Day, Hard Day, Dopamine Menu, Notes)
   bareMinimum: 'Assets/images/bare-minimum.png',
@@ -5726,6 +5728,7 @@ function blockIconName(b) {
   if (b.blockKey === 'sleep') return 'sleep';
   if (b.type === 'work') return 'work';
   if (b.type === 'academic') return b.academicKind === 'internship' ? 'work' : (SCHOOL_TIME_KINDS[b.academicKind]?.icon || 'schoolTime');
+  if (b.type === 'personal') return 'personal';
   return 'calendarTab'; // appointments and other plans
 }
 
@@ -6020,7 +6023,8 @@ function buildMonthCalendar() {
 
 /* The month marks work (and older internship shifts), school time and
    assignments due (each with its own icon; the notebook covers both due
-   dates and homework time), cleaning days, other plans and paydays —
+   dates and homework time), cleaning days, personal plans, appointments
+   and paydays —
    everything else lives in the week view and the day popup. */
 function monthIconsForDate(dateKey, events = getEvents(), assignments = getAcademicAssignments()) {
   const dayEvents = getEventsForDateFromList(dateKey, events).filter(e => !schoolTimeFreed(e, dateKey, assignments));
@@ -6031,7 +6035,8 @@ function monthIconsForDate(dateKey, events = getEvents(), assignments = getAcade
   if (assignments.some(a => a && a.dueDate === dateKey)) schoolIcons.push('academic');
   ['academic', 'schoolTime', 'zoom'].filter(i => schoolIcons.includes(i)).forEach(i => out.push(i));
   if (getChoresForDate(dateKey).length) out.push('mop');
-  if (dayEvents.some(e => e.type !== 'work' && e.type !== 'academic')) out.push('calendarTab');
+  if (dayEvents.some(e => e.type === 'personal')) out.push('personal');
+  if (dayEvents.some(e => e.type !== 'work' && e.type !== 'academic' && e.type !== 'personal')) out.push('calendarTab');
   if (incomeOccurrencesForDate(dateFromKey(dateKey)).length) out.push('payday');
   return out;
 }
