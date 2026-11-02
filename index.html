@@ -1839,7 +1839,8 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
 .month-cell .month-icons[data-count="2"] .month-day-sticker { --sticker-size: min(18px, 100cqh - 16px, 46cqw); }
 .month-cell .month-icons[data-count="3"] .month-day-sticker,
 .month-cell .month-icons[data-count="4"] .month-day-sticker { --sticker-size: min(15px, (100cqh - 18px) / 2, 46cqw); }
-.month-cell .month-icons[data-count="5"] .month-day-sticker { --sticker-size: min(14px, (100cqh - 18px) / 2, 30cqw); }
+.month-cell .month-icons[data-count="5"] .month-day-sticker,
+.month-cell .month-icons[data-count="6"] .month-day-sticker { --sticker-size: min(14px, (100cqh - 18px) / 2, 30cqw); }
 /* Phones: day squares get a little taller so the icons stay readable. */
 @media (max-width: 520px) {
   .month-cell { aspect-ratio: 4 / 5; }
@@ -3335,6 +3336,7 @@ const IMG_ICONS = {
   dishes: 'Assets/images/dishes.svg',
   trash: 'Assets/images/trash.svg',
   mop: 'Assets/images/cleaning-mop.svg',
+  schoolTime: 'Assets/images/hw.svg',
   syringe: 'Assets/images/syringe.svg',
   // Gentle tools (Bare Minimum Day, Hard Day, Dopamine Menu, Notes)
   bareMinimum: 'Assets/images/bare-minimum.png',
@@ -5163,6 +5165,7 @@ function renderHome() {
   } else {
     html += buildHomeWater();
     html += buildHomeHomework(dk);
+    html += buildHomeFreeTimes(dk);
     html += mode === 'morning' ? buildHomeMorning(dk) : mode === 'day' ? buildHomeDay(dk) : buildHomeEvening(dk);
     html += buildHomeMealLog(dk);
     html += buildHomeAddTodo(dk);
@@ -5272,10 +5275,42 @@ function homeRowsCard(title, rows) {
   return `<div class="card theme-card"><div class="card-title-row"><div class="card-title">${esc(title)}</div></div>${rows.map(todoRowHtml).join('')}</div>`;
 }
 
-/* What's due this week, on Home. */
+/* Homework due today, on Home (the whole week's list is on Calendar). */
 function buildHomeHomework(dk) {
-  const weekStart = startOfMondayWeek(dateFromKey(dk));
-  return dueThisWeekRows(weekStart).length ? buildDueListCard(weekStart) : '';
+  const rows = getAcademicAssignments().filter(a => a && a.dueDate === dk).sort(academicAssignmentSort).map(a => ({ ...dueListRow(a, dk), meta: '' }));
+  return rows.length ? homeRowsCard('Due today', rows) : '';
+}
+
+/* The open stretches left today between the morning routine and sleep,
+   around everything with a start and end time (meals and routines too).
+   Gaps under half an hour don't count. */
+const FREE_TIME_MIN_MINUTES = 30;
+function freeTimesForDate(dk) {
+  const blocks = homeTimedBlocks(dk);
+  const sleep = blocks.find(b => b.blockKey === 'sleep');
+  const dayEnd = sleep ? timeToMinutes(sleep.time) : 23 * 60;
+  let t = MORNING_ROUTINE_START;
+  if (dk === todayKey()) t = Math.max(t, Math.ceil(nowMinutes() / 5) * 5);
+  const busy = blocks.filter(b => b.blockKey !== 'sleep').map(homeBlockSpan).filter(sp => sp.hasEnd).sort((a, b) => a.start - b.start);
+  const free = [];
+  busy.forEach(sp => {
+    if (sp.start - t >= FREE_TIME_MIN_MINUTES) free.push({ s: t, e: Math.min(sp.start, dayEnd) });
+    t = Math.max(t, sp.end);
+  });
+  if (dayEnd - t >= FREE_TIME_MIN_MINUTES) free.push({ s: t, e: dayEnd });
+  return free.filter(f => f.e - f.s >= FREE_TIME_MIN_MINUTES);
+}
+function buildHomeFreeTimes(dk) {
+  const free = freeTimesForDate(dk);
+  const total = free.reduce((sum, f) => sum + f.e - f.s, 0);
+  const rows = free.map(f => `<div class="day-todo-row free-time-row">
+      <span class="day-todo-text">${esc(shortTimeRange(f.s, f.e))}</span>
+      <span class="todo-meta">${esc(minutesLabel(f.e - f.s))}</span>
+    </div>`).join('');
+  return `<div class="card theme-card">
+    <div class="card-title-row"><div class="card-title">Free time today</div>${total ? `<span class="due-list-left">${esc(minutesLabel(total))} total</span>` : ''}</div>
+    ${rows || '<div class="day-panel-empty">No open stretches left today.</div>'}
+  </div>`;
 }
 
 /* One routine step at a time: Done checks it off, Skip shows the next one
@@ -5680,8 +5715,8 @@ function blockIconName(b) {
   if (b.blockKey === 'evening') return 'moon';
   if (b.blockKey === 'sleep') return 'sleep';
   if (b.type === 'work') return 'work';
-  if (b.type === 'academic' && b.academicKind === 'internship') return 'work';
-  return 'calendarTab'; // appointments, school time and other plans (the homework icon is only for due dates)
+  if (b.type === 'academic') return b.academicKind === 'internship' ? 'work' : 'schoolTime';
+  return 'calendarTab'; // appointments and other plans
 }
 
 /* The day as a simple list: what to be doing, at what time. */
@@ -5973,16 +6008,19 @@ function buildMonthCalendar() {
   return html;
 }
 
-/* The month marks work, assignments due (the homework icon is only for
-   due dates), cleaning days, other plans (appointments, school time) and
-   paydays — everything else lives in the week view and the day popup. */
+/* The month marks work (and internship shifts), assignments due (the
+   homework icon is only for due dates), school sessions and meetings,
+   cleaning days, other plans and paydays — everything else lives in the
+   week view and the day popup. */
 function monthIconsForDate(dateKey, events = getEvents(), assignments = getAcademicAssignments()) {
   const dayEvents = getEventsForDateFromList(dateKey, events).filter(e => !schoolTimeFreed(e, dateKey, assignments));
   const out = [];
-  if (dayEvents.some(e => e.type === 'work')) out.push('work');
+  const internship = e => e.type === 'academic' && e.academicKind === 'internship';
+  if (dayEvents.some(e => e.type === 'work' || internship(e))) out.push('work');
   if (assignments.some(a => a && a.dueDate === dateKey)) out.push('academic');
+  if (dayEvents.some(e => e.type === 'academic' && !internship(e))) out.push('schoolTime');
   if (getChoresForDate(dateKey).length) out.push('mop');
-  if (dayEvents.some(e => e.type !== 'work')) out.push('calendarTab');
+  if (dayEvents.some(e => e.type !== 'work' && e.type !== 'academic')) out.push('calendarTab');
   if (incomeOccurrencesForDate(dateFromKey(dateKey)).length) out.push('payday');
   return out;
 }
