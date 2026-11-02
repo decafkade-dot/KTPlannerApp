@@ -2613,7 +2613,7 @@ body.bill-card-dragging .bill-card-section .bill-cat-body {
     </div>
     <div class="modal-field">
       <div class="field-label">Date</div>
-      <div class="field-hint">Goes into checking, so it counts in the checking balance on the Bills tab.</div>
+      <div class="field-hint">Goes into checking, and shows on the Paychecks tab so you can assign bills to it.</div>
       <input type="date" class="modal-input" id="deposit-date" onchange="onDepositDateChange()">
     </div>
     <div class="modal-field">
@@ -4847,16 +4847,18 @@ function savePaycheckPlan(plan, monthDate = getBillMonthDate()) {
   savePaycheckPlans(plans);
 }
 /* Whether a paycheck still turns up in its plan month. It goes away when its
-   income source is deleted (or its payday or amount changes), and any bill
-   still assigned to it then counts as unassigned again. */
+   income source is deleted (or its payday or amount changes), or its deposit
+   is deleted or moved to another month, and any bill still assigned to it
+   then counts as unassigned again. */
 let livePaycheckIdsMemo = { sig: null, byMonth: {} };
 function paycheckStillExists(paycheckId, planMonthKey) {
-  const sig = localStorage.getItem('gnd-income-sources') || '';
+  const sig = (localStorage.getItem('gnd-income-sources') || '') + '\u0001' + (localStorage.getItem(DEPOSITS_KEY) || '')
+    + '\u0001' + (localStorage.getItem(REMOVED_DEPOSITS_KEY) || '');
   if (livePaycheckIdsMemo.sig !== sig) livePaycheckIdsMemo = { sig, byMonth: {} };
   let ids = livePaycheckIdsMemo.byMonth[planMonthKey];
   if (!ids) {
     const [y, m] = String(planMonthKey).split('-').map(Number);
-    ids = new Set(y && m ? incomeOccurrencesForMonth(new Date(y, m - 1, 1)).map(p => p.id) : []);
+    ids = new Set(y && m ? paydaysForMonth(new Date(y, m - 1, 1)).map(p => p.id) : []);
     livePaycheckIdsMemo.byMonth[planMonthKey] = ids;
   }
   return ids.has(paycheckId);
@@ -8757,7 +8759,8 @@ function deleteRandomExpense() {
    Money in that isn't a paycheck (a casino win, a cash gift). Each goes
    into checking on its date and has a received tick, like a payday: the
    checking balance on the Bills tab adds it once it's in, and counts it
-   as still coming until then. Listed on the Income tab.
+   as still coming until then. Listed on the Income tab, and on the
+   Paychecks tab as a payday of its own that bills can be assigned to.
    gnd-deposits = [{ id, name, amount, date: "YYYY-MM-DD", received }] */
 function getDeposits() {
   const list = ls(DEPOSITS_KEY, []);
@@ -8774,6 +8777,28 @@ function depositsInMonth(monthDate) {
 function toggleDepositReceived(id, received) {
   saveDeposits(getDeposits().map(d => d.id === id ? { ...d, received: typeof received === 'boolean' ? received : !d.received } : d));
   renderActivePage();
+}
+/* Deposits as paydays, shaped like incomeOccurrencesForMonth's entries. The
+   deposit's id is the paycheck id, so bills stay on it if its date moves
+   within the month. Each is its own "source", so card payments never carry
+   over to or from it. */
+function depositPaydaysForMonth(monthDate) {
+  return depositsInMonth(monthDate).map(d => ({
+    id: d.id, depositId: d.id, deposit: true, sourceId: `deposit:${d.id}`,
+    date: dateFromKey(d.date), dateKey: d.date, label: d.name, amount: Number(d.amount || 0),
+    cadence: 'once', received: !!d.received, status: d.received ? 'Received income' : 'Expected income',
+  }));
+}
+/* Every payday bills can go on: the income sources' paychecks plus deposits. */
+function paydaysForMonth(monthDate = getBillMonthDate()) {
+  return incomeOccurrencesForMonth(monthDate).concat(depositPaydaysForMonth(monthDate));
+}
+function submitDepositAmount(id, rawValue, shownAmount) {
+  const n = Number(String(rawValue == null ? '' : rawValue).trim() || 0);
+  if (Number.isNaN(n) || n < 0) return;
+  if (n === Number(Number(shownAmount).toFixed(2))) return;
+  saveDeposits(getDeposits().map(d => d.id === id ? { ...d, amount: Math.round(n * 100) / 100 } : d));
+  renderMoney();
 }
 
 /* The add / edit popup, opened from the Income tab or Home. "Already in
@@ -9018,7 +9043,7 @@ function billIsCardPayment(bill) { return !!cardForBill(bill); }
 let cardScheduleMemo = { sig: null, data: null };
 function cardPaymentSchedule() {
   const today = new Date();
-  const sig = [CARD_PAYMENTS_KEY, 'gnd-paycheck-plan', 'gnd-paycheck-instances', 'gnd-bills-list', REMOVED_BILLS_KEY, 'gnd-income-sources', 'gnd-accounts']
+  const sig = [CARD_PAYMENTS_KEY, 'gnd-paycheck-plan', 'gnd-paycheck-instances', 'gnd-bills-list', REMOVED_BILLS_KEY, 'gnd-income-sources', 'gnd-accounts', DEPOSITS_KEY, REMOVED_DEPOSITS_KEY]
     .map(k => localStorage.getItem(k) || '').join('\u0001') + '\u0001' + paycheckPlanKey(today);
   if (cardScheduleMemo.sig === sig) return cardScheduleMemo.data;
 
@@ -9033,7 +9058,7 @@ function cardPaymentSchedule() {
     const mk = paycheckPlanKey(m);
     const assignments = normalizePlanAssignments(plans[mk]?.assignments, mk);
     const occs = paycheckOccurrencesForMonth(cardBills, m).concat(paycheckOccurrencesForMonth(cardBills, nextMonthDate(m), true));
-    incomeOccurrencesForMonth(m).forEach(p => {
+    paydaysForMonth(m).forEach(p => {
       const inst = normalizePaycheckInstance(instances[mk]?.[p.id]);
       const legacy = {};
       const addPart = (card, part) => { (legacy[card] = legacy[card] || []).push(part); };
@@ -9398,7 +9423,7 @@ function renderMoneyBills() {
   };
   const entryPaid = e => isBillPaidOn(e.b.key, e.date);
   const allEntries = bills.flatMap(billEntries);
-  const monthPaychecks = incomeOccurrencesForMonth(billMonth).slice().sort((a, b) => a.date - b.date);
+  const monthPaychecks = paydaysForMonth(billMonth).slice().sort((a, b) => a.date - b.date);
   const cardEntries = monthPaychecks.flatMap(p => paycheckCardPayments(p.id).map(c => ({ ...c, p })));
   const cardPaidEntries = cardEntries.filter(c => c.paid);
   const totalAll = allEntries.reduce((s, e) => s + e.b.amount, 0) + cardEntries.reduce((s, c) => s + c.amount, 0);
@@ -9634,7 +9659,7 @@ function checkingPlan(billMonth) {
   const eligible = BILLS.filter(billBelongsOnPaychecksTab);
   const plan = getPaycheckPlan(billMonth);
   const monthKey = paycheckPlanKey(billMonth);
-  const paychecks = incomeOccurrencesForMonth(billMonth).slice().sort((a, b) => a.date - b.date);
+  const paychecks = paydaysForMonth(billMonth).slice().sort((a, b) => a.date - b.date);
   const instances = {};
   paychecks.forEach(p => { instances[p.id] = getPaycheckInstance(p.id, billMonth); });
 
@@ -9734,12 +9759,11 @@ function checkingFlows(fromMonth, toMonth) {
     const { perPaycheck, unassignedItems, randomItems } = checkingPlan(m);
     perPaycheck.forEach(r => {
       r.items.concat(r.cards).forEach(it => { if (!outs.has(it.id)) outs.set(it.id, it); });
-      ins.set(`inc:${r.paycheck.id}`, { id: `inc:${r.paycheck.id}`, monthKey: paycheckPlanKey(m), amount: r.paycheckAmt, received: !!r.paycheck.received, dateKey: r.paycheck.dateKey });
+      const p = r.paycheck;
+      const id = p.deposit ? `dep:${p.depositId}` : `inc:${p.id}`;
+      ins.set(id, { id, monthKey: paycheckPlanKey(m), amount: r.paycheckAmt, received: !!p.received, dateKey: p.dateKey, deposit: !!p.deposit });
     });
     unassignedItems.concat(randomItems).forEach(it => { if (!outs.has(it.id)) outs.set(it.id, it); });
-    depositsInMonth(m).forEach(d => {
-      ins.set(`dep:${d.id}`, { id: `dep:${d.id}`, monthKey: paycheckPlanKey(m), amount: Number(d.amount || 0), received: !!d.received, dateKey: d.date, deposit: true });
-    });
   });
   return { outs: [...outs.values()], ins: [...ins.values()] };
 }
@@ -9831,7 +9855,7 @@ function buildCheckingSection(billMonth) {
   const openKey = '@checking';
   const isOpen = billCatOpen[openKey] !== false;
   const monthName = billMonth.toLocaleDateString('en-US', { month: 'long' });
-  const { paychecks, perPaycheck, unassignedItems, randomItems } = checkingPlan(billMonth);
+  const { perPaycheck, unassignedItems, randomItems } = checkingPlan(billMonth);
   const doneIds = donePaycheckIds(billMonth);
   const proj = checkingProjection(billMonth);
   const itemRow = it => {
@@ -9844,10 +9868,12 @@ function buildCheckingSection(billMonth) {
   };
 
   let body = buildCheckingBalance(billMonth, proj);
-  if (!paychecks.length) {
+  // A deposit only gets a card here once something is paid out of it.
+  const shownPaychecks = perPaycheck.filter(r => !r.paycheck.deposit || r.items.length + r.cards.length);
+  if (!shownPaychecks.length) {
     body += `<div class="ff-empty">No paychecks scheduled for ${esc(monthName)}. Add an income source on the Income tab to break this down by paycheck.</div>`;
   }
-  perPaycheck.forEach(({ paycheck, items, cards, needed, allPaid }) => {
+  shownPaychecks.forEach(({ paycheck, items, cards, needed, allPaid }) => {
     const dateLabel = paycheck.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
     const count = items.length + cards.length;
     // Everything paid and the paycheck received (or its day has passed): fold to its header; tap to open.
@@ -9949,8 +9975,8 @@ function setBillCard(billKey, source) {
 }
 
 function pickPaycheckForBill(occId) {
-  const paychecks = incomeOccurrencesForMonth(getBillMonthDate()).slice().sort((a, b) => a.date - b.date);
-  if (!paychecks.length) { alert('Add an income source first so we have paychecks to assign to.'); return; }
+  const paychecks = paydaysForMonth(getBillMonthDate()).slice().sort((a, b) => a.date - b.date);
+  if (!paychecks.length) { alert('Add an income source or a deposit first so we have paychecks to assign to.'); return; }
   const sheet = document.getElementById('cleaning-picker');
   if (!sheet) return;
   let html = `<div class="cleaning-picker-title">Assign to which paycheck?</div><div class="paycheck-picker-grid">`;
@@ -10015,7 +10041,7 @@ function renderMoneyPaychecks() {
   const monthName = monthDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   const next = nextMonthDate(monthDate);
   const nextMonthShort = next.toLocaleDateString('en-US', { month: 'short' });
-  const paychecks = incomeOccurrencesForMonth(monthDate).slice().sort((a, b) => a.date - b.date);
+  const paychecks = paydaysForMonth(monthDate).slice().sort((a, b) => a.date - b.date);
   const plan = getPaycheckPlan(monthDate);
   const bills = BILLS.slice().filter(billBelongsOnPaychecksTab);
   const todayK = todayKey();
@@ -10054,6 +10080,7 @@ function renderMoneyPaychecks() {
     html += `<div class="card theme-card" style="text-align:center;padding:24px;">${themeIcon('money', 'theme-corner')}
       <div style="font-size:15px;color:var(--text-muted);margin-bottom:12px;">No paychecks for this month yet.</div>
       <button class="modal-submit" onclick="moneySubTab='income';renderMoney()">Add Income Source</button>
+      <button class="add-btn" style="margin:10px 0 0;" onclick="openDepositModal(null,'${randomExpenseDefaultDate(monthDate)}')">+ Add a one-off deposit</button>
     </div>`;
     return html;
   }
@@ -10081,7 +10108,7 @@ function renderMoneyPaychecks() {
         <div class="paycheck-card-head">
           <div>
             <div class="paycheck-card-label">${esc(p.label)}</div>
-            <div class="paycheck-card-date">${esc(dateLabel)}${isDone ? ' · Done' : isReceived ? ' · Received' : isPast ? ' · Past' : ''}</div>
+            <div class="paycheck-card-date">${esc(dateLabel)}${p.deposit ? ' · Deposit' : ''}${isDone ? ' · Done' : isReceived ? ' · Received' : isPast ? ' · Past' : ''}</div>
           </div>
           <div class="paycheck-card-amount">${formatMoney(paycheckAmt)}</div>
         </div>
@@ -10093,6 +10120,24 @@ function renderMoneyPaychecks() {
       </button>
       <div class="paycheck-card-body">
         <div class="paycheck-instance-controls">
+          ${p.deposit ? `<div class="paycheck-amount-row">
+            <div class="field-label">Deposit amount</div>
+            <div class="paycheck-amount-inputs">
+              <label class="paycheck-row-amt-edit" title="Change the deposit's amount">
+                <span class="paycheck-row-amt-currency">$</span>
+                <input type="number" step="0.01" min="0" inputmode="decimal"
+                  class="paycheck-row-amt-input" style="width:110px;"
+                  value="${Number(paycheckAmt).toFixed(2)}"
+                  onclick="event.stopPropagation();this.select()"
+                  onfocus="this.select()"
+                  onblur="submitDepositAmount('${attr(p.depositId)}',this.value,${Number(paycheckAmt)})"
+                  onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}">
+              </label>
+              <button type="button" class="paycheck-tool-btn" onclick="openDepositModal('${attr(p.depositId)}')" title="Rename, move or delete this deposit">Edit</button>
+            </div>
+          </div>
+          <button type="button" class="paycheck-received-btn ${isReceived ? 'on' : ''}"
+            onclick="toggleDepositReceived('${attr(p.depositId)}',${!isReceived})">${isReceived ? '✓ Received' : 'Mark received'}</button>` : `
           <div class="paycheck-amount-row">
             <div class="field-label">Amount for this payday${instance.amountOverride !== null ? ' <span class="paycheck-edited-badge">edited</span>' : ''}</div>
             <div class="paycheck-amount-inputs">
@@ -10112,7 +10157,7 @@ function renderMoneyPaychecks() {
             </div>
           </div>
           <button type="button" class="paycheck-received-btn ${isReceived ? 'on' : ''}"
-            onclick="toggleIncomeReceived('${attr(p.id)}','${attr(p.dateKey)}',${!isReceived})">${isReceived ? '✓ Received' : 'Mark received'}</button>
+            onclick="toggleIncomeReceived('${attr(p.id)}','${attr(p.dateKey)}',${!isReceived})">${isReceived ? '✓ Received' : 'Mark received'}</button>`}
         </div>
 
         <div class="paycheck-section-label">Bills</div>
@@ -10225,6 +10270,7 @@ function renderMoneyPaychecks() {
     html += `</div></div>`;
   });
   html += `</div>`;
+  html += `<button class="add-btn" onclick="openDepositModal(null,'${randomExpenseDefaultDate(monthDate)}')">+ Add a one-off deposit</button>`;
 
   // Unassigned pool — everything starts here and stays here until dragged.
   if (unassigned.length) {
@@ -10533,7 +10579,7 @@ function renderMoneyIncome() {
   const depositTotal = deposits.reduce((sum, d) => sum + Number(d.amount || 0), 0);
   html += `<div class="card theme-card" style="margin-top:14px;">
     <div class="card-title-row"><div class="card-title">One-off deposits</div>${deposits.length ? `<div class="paycheck-pool-total">${formatMoney(depositTotal)}</div>` : ''}</div>
-    <div style="font-size:13px;color:var(--text-muted);margin-bottom:8px;">Money in that isn't a paycheck, like a casino win or a cash gift. Tick it once it's in checking.</div>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:8px;">Money in that isn't a paycheck, like a casino win or a cash gift. Each one shows on the Paychecks tab so you can put bills on it.</div>
     ${deposits.length ? deposits.map(depositRowHtml).join('') : `<div style="font-size:14px;color:var(--text-muted);padding:4px 0 8px;">No one-off deposits in ${esc(billMonthName)}.</div>`}
     <button class="add-btn" style="margin:8px 0 0;" onclick="openDepositModal(null,'${randomExpenseDefaultDate(billMonth)}')">+ Add deposit</button>
   </div>`;
